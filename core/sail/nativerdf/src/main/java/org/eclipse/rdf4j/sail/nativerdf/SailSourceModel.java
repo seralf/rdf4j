@@ -7,13 +7,6 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.nativerdf;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import org.eclipse.rdf4j.IsolationLevels;
 import org.eclipse.rdf4j.common.iteration.CloseableIteration;
 import org.eclipse.rdf4j.model.IRI;
@@ -35,9 +28,16 @@ import org.eclipse.rdf4j.sail.base.SailStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 /**
  * A {@link Model} that keeps the {@link Statement}s in an {@link SailSource}.
- * 
+ *
  * @author James Leigh
  */
 class SailSourceModel extends AbstractModel {
@@ -54,18 +54,20 @@ class SailSourceModel extends AbstractModel {
 			this.stmts = closeableIteration;
 		}
 
+		@Override
 		public boolean hasNext() {
 			try {
-				if (stmts.hasNext())
+				if (stmts.hasNext()) {
 					return true;
+				}
 				stmts.close();
 				return false;
-			}
-			catch (SailException e) {
+			} catch (SailException e) {
 				throw new ModelException(e);
 			}
 		}
 
+		@Override
 		public Statement next() {
 			try {
 				last = stmts.next();
@@ -73,15 +75,16 @@ class SailSourceModel extends AbstractModel {
 					stmts.close();
 				}
 				return last;
-			}
-			catch (SailException e) {
+			} catch (SailException e) {
 				throw new ModelException(e);
 			}
 		}
 
+		@Override
 		public void remove() {
-			if (last == null)
+			if (last == null) {
 				throw new IllegalStateException("next() not yet called");
+			}
 			SailSourceModel.this.remove(last);
 			last = null;
 		}
@@ -110,9 +113,8 @@ class SailSourceModel extends AbstractModel {
 		super.closeIterator(iter);
 		if (iter instanceof StatementIterator) {
 			try {
-				((StatementIterator)iter).stmts.close();
-			}
-			catch (SailException e) {
+				((StatementIterator) iter).stmts.close();
+			} catch (SailException e) {
 				throw new ModelException(e);
 			}
 		}
@@ -131,17 +133,18 @@ class SailSourceModel extends AbstractModel {
 			for (int i = 0; i < 100; i++) {
 				Statement e = it.next();
 				sb.append(e == this ? "(this Collection)" : e);
-				if (!it.hasNext())
+				if (!it.hasNext()) {
 					return sb.append(']').toString();
+				}
 				sb.append(',').append(' ');
 			}
 			return sb.toString();
-		}
-		finally {
+		} finally {
 			closeIterator(it);
 		}
 	}
 
+	@Override
 	public synchronized int size() {
 		if (size < 0) {
 			try {
@@ -152,25 +155,23 @@ class SailSourceModel extends AbstractModel {
 						iter.next();
 						size++;
 					}
-				}
-				finally {
+				} finally {
 					iter.close();
 				}
-			}
-			catch (SailException e) {
+			} catch (SailException e) {
 				throw new ModelException(e);
 			}
 		}
 		if (size > Integer.MAX_VALUE) {
 			return Integer.MAX_VALUE;
-		}
-		else {
-			return (int)size;
+		} else {
+			return (int) size;
 		}
 	}
 
+	@Override
 	public Set<Namespace> getNamespaces() {
-		Set<Namespace> set = new LinkedHashSet<Namespace>();
+		Set<Namespace> set = new LinkedHashSet<>();
 		try {
 			CloseableIteration<? extends Namespace, SailException> spaces;
 			spaces = dataset().getNamespaces();
@@ -178,66 +179,68 @@ class SailSourceModel extends AbstractModel {
 				while (spaces.hasNext()) {
 					set.add(spaces.next());
 				}
-			}
-			finally {
+			} finally {
 				spaces.close();
 			}
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 		return set;
 	}
 
+	@Override
 	public Optional<Namespace> getNamespace(String prefix) {
 		try {
 			String name = dataset().getNamespace(prefix);
 			return Optional.of(new SimpleNamespace(prefix, name));
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 	}
 
+	@Override
 	public Namespace setNamespace(String prefix, String name) {
 		try {
 			sink().setNamespace(prefix, name);
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 		return new SimpleNamespace(prefix, name);
 	}
 
+	@Override
 	public void setNamespace(Namespace namespace) {
 		setNamespace(namespace.getPrefix(), namespace.getName());
 	}
 
+	@Override
 	public Optional<Namespace> removeNamespace(String prefix) {
 		Optional<Namespace> ret = getNamespace(prefix);
 		try {
 			sink().removeNamespace(prefix);
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 		return ret;
 	}
 
+	@Override
 	public boolean contains(Resource subj, IRI pred, Value obj, Resource... contexts) {
 		try {
-			if (!isEmptyOrResourcePresent(contexts))
+			if (!isEmptyOrResourcePresent(contexts)) {
 				return false;
+			}
 			return contains(dataset(), subj, pred, obj, contexts);
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 	}
 
+	@Override
 	public synchronized boolean add(Resource subj, IRI pred, Value obj, Resource... contexts) {
-		if (subj == null || pred == null || obj == null)
+		if (subj == null || pred == null || obj == null) {
 			throw new UnsupportedOperationException("Incomplete statement");
+		}
 		try {
 			if (contains(subj, pred, obj, contexts)) {
 				logger.trace("already contains statement {} {} {} {}", subj, pred, obj, contexts);
@@ -248,19 +251,18 @@ class SailSourceModel extends AbstractModel {
 			}
 			if (contexts == null || contexts.length == 0) {
 				sink().approve(subj, pred, obj, null);
-			}
-			else {
+			} else {
 				for (Resource ctx : contexts) {
 					sink().approve(subj, pred, obj, ctx);
 				}
 			}
 			return true;
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 	}
 
+	@Override
 	public synchronized boolean clear(Resource... contexts) {
 		try {
 			if (contains(null, null, null, contexts)) {
@@ -268,13 +270,13 @@ class SailSourceModel extends AbstractModel {
 				size = -1;
 				return true;
 			}
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 		return false;
 	}
 
+	@Override
 	public synchronized boolean remove(Resource subj, IRI pred, Value obj, Resource... contexts) {
 		try {
 			if (contains(subj, pred, obj, contexts)) {
@@ -282,18 +284,19 @@ class SailSourceModel extends AbstractModel {
 				CloseableIteration<? extends Statement, SailException> stmts;
 				stmts = dataset().getStatements(subj, pred, obj, contexts);
 				try {
+
 					while (stmts.hasNext()) {
 						Statement st = stmts.next();
-						sink().deprecate(st.getSubject(), st.getPredicate(), st.getObject(), st.getContext());
+
+						sink.deprecate(st);
 					}
-				}
-				finally {
+
+				} finally {
 					stmts.close();
 				}
 				return true;
 			}
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 		return false;
@@ -303,15 +306,16 @@ class SailSourceModel extends AbstractModel {
 	public Iterator<Statement> iterator() {
 		try {
 			return new StatementIterator(dataset().getStatements(null, null, null));
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 	}
 
+	@Override
 	public Model filter(final Resource subj, final IRI pred, final Value obj, final Resource... contexts) {
-		if (!isEmptyOrResourcePresent(contexts))
+		if (!isEmptyOrResourcePresent(contexts)) {
 			return new EmptyModel(this);
+		}
 		return new FilteredModel(this, subj, pred, obj, contexts) {
 
 			@Override
@@ -328,13 +332,11 @@ class SailSourceModel extends AbstractModel {
 									return Integer.MAX_VALUE;
 								}
 							}
-							return (int)size;
-						}
-						finally {
+							return (int) size;
+						} finally {
 							iter.close();
 						}
-					}
-					catch (SailException e) {
+					} catch (SailException e) {
 						throw new ModelException(e);
 					}
 				}
@@ -345,16 +347,14 @@ class SailSourceModel extends AbstractModel {
 			public Iterator<Statement> iterator() {
 				try {
 					return new StatementIterator(dataset().getStatements(subj, pred, obj, contexts));
-				}
-				catch (SailException e) {
+				} catch (SailException e) {
 					throw new ModelException(e);
 				}
 			}
 
 			@Override
-			protected void removeFilteredTermIteration(Iterator<Statement> iter, Resource subj, IRI pred,
-					Value obj, Resource... contexts)
-			{
+			protected void removeFilteredTermIteration(Iterator<Statement> iter, Resource subj, IRI pred, Value obj,
+					Resource... contexts) {
 				SailSourceModel.this.removeTermIteration(iter, subj, pred, obj, contexts);
 			}
 		};
@@ -362,44 +362,38 @@ class SailSourceModel extends AbstractModel {
 
 	@Override
 	public synchronized void removeTermIteration(Iterator<Statement> iter, Resource subj, IRI pred, Value obj,
-			Resource... contexts)
-	{
+			Resource... contexts) {
 		try {
 			CloseableIteration<? extends Statement, SailException> stmts;
 			stmts = dataset().getStatements(subj, pred, obj, contexts);
 			try {
+
 				while (stmts.hasNext()) {
 					Statement st = stmts.next();
-					sink().deprecate(st.getSubject(), st.getPredicate(), st.getObject(), st.getContext());
+					sink.deprecate(st);
 				}
-			}
-			finally {
+
+			} finally {
 				stmts.close();
 			}
 			size = -1;
-		}
-		catch (SailException e) {
+		} catch (SailException e) {
 			throw new ModelException(e);
 		}
 	}
 
-	private synchronized SailSink sink()
-		throws SailException
-	{
+	private synchronized SailSink sink() throws SailException {
 		if (sink == null) {
 			sink = source.sink(level);
 		}
 		return sink;
 	}
 
-	private synchronized SailDataset dataset()
-		throws SailException
-	{
+	private synchronized SailDataset dataset() throws SailException {
 		if (sink != null) {
 			try {
 				sink.flush();
-			}
-			finally {
+			} finally {
 				sink.close();
 				sink = null;
 			}
@@ -415,8 +409,7 @@ class SailSourceModel extends AbstractModel {
 	}
 
 	private boolean contains(SailDataset dataset, Resource subj, IRI pred, Value obj, Resource... contexts)
-		throws SailException
-	{
+			throws SailException {
 		if (dataset == null) {
 			return false;
 		}
@@ -424,44 +417,49 @@ class SailSourceModel extends AbstractModel {
 		stmts = dataset.getStatements(subj, pred, obj, contexts);
 		try {
 			return stmts.hasNext();
-		}
-		finally {
+		} finally {
 			stmts.close();
 		}
 	}
 
 	private boolean isEmptyOrResourcePresent(Value[] contexts) {
-		if (contexts instanceof Resource[])
+		if (contexts instanceof Resource[]) {
 			return true;
-		if (contexts == null)
+		}
+		if (contexts == null) {
 			return true;
-		if (contexts.length == 0)
+		}
+		if (contexts.length == 0) {
 			return true;
+		}
 		Resource[] result = new Resource[contexts.length];
 		for (int i = 0; i < result.length; i++) {
-			if (contexts[i] == null || contexts[i] instanceof Resource)
+			if (contexts[i] == null || contexts[i] instanceof Resource) {
 				return true;
+			}
 		}
 		return false;
 	}
 
 	Resource[] cast(Value[] contexts) {
-		if (contexts instanceof Resource[])
-			return (Resource[])contexts;
-		if (contexts == null)
+		if (contexts instanceof Resource[]) {
+			return (Resource[]) contexts;
+		}
+		if (contexts == null) {
 			return new Resource[] { null };
-		if (contexts.length == 0)
+		}
+		if (contexts.length == 0) {
 			return new Resource[0];
+		}
 		Resource[] result = new Resource[contexts.length];
 		for (int i = 0; i < result.length; i++) {
 			if (contexts[i] == null || contexts[i] instanceof Resource) {
-				result[i] = (Resource)contexts[i];
-			}
-			else {
-				List<Resource> list = new ArrayList<Resource>();
+				result[i] = (Resource) contexts[i];
+			} else {
+				List<Resource> list = new ArrayList<>();
 				for (Value v : contexts) {
 					if (v == null || v instanceof Resource) {
-						list.add((Resource)v);
+						list.add((Resource) v);
 					}
 				}
 				return list.toArray(new Resource[list.size()]);

@@ -27,9 +27,8 @@ public class In extends CompareSubQueryValueOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -45,6 +44,6 @@ public class In extends CompareSubQueryValueOperator {
 
 	@Override
 	public In clone() {
-		return (In)super.clone();
+		return (In) super.clone();
 	}
 }

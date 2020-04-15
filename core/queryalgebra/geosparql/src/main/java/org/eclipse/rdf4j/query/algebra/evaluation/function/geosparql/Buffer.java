@@ -9,21 +9,20 @@ package org.eclipse.rdf4j.query.algebra.evaluation.function.geosparql;
 
 import java.io.IOException;
 
-import org.eclipse.rdf4j.model.URI;
+import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.GEO;
 import org.eclipse.rdf4j.model.vocabulary.GEOF;
 import org.eclipse.rdf4j.query.algebra.evaluation.ValueExprEvaluationException;
 import org.eclipse.rdf4j.query.algebra.evaluation.function.Function;
-
-import com.spatial4j.core.context.SpatialContext;
-import com.spatial4j.core.shape.Shape;
+import org.locationtech.spatial4j.context.SpatialContext;
+import org.locationtech.spatial4j.shape.Shape;
 
 /**
  * The GeoSPARQL {@link Function} geof:buffer, as defined in
- * <a href="http://www.opengeospatial.org/standards/geosparql">OGC GeoSPARQL - A Geographic Query Language for
- * RDF Data</a>.
+ * <a href="http://www.opengeospatial.org/standards/geosparql">OGC GeoSPARQL - A Geographic Query Language for RDF
+ * Data</a>.
  */
 public class Buffer implements Function {
 
@@ -33,27 +32,23 @@ public class Buffer implements Function {
 	}
 
 	@Override
-	public Value evaluate(ValueFactory valueFactory, Value... args)
-		throws ValueExprEvaluationException
-	{
+	public Value evaluate(ValueFactory valueFactory, Value... args) throws ValueExprEvaluationException {
 		if (args.length != 3) {
-			throw new ValueExprEvaluationException(
-					getURI() + " requires exactly 3 arguments, got " + args.length);
+			throw new ValueExprEvaluationException(getURI() + " requires exactly 3 arguments, got " + args.length);
 		}
 
 		SpatialContext geoContext = SpatialSupport.getSpatialContext();
 		Shape geom = FunctionArguments.getShape(this, args[0], geoContext);
 		double radiusUom = FunctionArguments.getDouble(this, args[1]);
-		URI units = FunctionArguments.getUnits(this, args[2]);
+		IRI units = FunctionArguments.getUnits(this, args[2]);
 		double radiusDegs = FunctionArguments.convertToDegrees(radiusUom, units);
 
-		Shape buffered = geom.getBuffered(radiusDegs, geoContext);
+		Shape buffered = SpatialSupport.getSpatialAlgebra().buffer(geom, radiusDegs);
 
 		String wkt;
 		try {
 			wkt = SpatialSupport.getWktWriter().toWkt(buffered);
-		}
-		catch (IOException ioe) {
+		} catch (IOException ioe) {
 			throw new ValueExprEvaluationException(ioe);
 		}
 		return valueFactory.createLiteral(wkt, GEO.WKT_LITERAL);

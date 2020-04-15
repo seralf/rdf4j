@@ -7,18 +7,12 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.rio.ntriples;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.io.InputStream;
-import java.io.StringReader;
 
 import junit.framework.TestSuite;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQueryResult;
@@ -29,13 +23,8 @@ import org.eclipse.rdf4j.rio.FailureMode;
 import org.eclipse.rdf4j.rio.NegativeParserTest;
 import org.eclipse.rdf4j.rio.PositiveParserTest;
 import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFParser;
-import org.eclipse.rdf4j.rio.helpers.NTriplesParserSettings;
-import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import org.junit.Ignore;
-import org.junit.Test;
 
 /**
  * JUnit test for the N-Triples parser that uses the tests that are available
@@ -62,9 +51,7 @@ public abstract class AbstractNTriplesParserTest {
 	 * Methods *
 	 *---------*/
 
-	public TestSuite createTestSuite()
-		throws Exception
-	{
+	public TestSuite createTestSuite() throws Exception {
 		// Create test suite
 		TestSuite suite = new TestSuite(this.getClass().getName());
 
@@ -85,10 +72,8 @@ public abstract class AbstractNTriplesParserTest {
 		return suite;
 	}
 
-	private void parsePositiveNTriplesSyntaxTests(TestSuite suite, String fileBasePath,
-			String testLocationBaseUri, RepositoryConnection con)
-		throws Exception
-	{
+	private void parsePositiveNTriplesSyntaxTests(TestSuite suite, String fileBasePath, String testLocationBaseUri,
+			RepositoryConnection con) throws Exception {
 		StringBuilder positiveQuery = new StringBuilder();
 		positiveQuery.append(" PREFIX mf:   <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#>\n");
 		positiveQuery.append(" PREFIX qt:   <http://www.w3.org/2001/sw/DataAccess/tests/test-query#>\n");
@@ -100,16 +85,14 @@ public abstract class AbstractNTriplesParserTest {
 		positiveQuery.append("     ?test mf:action ?inputURL . ");
 		positiveQuery.append(" }");
 
-		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL,
-				positiveQuery.toString()).evaluate();
+		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL, positiveQuery.toString()).evaluate();
 
 		// Add all positive parser tests to the test suite
 		while (queryResult.hasNext()) {
 			BindingSet bindingSet = queryResult.next();
-			IRI nextTestUri = (IRI)bindingSet.getValue("test");
-			String nextTestName = ((Literal)bindingSet.getValue("testName")).getLabel();
-			String nextTestFile = removeBase(((IRI)bindingSet.getValue("inputURL")).toString(),
-					testLocationBaseUri);
+			IRI nextTestUri = (IRI) bindingSet.getValue("test");
+			String nextTestName = ((Literal) bindingSet.getValue("testName")).getLabel();
+			String nextTestFile = removeBase(((IRI) bindingSet.getValue("inputURL")).toString(), testLocationBaseUri);
 			String nextInputURL = fileBasePath + nextTestFile;
 
 			String nextBaseUrl = testLocationBaseUri + nextTestFile;
@@ -122,10 +105,8 @@ public abstract class AbstractNTriplesParserTest {
 
 	}
 
-	private void parseNegativeNTriplesSyntaxTests(TestSuite suite, String fileBasePath,
-			String testLocationBaseUri, RepositoryConnection con)
-		throws Exception
-	{
+	private void parseNegativeNTriplesSyntaxTests(TestSuite suite, String fileBasePath, String testLocationBaseUri,
+			RepositoryConnection con) throws Exception {
 		StringBuilder negativeQuery = new StringBuilder();
 		negativeQuery.append(" PREFIX mf:   <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#>\n");
 		negativeQuery.append(" PREFIX qt:   <http://www.w3.org/2001/sw/DataAccess/tests/test-query#>\n");
@@ -137,16 +118,14 @@ public abstract class AbstractNTriplesParserTest {
 		negativeQuery.append("     ?test mf:action ?inputURL . ");
 		negativeQuery.append(" }");
 
-		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL,
-				negativeQuery.toString()).evaluate();
+		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL, negativeQuery.toString()).evaluate();
 
 		// Add all negative parser tests to the test suite
 		while (queryResult.hasNext()) {
 			BindingSet bindingSet = queryResult.next();
-			IRI nextTestUri = (IRI)bindingSet.getValue("test");
-			String nextTestName = ((Literal)bindingSet.getValue("testName")).toString();
-			String nextTestFile = removeBase(((IRI)bindingSet.getValue("inputURL")).toString(),
-					testLocationBaseUri);
+			IRI nextTestUri = (IRI) bindingSet.getValue("test");
+			String nextTestName = ((Literal) bindingSet.getValue("testName")).toString();
+			String nextTestFile = removeBase(((IRI) bindingSet.getValue("inputURL")).toString(), testLocationBaseUri);
 			String nextInputURL = fileBasePath + nextTestFile;
 
 			String nextBaseUrl = testLocationBaseUri + nextTestFile;

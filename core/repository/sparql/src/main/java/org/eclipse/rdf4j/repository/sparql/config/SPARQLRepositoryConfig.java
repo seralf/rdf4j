@@ -26,11 +26,13 @@ public class SPARQLRepositoryConfig extends AbstractRepositoryImplConfig {
 
 	private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-	public static final IRI QUERY_ENDPOINT = vf.createIRI(
-			"http://www.openrdf.org/config/repository/sparql#query-endpoint");
+	public static final String NAMESPACE = "http://www.openrdf.org/config/repository/sparql#";
 
-	public static final IRI UPDATE_ENDPOINT = vf.createIRI(
-			"http://www.openrdf.org/config/repository/sparql#update-endpoint");
+	public static final IRI QUERY_ENDPOINT = vf
+			.createIRI("http://www.openrdf.org/config/repository/sparql#query-endpoint");
+
+	public static final IRI UPDATE_ENDPOINT = vf
+			.createIRI("http://www.openrdf.org/config/repository/sparql#update-endpoint");
 
 	private String queryEndpointUrl;
 
@@ -67,9 +69,7 @@ public class SPARQLRepositoryConfig extends AbstractRepositoryImplConfig {
 	}
 
 	@Override
-	public void validate()
-		throws RepositoryConfigException
-	{
+	public void validate() throws RepositoryConfigException {
 		super.validate();
 		if (getQueryEndpointUrl() == null) {
 			throw new RepositoryConfigException("No endpoint URL specified for SPARQL repository");
@@ -80,6 +80,7 @@ public class SPARQLRepositoryConfig extends AbstractRepositoryImplConfig {
 	public Resource export(Model m) {
 		Resource implNode = super.export(m);
 
+		m.setNamespace("sparql", NAMESPACE);
 		if (getQueryEndpointUrl() != null) {
 			m.add(implNode, QUERY_ENDPOINT, vf.createIRI(getQueryEndpointUrl()));
 		}
@@ -91,18 +92,15 @@ public class SPARQLRepositoryConfig extends AbstractRepositoryImplConfig {
 	}
 
 	@Override
-	public void parse(Model m, Resource implNode)
-		throws RepositoryConfigException
-	{
+	public void parse(Model m, Resource implNode) throws RepositoryConfigException {
 		super.parse(m, implNode);
 
 		try {
-			Models.objectIRI(m.filter(implNode, QUERY_ENDPOINT, null)).ifPresent(
-					iri -> setQueryEndpointUrl(iri.stringValue()));
-			Models.objectIRI(m.filter(implNode, UPDATE_ENDPOINT, null)).ifPresent(
-					iri -> setUpdateEndpointUrl(iri.stringValue()));
-		}
-		catch (ModelException e) {
+			Models.objectIRI(m.filter(implNode, QUERY_ENDPOINT, null))
+					.ifPresent(iri -> setQueryEndpointUrl(iri.stringValue()));
+			Models.objectIRI(m.filter(implNode, UPDATE_ENDPOINT, null))
+					.ifPresent(iri -> setUpdateEndpointUrl(iri.stringValue()));
+		} catch (ModelException e) {
 			throw new RepositoryConfigException(e.getMessage(), e);
 		}
 	}

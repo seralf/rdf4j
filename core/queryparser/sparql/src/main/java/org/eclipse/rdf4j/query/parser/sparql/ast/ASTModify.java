@@ -20,9 +20,8 @@ public class ASTModify extends ASTUpdate {
 	}
 
 	/** Accept the visitor. **/
-	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	@Override
+	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		return visitor.visit(this, data);
 	}
 
@@ -36,9 +35,8 @@ public class ASTModify extends ASTUpdate {
 
 	public ASTDatasetClause getWithClause() {
 		if (jjtGetChild(0) instanceof ASTDatasetClause) {
-			return (ASTDatasetClause)jjtGetChild(0);
-		}
-		else {
+			return (ASTDatasetClause) jjtGetChild(0);
+		} else {
 			return null;
 		}
 	}

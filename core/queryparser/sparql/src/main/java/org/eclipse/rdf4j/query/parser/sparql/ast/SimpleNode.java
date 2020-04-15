@@ -26,7 +26,7 @@ public class SimpleNode implements Node {
 
 	public SimpleNode(int id) {
 		this.id = id;
-		children = new ArrayList<Node>();
+		children = new ArrayList<>();
 	}
 
 	public SimpleNode(SyntaxTreeBuilder parser, int id) {
@@ -34,20 +34,25 @@ public class SimpleNode implements Node {
 		this.parser = parser;
 	}
 
+	@Override
 	public void jjtOpen() {
 	}
 
+	@Override
 	public void jjtClose() {
 	}
 
+	@Override
 	public void jjtSetParent(Node n) {
 		parent = n;
 	}
 
+	@Override
 	public Node jjtGetParent() {
 		return parent;
 	}
 
+	@Override
 	public void jjtAddChild(Node n, int i) {
 		while (i >= children.size()) {
 			// Add dummy nodes
@@ -57,14 +62,17 @@ public class SimpleNode implements Node {
 		children.set(i, n);
 	}
 
+	@Override
 	public void jjtAppendChild(Node n) {
 		children.add(n);
 	}
 
+	@Override
 	public void jjtInsertChild(Node n, int i) {
 		children.add(i, n);
 	}
 
+	@Override
 	public void jjtReplaceChild(Node oldNode, Node newNode) {
 		for (int i = 0; i < children.size(); i++) {
 			if (children.get(i) == oldNode) {
@@ -76,8 +84,7 @@ public class SimpleNode implements Node {
 	/**
 	 * Replaces this node with the supplied one in the AST.
 	 * 
-	 * @param newNode
-	 *        The replacement node.
+	 * @param newNode The replacement node.
 	 */
 	public void jjtReplaceWith(Node newNode) {
 		if (parent != null) {
@@ -93,6 +100,7 @@ public class SimpleNode implements Node {
 		return children;
 	}
 
+	@Override
 	public Node jjtGetChild(int i) {
 		return children.get(i);
 	}
@@ -100,14 +108,13 @@ public class SimpleNode implements Node {
 	/**
 	 * Gets the (first) child of this node that is of the specific type.
 	 * 
-	 * @param type
-	 *        The type of the child node that should be returned.
+	 * @param type The type of the child node that should be returned.
 	 * @return The (first) child node of the specified type, or <tt>null</tt> if no such child node was found.
 	 */
 	public <T extends Node> T jjtGetChild(Class<T> type) {
 		for (Node n : children) {
 			if (type.isInstance(n)) {
-				return (T)n;
+				return (T) n;
 			}
 		}
 
@@ -115,33 +122,31 @@ public class SimpleNode implements Node {
 	}
 
 	public <T extends Node> List<T> jjtGetChildren(Class<T> type) {
-		List<T> result = new ArrayList<T>(children.size());
+		List<T> result = new ArrayList<>(children.size());
 
 		for (Node n : children) {
 			if (type.isInstance(n)) {
-				result.add((T)n);
+				result.add((T) n);
 			}
 		}
 
 		return result;
 	}
 
+	@Override
 	public int jjtGetNumChildren() {
 		return children.size();
 	}
 
-	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	@Override
+	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		return visitor.visit(this, data);
 	}
 
 	/**
 	 * Accept the visitor.
 	 */
-	public Object childrenAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	public Object childrenAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		for (Node childNode : children) {
 			// Note: modified JavaCC code, child's data no longer ignored
 			data = childNode.jjtAccept(visitor, data);
@@ -151,9 +156,9 @@ public class SimpleNode implements Node {
 	}
 
 	/*
-	 * You can override these two methods in subclasses of SimpleNode to customize the way the node appears
-	 * when the tree is dumped. If your output uses more than one line you should override toString(String),
-	 * otherwise overriding toString() is probably all you need to do.
+	 * You can override these two methods in subclasses of SimpleNode to customize the way the node appears when the
+	 * tree is dumped. If your output uses more than one line you should override toString(String), otherwise overriding
+	 * toString() is probably all you need to do.
 	 */
 
 	@Override
@@ -166,33 +171,28 @@ public class SimpleNode implements Node {
 	}
 
 	/**
-	 * Writes a tree-like representation of this node and all of its subnodes (recursively) to the supplied
-	 * Appendable.
+	 * Writes a tree-like representation of this node and all of its subnodes (recursively) to the supplied Appendable.
 	 */
-	public void dump(String prefix, Appendable out)
-		throws IOException
-	{
+	public void dump(String prefix, Appendable out) throws IOException {
 		out.append(prefix).append(this.toString());
 
 		for (Node childNode : children) {
 			if (childNode != null) {
 				out.append(LINE_SEPARATOR);
-				((SimpleNode)childNode).dump(prefix + " ", out);
+				((SimpleNode) childNode).dump(prefix + " ", out);
 			}
 		}
 	}
 
 	/**
-	 * Writes a tree-like representation of this node and all of its subnodes (recursively) and returns it as
-	 * a string.
+	 * Writes a tree-like representation of this node and all of its subnodes (recursively) and returns it as a string.
 	 */
 	public String dump(String prefix) {
 		StringWriter out = new StringWriter(256);
 		try {
 			dump(prefix, out);
 			return out.toString();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RuntimeException("Unexpected I/O error while writing to StringWriter", e);
 		}
 	}

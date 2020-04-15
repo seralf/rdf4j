@@ -32,31 +32,18 @@ public class SPARQLUpdate extends AbstractHTTPUpdate {
 	}
 
 	@Override
-	public void execute()
-		throws UpdateExecutionException
-	{
+	public void execute() throws UpdateExecutionException {
 
 		try {
 			// execute update immediately
 			SPARQLProtocolSession client = getHttpClient();
 			try {
-				client.sendUpdate(getQueryLanguage(), getQueryString(), getBaseURI(), dataset,
-						includeInferred, getMaxExecutionTime(), getBindingsArray());
-			}
-			catch (UnauthorizedException e) {
+				client.sendUpdate(getQueryLanguage(), getQueryString(), getBaseURI(), dataset, includeInferred,
+						getMaxExecutionTime(), getBindingsArray());
+			} catch (UnauthorizedException | QueryInterruptedException | MalformedQueryException | IOException e) {
 				throw new UpdateExecutionException(e.getMessage(), e);
 			}
-			catch (QueryInterruptedException e) {
-				throw new UpdateExecutionException(e.getMessage(), e);
-			}
-			catch (MalformedQueryException e) {
-				throw new UpdateExecutionException(e.getMessage(), e);
-			}
-			catch (IOException e) {
-				throw new UpdateExecutionException(e.getMessage(), e);
-			}
-		}
-		catch (RepositoryException e) {
+		} catch (RepositoryException e) {
 			throw new UpdateExecutionException(e.getMessage(), e);
 		}
 
@@ -64,6 +51,6 @@ public class SPARQLUpdate extends AbstractHTTPUpdate {
 
 	@Override
 	public String getQueryString() {
-		return QueryStringUtil.getQueryString(queryString, getBindings());
+		return QueryStringUtil.getUpdateString(queryString, getBindings());
 	}
 }

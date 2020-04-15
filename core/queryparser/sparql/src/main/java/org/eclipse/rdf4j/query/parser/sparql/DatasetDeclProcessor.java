@@ -26,21 +26,20 @@ import org.eclipse.rdf4j.query.parser.sparql.ast.ASTOperationContainer;
  * 
  * @author Simon Schenk
  * @author Arjohn Kampman
+ * 
+ * @deprecated since 3.0. This feature is for internal use only: its existence, signature or behavior may change without
+ *             warning from one release to the next.
  */
+@Deprecated
 public class DatasetDeclProcessor {
 
 	/**
-	 * Extracts a SPARQL {@link Dataset} from an ASTQueryContainer, if one is contained. Returns null
-	 * otherwise.
+	 * Extracts a SPARQL {@link Dataset} from an ASTQueryContainer, if one is contained. Returns null otherwise.
 	 * 
-	 * @param qc
-	 *        The query model to resolve relative URIs in.
-	 * @throws MalformedQueryException
-	 *         If DatasetClause does not contain a valid URI.
+	 * @param qc The query model to resolve relative URIs in.
+	 * @throws MalformedQueryException If DatasetClause does not contain a valid URI.
 	 */
-	public static Dataset process(ASTOperationContainer qc)
-		throws MalformedQueryException
-	{
+	public static Dataset process(ASTOperationContainer qc) throws MalformedQueryException {
 		SimpleDataset dataset = null;
 
 		ASTOperation op = qc.getOperation();
@@ -64,7 +63,7 @@ public class DatasetDeclProcessor {
 
 						boolean withClause = false;
 						if (op instanceof ASTModify) {
-							if (dc.equals(((ASTModify)op).getWithClause())) {
+							if (dc.equals(((ASTModify) op).getWithClause())) {
 								withClause = true;
 								dataset.setDefaultInsertGraph(uri);
 								dataset.addDefaultRemoveGraph(uri);
@@ -77,13 +76,11 @@ public class DatasetDeclProcessor {
 						if (!withClause || datasetClauses.size() == 1) {
 							if (dc.isNamed()) {
 								dataset.addNamedGraph(uri);
-							}
-							else {
+							} else {
 								dataset.addDefaultGraph(uri);
 							}
 						}
-					}
-					catch (IllegalArgumentException e) {
+					} catch (IllegalArgumentException e) {
 						throw new MalformedQueryException(e.getMessage(), e);
 					}
 				}

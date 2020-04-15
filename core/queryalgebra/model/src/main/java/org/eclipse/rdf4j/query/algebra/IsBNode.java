@@ -24,9 +24,8 @@ public class IsBNode extends UnaryValueOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -42,6 +41,6 @@ public class IsBNode extends UnaryValueOperator {
 
 	@Override
 	public IsBNode clone() {
-		return (IsBNode)super.clone();
+		return (IsBNode) super.clone();
 	}
 }

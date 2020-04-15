@@ -38,9 +38,8 @@ public class BNodeGenerator extends AbstractQueryModelNode implements ValueExpr 
 		this.nodeIdExpr = nodeIdExpr;
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -56,6 +55,6 @@ public class BNodeGenerator extends AbstractQueryModelNode implements ValueExpr 
 
 	@Override
 	public BNodeGenerator clone() {
-		return (BNodeGenerator)super.clone();
+		return (BNodeGenerator) super.clone();
 	}
 }

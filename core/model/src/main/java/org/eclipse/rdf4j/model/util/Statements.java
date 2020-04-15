@@ -17,6 +17,7 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 /**
  * Utility methods for {@link Statement} objects.
@@ -26,27 +27,20 @@ import org.eclipse.rdf4j.model.ValueFactory;
 public class Statements {
 
 	/**
-	 * Creates one or more {@link Statement} objects with the given subject, predicate and object, one for
-	 * each given context, and sends each created statement to the supplied {@link Consumer}. If no context is
-	 * supplied, only a single statement (without any assigned context) is created.
+	 * Creates one or more {@link Statement} objects with the given subject, predicate and object, one for each given
+	 * context, and sends each created statement to the supplied {@link Consumer}. If no context is supplied, only a
+	 * single statement (without any assigned context) is created.
 	 * 
-	 * @param vf
-	 *        the {@link ValueFactory} to use for creating statements.
-	 * @param subject
-	 *        the subject of each statement. May not be null.
-	 * @param predicate
-	 *        the predicate of each statement. May not be null.
-	 * @param object
-	 *        the object of each statement. May not be null.
-	 * @param consumer
-	 *        the {@link Consumer} function for the produced statements.
-	 * @param contexts
-	 *        the context(s) for which to produce statements. This argument is an optional vararg: leave it
-	 *        out completely to produce a single statement without context.
+	 * @param vf        the {@link ValueFactory} to use for creating statements.
+	 * @param subject   the subject of each statement. May not be null.
+	 * @param predicate the predicate of each statement. May not be null.
+	 * @param object    the object of each statement. May not be null.
+	 * @param consumer  the {@link Consumer} function for the produced statements.
+	 * @param contexts  the context(s) for which to produce statements. This argument is an optional vararg: leave it
+	 *                  out completely to produce a single statement without context.
 	 */
 	public static void consume(ValueFactory vf, Resource subject, IRI predicate, Value object,
-			Consumer<Statement> consumer, Resource... contexts)
-	{
+			Consumer<Statement> consumer, Resource... contexts) {
 		OpenRDFUtil.verifyContextNotNull(contexts);
 		Objects.requireNonNull(consumer);
 
@@ -54,49 +48,68 @@ public class Statements {
 			for (Resource context : contexts) {
 				consumer.accept(vf.createStatement(subject, predicate, object, context));
 			}
-		}
-		else {
+		} else {
 			consumer.accept(vf.createStatement(subject, predicate, object));
 		}
 	}
 
 	/**
-	 * Creates one or more {@link Statement} objects with the given subject, predicate and object, one for
-	 * each given context. If no context is supplied, only a single statement (without any assigned context)
-	 * is created.
+	 * Creates one or more {@link Statement} objects with the given subject, predicate and object, one for each given
+	 * context. If no context is supplied, only a single statement (without any assigned context) is created.
 	 * 
-	 * @param vf
-	 *        the {@link ValueFactory} to use for creating statements.
-	 * @param subject
-	 *        the subject of each statement. May not be null.
-	 * @param predicate
-	 *        the predicate of each statement. May not be null.
-	 * @param object
-	 *        the object of each statement. May not be null.
-	 * @param collection
-	 *        the collection of Statements to which the newly created Statements will be added. May not be
-	 *        null.
+	 * @param vf         the {@link ValueFactory} to use for creating statements.
+	 * @param subject    the subject of each statement. May not be null.
+	 * @param predicate  the predicate of each statement. May not be null.
+	 * @param object     the object of each statement. May not be null.
+	 * @param collection the collection of Statements to which the newly created Statements will be added. May not be
+	 *                   null.
 	 * @return the input collection of Statements, with the newly created Statements added.
-	 * @param contexts
-	 *        the context(s) for which to produce statements. This argument is an optional vararg: leave it
-	 *        out completely to produce a single statement without context.
+	 * @param contexts the context(s) for which to produce statements. This argument is an optional vararg: leave it out
+	 *                 completely to produce a single statement without context.
 	 */
 	public static <C extends Collection<Statement>> C create(ValueFactory vf, Resource subject, IRI predicate,
-			Value object, C collection, Resource... contexts)
-	{
+			Value object, C collection, Resource... contexts) {
 		Objects.requireNonNull(collection);
 		consume(vf, subject, predicate, object, st -> collection.add(st), contexts);
 		return collection;
 	}
 
 	/**
-	 * Checks if the two statements represent the same triple (that is, they have equal subject, predicate,
-	 * and object). Context information is disregarded.
+	 * Strips the context (if any) from the supplied statement and returns a statement with the same subject, predicate
+	 * and object, but with no assigned context.
 	 * 
-	 * @param st1
-	 *        the first statement to compare. May not be null.
-	 * @param st2
-	 *        the second statement to compare. May not be null.
+	 * @param statement the statement to strip the context from
+	 * @return a statement without context
+	 * 
+	 * @since 3.1.0
+	 */
+	public static Statement stripContext(Statement statement) {
+		return stripContext(SimpleValueFactory.getInstance(), statement);
+	}
+
+	/**
+	 * Strips the context (if any) from the supplied statement and returns a statement with the same subject, predicate
+	 * and object, but with no assigned context.
+	 * 
+	 * @param vf        the {@link ValueFactory} to use for creating a new {@link Statement}.
+	 * @param statement the statement to strip the context from.
+	 * @return a statement without context
+	 * 
+	 * @since 3.1.0
+	 */
+	public static Statement stripContext(ValueFactory vf, Statement statement) {
+		if (statement.getContext() == null) {
+			return statement;
+		}
+		return vf.createStatement(statement.getSubject(), statement.getPredicate(), statement.getObject());
+	}
+
+	/**
+	 * Checks if the two statements represent the same triple (that is, they have equal subject, predicate, and object).
+	 * Context information is disregarded.
+	 * 
+	 * @param st1 the first statement to compare. May not be null.
+	 * @param st2 the second statement to compare. May not be null.
 	 * @return {@code true} iff the subject, predicate and object of {@code st1} and {@code st2} are equal,
 	 *         {@code false} otherwise.
 	 * @see Statement#equals(Object)

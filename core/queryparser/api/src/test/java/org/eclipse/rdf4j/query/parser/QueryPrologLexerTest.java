@@ -35,8 +35,7 @@ public class QueryPrologLexerTest {
 	public void testFinalTokenEmptyString() {
 		try {
 			Token t = QueryPrologLexer.getRestOfQueryToken("");
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			fail("lexer should not throw exception on malformed input");
 		}
 	}
@@ -60,7 +59,7 @@ public class QueryPrologLexerTest {
 
 	@Test
 	public void testLexWithComment() {
-		List<Token> tokens = QueryPrologLexer.lex("# COMMENT \n SELECT * WHERE {?s ?p ?o} ");
+		List<Token> tokens = QueryPrologLexer.lex("# COMMENT \nSELECT * WHERE {?s ?p ?o} ");
 		assertNotNull(tokens);
 		assertEquals(3, tokens.size());
 		assertEquals(" COMMENT \n", tokens.get(1).s);
@@ -72,7 +71,7 @@ public class QueryPrologLexerTest {
 
 	@Test
 	public void testLexWithComment_WindowsLinebreak() {
-		List<Token> tokens = QueryPrologLexer.lex("# COMMENT \r\n SELECT * WHERE {?s ?p ?o} ");
+		List<Token> tokens = QueryPrologLexer.lex("# COMMENT \r\nSELECT * WHERE {?s ?p ?o} ");
 		assertNotNull(tokens);
 
 		Token t = tokens.get(tokens.size() - 1);
@@ -92,7 +91,7 @@ public class QueryPrologLexerTest {
 
 	@Test
 	public void testFinalTokenWithComment() {
-		Token t = QueryPrologLexer.getRestOfQueryToken("# COMMENT \n  SELECT * WHERE {?s ?p ?o} ");
+		Token t = QueryPrologLexer.getRestOfQueryToken("# COMMENT \n SELECT * WHERE {?s ?p ?o} ");
 		assertNotNull(t);
 		assertTrue(t.getType().equals(TokenType.REST_OF_QUERY));
 		assertEquals("SELECT * WHERE {?s ?p ?o} ", t.s);
@@ -100,16 +99,25 @@ public class QueryPrologLexerTest {
 
 	@Test
 	public void testFinalTokenWithMultilineComment() {
-		Token t = QueryPrologLexer.getRestOfQueryToken(
-				"# COMMENT \n # COMMENT (continued) \n SELECT * WHERE {?s ?p ?o} ");
+		Token t = QueryPrologLexer
+				.getRestOfQueryToken("# COMMENT \n# COMMENT (continued) \nSELECT * WHERE {?s ?p ?o} ");
 		assertNotNull(t);
 		assertTrue(t.getType().equals(TokenType.REST_OF_QUERY));
 		assertEquals("SELECT * WHERE {?s ?p ?o} ", t.s);
 	}
 
 	@Test
+	public void testFinalTokenWithMultilineComment2() {
+		Token t = QueryPrologLexer
+				.getRestOfQueryToken("#comment1\n#another comment\n" + "SELECT * WHERE { ?s ?p ?o } LIMIT 1");
+		assertNotNull(t);
+		assertTrue(t.getType().equals(TokenType.REST_OF_QUERY));
+		assertEquals("SELECT * WHERE { ?s ?p ?o } LIMIT 1", t.s);
+	}
+
+	@Test
 	public void testLexWithBaseAndComment() {
-		List<Token> tokens = QueryPrologLexer.lex("BASE <foobar> # COMMENT \n SELECT * WHERE {?s ?p ?o} ");
+		List<Token> tokens = QueryPrologLexer.lex("BASE <foobar> # COMMENT \nSELECT * WHERE {?s ?p ?o} ");
 		assertNotNull(tokens);
 
 		Token t = tokens.get(tokens.size() - 1);
@@ -119,8 +127,7 @@ public class QueryPrologLexerTest {
 
 	@Test
 	public void testFinalTokenWithBaseAndComment() {
-		Token t = QueryPrologLexer.getRestOfQueryToken(
-				"BASE <foobar> # COMMENT \n SELECT * WHERE {?s ?p ?o} ");
+		Token t = QueryPrologLexer.getRestOfQueryToken("BASE <foobar> # COMMENT \nSELECT * WHERE {?s ?p ?o} ");
 		assertNotNull(t);
 		assertTrue(t.getType().equals(TokenType.REST_OF_QUERY));
 	}
@@ -133,10 +140,9 @@ public class QueryPrologLexerTest {
 		// the query are to be picked up by subsequent processing.
 
 		try {
-			List<Token> tokens = QueryPrologLexer.lex(
-					"BASE <foobar # missing closing bracket \n SELECT * WHERE {?s ?p ?o} ");
-		}
-		catch (Exception e) {
+			List<Token> tokens = QueryPrologLexer
+					.lex("BASE <foobar # missing closing bracket \nSELECT * WHERE {?s ?p ?o} ");
+		} catch (Exception e) {
 			fail("malformed query should not make lexer fail");
 
 		}
@@ -150,11 +156,19 @@ public class QueryPrologLexerTest {
 		// in the query are to be picked up by subsequent processing.
 
 		try {
-			Token t = QueryPrologLexer.getRestOfQueryToken(
-					"BASE <foobar # missing closing bracket \n SELECT * WHERE {?s ?p ?o} ");
-		}
-		catch (Exception e) {
+			Token t = QueryPrologLexer
+					.getRestOfQueryToken("BASE <foobar # missing closing bracket \nSELECT * WHERE {?s ?p ?o} ");
+		} catch (Exception e) {
 			fail("malformed query should not make lexer fail");
+		}
+	}
+
+	@Test
+	public void testFinalTokenSyntaxErrorPrefix() {
+		try {
+			Token t = QueryPrologLexer.getRestOfQueryToken("PREFIX");
+		} catch (Exception e) {
+			fail("Malformed query should not make lexer throw Exception");
 		}
 	}
 }

@@ -14,8 +14,6 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.Dataset;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryInterruptedException;
-import org.eclipse.rdf4j.query.impl.AbstractQuery;
-import org.eclipse.rdf4j.query.impl.FallbackDataset;
 import org.eclipse.rdf4j.query.parser.ParsedQuery;
 
 /**
@@ -34,8 +32,7 @@ public abstract class AbstractParserQuery extends AbstractQuery {
 	}
 
 	protected CloseableIteration<? extends BindingSet, QueryEvaluationException> enforceMaxQueryTime(
-			CloseableIteration<? extends BindingSet, QueryEvaluationException> bindingsIter)
-	{
+			CloseableIteration<? extends BindingSet, QueryEvaluationException> bindingsIter) {
 		if (getMaxExecutionTime() > 0) {
 			bindingsIter = new QueryInterruptIteration(bindingsIter, 1000L * getMaxExecutionTime());
 		}
@@ -44,9 +41,9 @@ public abstract class AbstractParserQuery extends AbstractQuery {
 	}
 
 	/**
-	 * Gets the "active" dataset for this query. The active dataset is either the dataset that has been
-	 * specified using {@link #setDataset(Dataset)} or the dataset that has been specified in the query, where
-	 * the former takes precedence over the latter.
+	 * Gets the "active" dataset for this query. The active dataset is either the dataset that has been specified using
+	 * {@link #setDataset(Dataset)} or the dataset that has been specified in the query, where the former takes
+	 * precedence over the latter.
 	 * 
 	 * @return The active dataset, or <tt>null</tt> if there is no dataset.
 	 */
@@ -66,16 +63,13 @@ public abstract class AbstractParserQuery extends AbstractQuery {
 
 	protected class QueryInterruptIteration extends TimeLimitIteration<BindingSet, QueryEvaluationException> {
 
-		public QueryInterruptIteration(
-				Iteration<? extends BindingSet, ? extends QueryEvaluationException> iter, long timeLimit)
-		{
+		public QueryInterruptIteration(Iteration<? extends BindingSet, ? extends QueryEvaluationException> iter,
+				long timeLimit) {
 			super(iter, timeLimit);
 		}
 
 		@Override
-		protected void throwInterruptedException()
-			throws QueryEvaluationException
-		{
+		protected void throwInterruptedException() throws QueryEvaluationException {
 			throw new QueryInterruptedException("Query evaluation took too long");
 		}
 	}

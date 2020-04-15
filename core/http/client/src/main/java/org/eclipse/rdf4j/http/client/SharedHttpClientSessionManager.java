@@ -7,19 +7,24 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.http.client;
 
+import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.eclipse.rdf4j.http.client.util.HttpClientBuilders;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Manager for HTTP sessions that uses a shared {@link HttpClient} to manage HTTP connections.
@@ -27,6 +32,18 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @author James Leigh
  */
 public class SharedHttpClientSessionManager implements HttpClientSessionManager, HttpClientDependent {
+	/**
+	 * FIXME: issue #1271, workaround for OpenJDK 8 bug. ScheduledThreadPoolExecutor with 0 core threads may cause 100%
+	 * CPU usage. Using 1 core thread instead of 0 (default) fixes the problem but wastes some resources.
+	 * 
+	 * @see <a href="https://bugs.openjdk.java.net/browse/JDK-8129861">JDK-8129861</a>
+	 */
+	private static final int cores = (System.getProperty("org.eclipse.rdf4j.client.executors.jdkbug") != null) ? 1 : 0;
+	/**/
+
+	private static final AtomicLong threadCount = new AtomicLong();
+
+	private final Logger logger = LoggerFactory.getLogger(SharedHttpClientSessionManager.class);
 
 	/** independent life cycle */
 	private volatile HttpClient httpClient;
@@ -34,27 +51,32 @@ public class SharedHttpClientSessionManager implements HttpClientSessionManager,
 	/** dependent life cycle */
 	private volatile CloseableHttpClient dependentClient;
 
-	private final ExecutorService executor;
+	private final ScheduledExecutorService executor;
 
 	/**
 	 * Optional {@link HttpClientBuilder} to create the inner {@link #httpClient} (if not provided externally)
 	 */
 	private volatile HttpClientBuilder httpClientBuilder;
 
+	private final Map<SPARQLProtocolSession, Boolean> openSessions = new ConcurrentHashMap<>();
+
 	/*--------------*
 	 * Constructors *
 	 *--------------*/
 
 	public SharedHttpClientSessionManager() {
-		this.executor = Executors.newCachedThreadPool(
-				new ThreadFactoryBuilder().setNameFormat("rdf4j-sesameclientimpl-%d").build());
+		final ThreadFactory backingThreadFactory = Executors.defaultThreadFactory();
+		this.executor = Executors.newScheduledThreadPool(cores, (Runnable runnable) -> {
+			Thread thread = backingThreadFactory.newThread(runnable);
+			thread.setName(String.format("rdf4j-sesameclientimpl-%d", threadCount.getAndIncrement()));
+			thread.setDaemon(true);
+			return thread;
+		});
 	}
 
 	public SharedHttpClientSessionManager(CloseableHttpClient dependentClient,
-			ExecutorService dependentExecutorService)
-	{
-		this.httpClient = this.dependentClient = Objects.requireNonNull(dependentClient,
-				"HTTP client was null");
+			ScheduledExecutorService dependentExecutorService) {
+		this.httpClient = this.dependentClient = Objects.requireNonNull(dependentClient, "HTTP client was null");
 		this.executor = Objects.requireNonNull(dependentExecutorService, "Executor service was null");
 	}
 
@@ -73,9 +95,9 @@ public class SharedHttpClientSessionManager implements HttpClientSessionManager,
 	}
 
 	/**
-	 * @param httpClient
-	 *        The httpClient to use for remote/service calls.
+	 * @param httpClient The httpClient to use for remote/service calls.
 	 */
+	@Override
 	public void setHttpClient(HttpClient httpClient) {
 		synchronized (this) {
 			this.httpClient = Objects.requireNonNull(httpClient, "HTTP Client cannot be null");
@@ -90,11 +112,10 @@ public class SharedHttpClientSessionManager implements HttpClientSessionManager,
 	}
 
 	/**
-	 * Set an optional {@link HttpClientBuilder} to create the inner {@link #httpClient} (if the latter is not
-	 * provided externally as dependent client).
+	 * Set an optional {@link HttpClientBuilder} to create the inner {@link #httpClient} (if the latter is not provided
+	 * externally as dependent client).
 	 *
-	 * @param httpClientBuilder
-	 *        the builder for the managed HttpClient
+	 * @param httpClientBuilder the builder for the managed HttpClient
 	 * @see HttpClientBuilders
 	 */
 	public void setHttpClientBuilder(HttpClientBuilder httpClientBuilder) {
@@ -106,21 +127,47 @@ public class SharedHttpClientSessionManager implements HttpClientSessionManager,
 		if (nextHttpClientBuilder != null) {
 			return nextHttpClientBuilder.build();
 		}
-		return HttpClientBuilder.create().useSystemProperties().disableAutomaticRetries().build();
+		return HttpClientBuilder.create()
+				.useSystemProperties()
+				.disableAutomaticRetries()
+				.setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
+				.build();
 	}
 
 	@Override
 	public SPARQLProtocolSession createSPARQLProtocolSession(String queryEndpointUrl, String updateEndpointUrl) {
-		SPARQLProtocolSession session = new SPARQLProtocolSession(getHttpClient(), executor);
+		SPARQLProtocolSession session = new SPARQLProtocolSession(getHttpClient(), executor) {
+
+			@Override
+			public void close() {
+				try {
+					super.close();
+				} finally {
+					openSessions.remove(this);
+				}
+			}
+		};
 		session.setQueryURL(queryEndpointUrl);
 		session.setUpdateURL(updateEndpointUrl);
+		openSessions.put(session, true);
 		return session;
 	}
 
 	@Override
 	public RDF4JProtocolSession createRDF4JProtocolSession(String serverURL) {
-		RDF4JProtocolSession session = new RDF4JProtocolSession(getHttpClient(), executor);
+		RDF4JProtocolSession session = new RDF4JProtocolSession(getHttpClient(), executor) {
+
+			@Override
+			public void close() {
+				try {
+					super.close();
+				} finally {
+					openSessions.remove(this);
+				}
+			}
+		};
 		session.setServerURL(serverURL);
+		openSessions.put(session, true);
 		return session;
 	}
 
@@ -131,22 +178,26 @@ public class SharedHttpClientSessionManager implements HttpClientSessionManager,
 	@Override
 	public void shutDown() {
 		try {
+			openSessions.keySet().forEach(session -> {
+				try {
+					session.close();
+				} catch (Exception e) {
+					logger.error(e.toString(), e);
+				}
+			});
 			CloseableHttpClient toCloseDependentClient = dependentClient;
 			dependentClient = null;
 			if (toCloseDependentClient != null) {
 				HttpClientUtils.closeQuietly(toCloseDependentClient);
 			}
-		}
-		finally {
+		} finally {
 			try {
 				executor.shutdown();
 				executor.awaitTermination(10, TimeUnit.SECONDS);
-			}
-			catch (InterruptedException e) {
+			} catch (InterruptedException e) {
 				// Preserve the interrupt status so others can check it as necessary
 				Thread.currentThread().interrupt();
-			}
-			finally {
+			} finally {
 				if (!executor.isTerminated()) {
 					executor.shutdownNow();
 				}

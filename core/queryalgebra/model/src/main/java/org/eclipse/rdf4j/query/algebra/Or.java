@@ -27,9 +27,8 @@ public class Or extends BinaryValueOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -45,6 +44,6 @@ public class Or extends BinaryValueOperator {
 
 	@Override
 	public Or clone() {
-		return (Or)super.clone();
+		return (Or) super.clone();
 	}
 }

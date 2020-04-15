@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * An abstract superclass for unary tuple operators which, by definition, has one argument.
  */
-public abstract class UnaryTupleOperator extends AbstractQueryModelNode implements TupleExpr {
+public abstract class UnaryTupleOperator extends AbstractQueryModelNode implements TupleExpr, GraphPatternGroupable {
 
 	/*-----------*
 	 * Variables *
@@ -27,16 +27,15 @@ public abstract class UnaryTupleOperator extends AbstractQueryModelNode implemen
 	 * Constructors *
 	 *--------------*/
 
-	public UnaryTupleOperator() {
+	protected UnaryTupleOperator() {
 	}
 
 	/**
 	 * Creates a new unary tuple operator.
 	 * 
-	 * @param arg
-	 *        The operator's argument, must not be <tt>null</tt>.
+	 * @param arg The operator's argument, must not be <tt>null</tt>.
 	 */
-	public UnaryTupleOperator(TupleExpr arg) {
+	protected UnaryTupleOperator(TupleExpr arg) {
 		setArg(arg);
 	}
 
@@ -56,36 +55,35 @@ public abstract class UnaryTupleOperator extends AbstractQueryModelNode implemen
 	/**
 	 * Sets the argument of this unary tuple operator.
 	 * 
-	 * @param arg
-	 *        The (new) argument for this operator, must not be <tt>null</tt>.
+	 * @param arg The (new) argument for this operator, must not be <tt>null</tt>.
 	 */
 	public void setArg(TupleExpr arg) {
 		assert arg != null : "arg must not be null";
+		assert arg != this : "arg must not be itself";
 		arg.setParentNode(this);
 		this.arg = arg;
 	}
 
+	@Override
 	public Set<String> getBindingNames() {
 		return getArg().getBindingNames();
 	}
 
+	@Override
 	public Set<String> getAssuredBindingNames() {
 		return getArg().getAssuredBindingNames();
 	}
 
 	@Override
-	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor) throws X {
 		arg.visit(visitor);
 	}
 
 	@Override
 	public void replaceChildNode(QueryModelNode current, QueryModelNode replacement) {
 		if (arg == current) {
-			setArg((TupleExpr)replacement);
-		}
-		else {
+			setArg((TupleExpr) replacement);
+		} else {
 			super.replaceChildNode(current, replacement);
 		}
 	}
@@ -93,7 +91,7 @@ public abstract class UnaryTupleOperator extends AbstractQueryModelNode implemen
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof UnaryTupleOperator) {
-			UnaryTupleOperator o = (UnaryTupleOperator)other;
+			UnaryTupleOperator o = (UnaryTupleOperator) other;
 			return arg.equals(o.getArg());
 		}
 
@@ -107,7 +105,7 @@ public abstract class UnaryTupleOperator extends AbstractQueryModelNode implemen
 
 	@Override
 	public UnaryTupleOperator clone() {
-		UnaryTupleOperator clone = (UnaryTupleOperator)super.clone();
+		UnaryTupleOperator clone = (UnaryTupleOperator) super.clone();
 		clone.setArg(getArg().clone());
 		return clone;
 	}

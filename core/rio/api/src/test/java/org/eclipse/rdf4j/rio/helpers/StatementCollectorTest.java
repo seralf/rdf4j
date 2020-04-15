@@ -35,27 +35,21 @@ public class StatementCollectorTest {
 	 * @throws java.lang.Exception
 	 */
 	@Before
-	public void setUp()
-		throws Exception
-	{
+	public void setUp() throws Exception {
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@After
-	public void tearDown()
-		throws Exception
-	{
+	public void tearDown() throws Exception {
 	}
 
 	/**
 	 * Test method for {@link org.eclipse.rdf4j.rio.helpers.StatementCollector#StatementCollector()}.
 	 */
 	@Test
-	public final void testStatementCollector()
-		throws Exception
-	{
+	public final void testStatementCollector() throws Exception {
 		StatementCollector collector = new StatementCollector();
 
 		assertNotNull(collector.getStatements());
@@ -63,14 +57,12 @@ public class StatementCollectorTest {
 	}
 
 	/**
-	 * Test method for
-	 * {@link org.eclipse.rdf4j.rio.helpers.StatementCollector#StatementCollector(java.util.Collection)} .
+	 * Test method for {@link org.eclipse.rdf4j.rio.helpers.StatementCollector#StatementCollector(java.util.Collection)}
+	 * .
 	 */
 	@Test
-	public final void testStatementCollectorList()
-		throws Exception
-	{
-		List<Statement> testList = new ArrayList<Statement>();
+	public final void testStatementCollectorList() throws Exception {
+		List<Statement> testList = new ArrayList<>();
 		StatementCollector collector = new StatementCollector(testList);
 
 		// Actual variable is exactly the same, although it could be theoretically
@@ -80,14 +72,12 @@ public class StatementCollectorTest {
 	}
 
 	/**
-	 * Test method for
-	 * {@link org.eclipse.rdf4j.rio.helpers.StatementCollector#StatementCollector(java.util.Collection)} .
+	 * Test method for {@link org.eclipse.rdf4j.rio.helpers.StatementCollector#StatementCollector(java.util.Collection)}
+	 * .
 	 */
 	@Test
-	public final void testStatementCollectorSet()
-		throws Exception
-	{
-		Set<Statement> testList = new LinkedHashSet<Statement>();
+	public final void testStatementCollectorSet() throws Exception {
+		Set<Statement> testList = new LinkedHashSet<>();
 		StatementCollector collector = new StatementCollector(testList);
 
 		// Actual variable is exactly the same, although it could be theoretically
@@ -97,13 +87,11 @@ public class StatementCollectorTest {
 	}
 
 	/**
-	 * Test method for
-	 * {@link org.eclipse.rdf4j.rio.helpers.StatementCollector#StatementCollector(java.util.Collection)} .
+	 * Test method for {@link org.eclipse.rdf4j.rio.helpers.StatementCollector#StatementCollector(java.util.Collection)}
+	 * .
 	 */
 	@Test
-	public final void testStatementCollectorCollectionModel()
-		throws Exception
-	{
+	public final void testStatementCollectorCollectionModel() throws Exception {
 		Model testList = new LinkedHashModel();
 		StatementCollector collector = new StatementCollector(testList);
 
@@ -131,11 +119,9 @@ public class StatementCollectorTest {
 	 * .
 	 */
 	@Test
-	public final void testStatementCollectorCollectionModelMapIndependent()
-		throws Exception
-	{
+	public final void testStatementCollectorCollectionModelMapIndependent() throws Exception {
 		Model testList = new LinkedHashModel();
-		Map<String, String> testNamespaces = new LinkedHashMap<String, String>();
+		Map<String, String> testNamespaces = new LinkedHashMap<>();
 		StatementCollector collector = new StatementCollector(testList, testNamespaces);
 
 		// Actual variable is exactly the same, although it could be theoretically
@@ -151,11 +137,9 @@ public class StatementCollectorTest {
 	 * .
 	 */
 	@Test
-	public final void testStatementCollectorCollectionMapModel()
-		throws Exception
-	{
+	public final void testStatementCollectorCollectionMapModel() throws Exception {
 		Collection<Statement> testList = new LinkedHashModel();
-		Map<String, String> testNamespaces = new LinkedHashMap<String, String>();
+		Map<String, String> testNamespaces = new LinkedHashMap<>();
 		StatementCollector collector = new StatementCollector(testList, testNamespaces);
 
 		// Actual variable is exactly the same, although it could be theoretically
@@ -168,9 +152,7 @@ public class StatementCollectorTest {
 	 * Test method for {@link org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler#startRDF()}.
 	 */
 	@Test
-	public final void testStartRDF()
-		throws Exception
-	{
+	public final void testStartRDF() throws Exception {
 		StatementCollector testCollector = new StatementCollector();
 		testCollector.startRDF();
 	}
@@ -179,24 +161,19 @@ public class StatementCollectorTest {
 	 * Test method for {@link org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler#endRDF()}.
 	 */
 	@Test
-	public final void testEndRDF()
-		throws Exception
-	{
+	public final void testEndRDF() throws Exception {
 		StatementCollector testCollector = new StatementCollector();
 		testCollector.startRDF();
 		testCollector.endRDF();
 	}
 
 	/**
-	 * Test method for
-	 * {@link org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler#handleComment(java.lang.String)} .
+	 * Test method for {@link org.eclipse.rdf4j.rio.helpers.AbstractRDFHandler#handleComment(java.lang.String)} .
 	 * 
 	 * @throws Exception
 	 */
 	@Test
-	public final void testHandleComment()
-		throws Exception
-	{
+	public final void testHandleComment() throws Exception {
 		StatementCollector testCollector = new StatementCollector();
 		// StatementCollector must be able to handle comments, but does not
 		// preserve them

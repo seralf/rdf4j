@@ -29,9 +29,8 @@ public class IsNumeric extends UnaryValueOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -47,6 +46,6 @@ public class IsNumeric extends UnaryValueOperator {
 
 	@Override
 	public IsNumeric clone() {
-		return (IsNumeric)super.clone();
+		return (IsNumeric) super.clone();
 	}
 }

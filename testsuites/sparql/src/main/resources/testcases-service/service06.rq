@@ -4,7 +4,7 @@ PREFIX : <http://example.org/>
 
 SELECT ?s ?o1 ?o2
 {
-  SERVICE <http://localhost:18080/openrdf/repositories/endpoint1> {
+  SERVICE <http://localhost:18080/rdf4j-server/repositories/endpoint1> {
   ?s ?p ?o1 .
   OPTIONAL {
 	SERVICE SILENT <http://invalid.endpoint.org/sparql> {

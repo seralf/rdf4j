@@ -7,10 +7,10 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.model.impl;
 
-import java.util.Objects;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.util.URIUtil;
+
+import java.util.Objects;
 
 /**
  * The default implementation of the {@link IRI} interface.
@@ -42,8 +42,8 @@ public class SimpleIRI implements IRI {
 	 *--------------*/
 
 	/**
-	 * Creates a new, un-initialized IRI. This IRI's string value needs to be {@link #setIRIString(String)
-	 * set} before the normal methods can be used.
+	 * Creates a new, un-initialized IRI. This IRI's string value needs to be {@link #setIRIString(String) set} before
+	 * the normal methods can be used.
 	 */
 	protected SimpleIRI() {
 	}
@@ -51,15 +51,13 @@ public class SimpleIRI implements IRI {
 	/**
 	 * Creates a new IRI from the supplied string.
 	 * <p>
-	 * Note that creating SimpleIRI objects directly via this constructor is not the recommended approach.
-	 * Instead, use a {@link org.eclipse.rdf4j.model.ValueFactory ValueFactory} (obtained from your repository
-	 * or by using {@link SimpleValueFactory#getInstance()}) to create new IRI objects.
-	 * 
-	 * @param iriString
-	 *        A String representing a valid, absolute IRI. May not be <code>null</code>.
-	 * @throws IllegalArgumentException
-	 *         If the supplied IRI is not a valid (absolute) IRI.
-	 * @see {@link SimpleValueFactory#createIRI(String)}
+	 * Note that creating SimpleIRI objects directly via this constructor is not the recommended approach. Instead, use
+	 * a {@link org.eclipse.rdf4j.model.ValueFactory ValueFactory} (obtained from your repository or by using
+	 * {@link SimpleValueFactory#getInstance()}) to create new IRI objects.
+	 *
+	 * @param iriString A String representing a valid, absolute IRI. May not be <code>null</code>.
+	 * @throws IllegalArgumentException If the supplied IRI is not a valid (absolute) IRI.
+	 * @see org.eclipse.rdf4j.model.impl.SimpleValueFactory#createIRI(String)
 	 */
 	protected SimpleIRI(String iriString) {
 		setIRIString(iriString);
@@ -86,10 +84,12 @@ public class SimpleIRI implements IRI {
 		return iriString;
 	}
 
+	@Override
 	public String stringValue() {
 		return iriString;
 	}
 
+	@Override
 	public String getNamespace() {
 		if (localNameIdx < 0) {
 			localNameIdx = URIUtil.getLocalNameIndex(iriString);
@@ -98,6 +98,7 @@ public class SimpleIRI implements IRI {
 		return iriString.substring(0, localNameIdx);
 	}
 
+	@Override
 	public String getLocalName() {
 		if (localNameIdx < 0) {
 			localNameIdx = URIUtil.getLocalNameIndex(iriString);
@@ -114,7 +115,11 @@ public class SimpleIRI implements IRI {
 		}
 
 		if (o instanceof IRI) {
-			return toString().equals(o.toString());
+
+			String a = toString();
+			String b = o.toString();
+
+			return a.equals(b);
 		}
 
 		return false;

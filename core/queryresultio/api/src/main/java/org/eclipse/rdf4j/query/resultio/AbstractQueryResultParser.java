@@ -16,7 +16,6 @@ import org.eclipse.rdf4j.query.QueryResultHandler;
 import org.eclipse.rdf4j.rio.ParseErrorListener;
 import org.eclipse.rdf4j.rio.ParseLocationListener;
 import org.eclipse.rdf4j.rio.ParserConfig;
-import org.eclipse.rdf4j.rio.RDFParser;
 import org.eclipse.rdf4j.rio.RioSetting;
 
 /**
@@ -58,17 +57,17 @@ public abstract class AbstractQueryResultParser implements QueryResultParser {
 	 *--------------*/
 
 	/**
-	 * Creates a new parser base that, by default, will use the global instance of {@link SimpleValueFactory}
-	 * to create Value objects.
+	 * Creates a new parser base that, by default, will use the global instance of {@link SimpleValueFactory} to create
+	 * Value objects.
 	 */
-	public AbstractQueryResultParser() {
+	protected AbstractQueryResultParser() {
 		this(SimpleValueFactory.getInstance());
 	}
 
 	/**
 	 * Creates a new parser base that will use the supplied ValueFactory to create Value objects.
 	 */
-	public AbstractQueryResultParser(ValueFactory valueFactory) {
+	protected AbstractQueryResultParser(ValueFactory valueFactory) {
 		setValueFactory(valueFactory);
 		setParserConfig(new ParserConfig());
 	}

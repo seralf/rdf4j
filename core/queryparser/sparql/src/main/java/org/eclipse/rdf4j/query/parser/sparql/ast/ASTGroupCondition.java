@@ -20,9 +20,8 @@ public class ASTGroupCondition extends SimpleNode {
 	}
 
 	/** Accept the visitor. **/
-	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	@Override
+	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		return visitor.visit(this, data);
 	}
 
@@ -30,9 +29,8 @@ public class ASTGroupCondition extends SimpleNode {
 		// TODO does this make sense?
 		Node child = jjtGetChild(0);
 		if (child instanceof ASTVar) {
-			return ((ASTVar)child).getName();
-		}
-		else {
+			return ((ASTVar) child).getName();
+		} else {
 			return child.toString();
 		}
 	}

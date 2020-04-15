@@ -10,12 +10,18 @@ package org.eclipse.rdf4j.query.algebra.evaluation.function.geosparql;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.spatial4j.core.shape.Point;
-import com.spatial4j.core.shape.Shape;
-import com.spatial4j.core.shape.ShapeCollection;
-import com.spatial4j.core.shape.SpatialRelation;
-import com.spatial4j.core.shape.impl.BufferedLineString;
+import org.locationtech.spatial4j.shape.Point;
+import org.locationtech.spatial4j.shape.Shape;
+import org.locationtech.spatial4j.shape.ShapeCollection;
+import org.locationtech.spatial4j.shape.SpatialRelation;
+import org.locationtech.spatial4j.shape.impl.BufferedLineString;
 
+/**
+ * Default implementation of Spatial Algebra for use in situations where JTS support is not available.
+ * 
+ * @deprecated use {@link JtsSpatialAlgebra} instead.
+ */
+@Deprecated
 final class DefaultSpatialAlgebra implements SpatialAlgebra {
 
 	private <T> T notSupported() {
@@ -28,17 +34,15 @@ final class DefaultSpatialAlgebra implements SpatialAlgebra {
 	}
 
 	private Shape createEmptyGeometry() {
-		return new ShapeCollection<Shape>(Collections.<Shape> emptyList(),
-				SpatialSupport.getSpatialContext());
+		return new ShapeCollection<>(Collections.<Shape>emptyList(), SpatialSupport.getSpatialContext());
 	}
 
 	@Override
 	public Shape convexHull(Shape s) {
 		if (s instanceof Point) {
 			return s;
-		}
-		else if (s instanceof ShapeCollection<?>) {
-			return new BufferedLineString((ShapeCollection<Point>)s, 0.0, SpatialSupport.getSpatialContext());
+		} else if (s instanceof ShapeCollection<?>) {
+			return new BufferedLineString((ShapeCollection<Point>) s, 0.0, SpatialSupport.getSpatialContext());
 		}
 		return notSupported();
 	}
@@ -48,9 +52,8 @@ final class DefaultSpatialAlgebra implements SpatialAlgebra {
 		if (s instanceof Point) {
 			// points have no boundary so return empty shape
 			return createEmptyGeometry();
-		}
-		else if (s instanceof ShapeCollection<?>) {
-			ShapeCollection<?> col = (ShapeCollection<?>)s;
+		} else if (s instanceof ShapeCollection<?>) {
+			ShapeCollection<?> col = (ShapeCollection<?>) s;
 			if (col.isEmpty()) {
 				return createEmptyGeometry();
 			}
@@ -75,17 +78,16 @@ final class DefaultSpatialAlgebra implements SpatialAlgebra {
 	@Override
 	public Shape union(Shape s1, Shape s2) {
 		if (s1 instanceof Point && s2 instanceof Point) {
-			Point p1 = (Point)s1;
-			Point p2 = (Point)s2;
+			Point p1 = (Point) s1;
+			Point p2 = (Point) s2;
 			int diff = compare(p2, p1);
 			if (diff == 0) {
 				return s1;
-			}
-			else if (diff < 0) {
+			} else if (diff < 0) {
 				p1 = p2;
-				p2 = (Point)s1;
+				p2 = (Point) s1;
 			}
-			return new ShapeCollection<Point>(Arrays.asList(p1, p2), SpatialSupport.getSpatialContext());
+			return new ShapeCollection<>(Arrays.asList(p1, p2), SpatialSupport.getSpatialContext());
 		}
 		return notSupported();
 	}
@@ -101,13 +103,12 @@ final class DefaultSpatialAlgebra implements SpatialAlgebra {
 	@Override
 	public Shape intersection(Shape s1, Shape s2) {
 		if (s1 instanceof Point && s2 instanceof Point) {
-			Point p1 = (Point)s1;
-			Point p2 = (Point)s2;
+			Point p1 = (Point) s1;
+			Point p2 = (Point) s2;
 			int diff = compare(p2, p1);
 			if (diff == 0) {
 				return s1;
-			}
-			else {
+			} else {
 				return createEmptyPoint();
 			}
 		}
@@ -117,17 +118,16 @@ final class DefaultSpatialAlgebra implements SpatialAlgebra {
 	@Override
 	public Shape symDifference(Shape s1, Shape s2) {
 		if (s1 instanceof Point && s2 instanceof Point) {
-			Point p1 = (Point)s1;
-			Point p2 = (Point)s2;
+			Point p1 = (Point) s1;
+			Point p2 = (Point) s2;
 			int diff = compare(p2, p1);
 			if (diff == 0) {
 				return createEmptyPoint();
-			}
-			else if (diff < 0) {
+			} else if (diff < 0) {
 				p1 = p2;
-				p2 = (Point)s1;
+				p2 = (Point) s1;
 			}
-			return new ShapeCollection<Point>(Arrays.asList(p1, p2), SpatialSupport.getSpatialContext());
+			return new ShapeCollection<>(Arrays.asList(p1, p2), SpatialSupport.getSpatialContext());
 		}
 		return notSupported();
 	}
@@ -135,8 +135,8 @@ final class DefaultSpatialAlgebra implements SpatialAlgebra {
 	@Override
 	public Shape difference(Shape s1, Shape s2) {
 		if (s1 instanceof Point && s2 instanceof Point) {
-			Point p1 = (Point)s1;
-			Point p2 = (Point)s2;
+			Point p1 = (Point) s1;
+			Point p2 = (Point) s2;
 			int diff = compare(p2, p1);
 			if (diff == 0) {
 				return createEmptyPoint();
@@ -152,7 +152,7 @@ final class DefaultSpatialAlgebra implements SpatialAlgebra {
 	}
 
 	@Override
-	public boolean equals(Shape s1, Shape s2) {
+	public boolean sfEquals(Shape s1, Shape s2) {
 		return s1.equals(s2);
 	}
 
@@ -258,6 +258,21 @@ final class DefaultSpatialAlgebra implements SpatialAlgebra {
 
 	@Override
 	public boolean rcc8ntppi(Shape s1, Shape s2) {
+		return notSupported();
+	}
+
+	@Override
+	public Shape buffer(Shape s, double distance) {
+		return s.getBuffered(distance, SpatialSupport.getSpatialContext());
+	}
+
+	@Override
+	public boolean ehEquals(Shape s1, Shape s2) {
+		return notSupported();
+	}
+
+	@Override
+	public boolean rcc8eq(Shape s1, Shape s2) {
 		return notSupported();
 	}
 }

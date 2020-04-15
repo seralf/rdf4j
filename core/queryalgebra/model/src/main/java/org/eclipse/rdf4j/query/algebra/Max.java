@@ -20,9 +20,8 @@ public class Max extends AbstractAggregateOperator {
 		super(arg, distinct);
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -38,6 +37,6 @@ public class Max extends AbstractAggregateOperator {
 
 	@Override
 	public Max clone() {
-		return (Max)super.clone();
+		return (Max) super.clone();
 	}
 }

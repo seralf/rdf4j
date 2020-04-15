@@ -20,46 +20,52 @@ import org.eclipse.rdf4j.repository.event.RepositoryConnectionListener;
  */
 public class RepositoryConnectionListenerAdapter implements RepositoryConnectionListener {
 
+	@Override
 	public void close(RepositoryConnection conn) {
 	}
 
 	@Deprecated
+	@Override
 	public void setAutoCommit(RepositoryConnection conn, boolean autoCommit) {
 	}
 
+	@Override
 	public void begin(RepositoryConnection conn) {
 	}
 
+	@Override
 	public void commit(RepositoryConnection conn) {
 	}
 
+	@Override
 	public void rollback(RepositoryConnection conn) {
 	}
 
-	public void add(RepositoryConnection conn, Resource subject, IRI predicate, Value object,
-			Resource... contexts)
-	{
+	@Override
+	public void add(RepositoryConnection conn, Resource subject, IRI predicate, Value object, Resource... contexts) {
 	}
 
-	public void remove(RepositoryConnection conn, Resource subject, IRI predicate, Value object,
-			Resource... contexts)
-	{
+	@Override
+	public void remove(RepositoryConnection conn, Resource subject, IRI predicate, Value object, Resource... contexts) {
 	}
 
+	@Override
 	public void clear(RepositoryConnection conn, Resource... contexts) {
 	}
 
+	@Override
 	public void setNamespace(RepositoryConnection conn, String prefix, String name) {
 	}
 
+	@Override
 	public void removeNamespace(RepositoryConnection conn, String prefix) {
 	}
 
+	@Override
 	public void clearNamespaces(RepositoryConnection conn) {
 	}
 
-	public void execute(RepositoryConnection conn, QueryLanguage ql, String update, String baseURI,
-			Update operation)
-	{
+	@Override
+	public void execute(RepositoryConnection conn, QueryLanguage ql, String update, String baseURI, Update operation) {
 	}
 }

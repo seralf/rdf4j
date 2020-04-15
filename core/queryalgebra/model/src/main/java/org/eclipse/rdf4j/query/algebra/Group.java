@@ -17,8 +17,8 @@ import java.util.Set;
 import org.eclipse.rdf4j.util.iterators.Iterators;
 
 /**
- * A tuple operator that groups tuples that have a specific set of equivalent variable bindings, and that can
- * apply aggregate functions on the grouped results.
+ * A tuple operator that groups tuples that have a specific set of equivalent variable bindings, and that can apply
+ * aggregate functions on the grouped results.
  * 
  * @author David Huynh
  * @author Arjohn Kampman
@@ -29,9 +29,9 @@ public class Group extends UnaryTupleOperator {
 	 * Variables *
 	 *-----------*/
 
-	private Set<String> groupBindings = new LinkedHashSet<String>();
+	private Set<String> groupBindings = new LinkedHashSet<>();
 
-	private List<GroupElem> groupElements = new ArrayList<GroupElem>();
+	private List<GroupElem> groupElements = new ArrayList<>();
 
 	/*--------------*
 	 * Constructors *
@@ -85,7 +85,7 @@ public class Group extends UnaryTupleOperator {
 	}
 
 	public Set<String> getAggregateBindingNames() {
-		Set<String> bindings = new HashSet<String>();
+		Set<String> bindings = new HashSet<>();
 
 		for (GroupElem binding : groupElements) {
 			bindings.add(binding.getName());
@@ -96,7 +96,7 @@ public class Group extends UnaryTupleOperator {
 
 	@Override
 	public Set<String> getBindingNames() {
-		Set<String> bindingNames = new LinkedHashSet<String>();
+		Set<String> bindingNames = new LinkedHashSet<>();
 
 		bindingNames.addAll(getGroupBindingNames());
 		bindingNames.addAll(getAggregateBindingNames());
@@ -106,7 +106,7 @@ public class Group extends UnaryTupleOperator {
 
 	@Override
 	public Set<String> getAssuredBindingNames() {
-		Set<String> bindingNames = new LinkedHashSet<String>();
+		Set<String> bindingNames = new LinkedHashSet<>();
 
 		bindingNames.addAll(getGroupBindingNames());
 		bindingNames.retainAll(getArg().getAssuredBindingNames());
@@ -115,16 +115,12 @@ public class Group extends UnaryTupleOperator {
 	}
 
 	@Override
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
 	@Override
-	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor) throws X {
 		super.visitChildren(visitor);
 
 		for (GroupElem ge : groupElements) {
@@ -144,9 +140,8 @@ public class Group extends UnaryTupleOperator {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Group && super.equals(other)) {
-			Group o = (Group)other;
-			return groupBindings.equals(o.getGroupBindingNames())
-					&& groupElements.equals(o.getGroupElements());
+			Group o = (Group) other;
+			return groupBindings.equals(o.getGroupBindingNames()) && groupElements.equals(o.getGroupElements());
 		}
 		return false;
 	}
@@ -158,11 +153,11 @@ public class Group extends UnaryTupleOperator {
 
 	@Override
 	public Group clone() {
-		Group clone = (Group)super.clone();
+		Group clone = (Group) super.clone();
 
-		clone.groupBindings = new LinkedHashSet<String>(getGroupBindingNames());
+		clone.groupBindings = new LinkedHashSet<>(getGroupBindingNames());
 
-		clone.groupElements = new ArrayList<GroupElem>(getGroupElements().size());
+		clone.groupElements = new ArrayList<>(getGroupElements().size());
 		for (GroupElem ge : getGroupElements()) {
 			clone.addGroupElement(ge.clone());
 		}

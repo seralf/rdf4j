@@ -30,9 +30,8 @@ public class ClearOperation extends ContextOperation implements Serializable {
 		super(contexts);
 	}
 
-	public void execute(RepositoryConnection con)
-		throws RepositoryException
-	{
+	@Override
+	public void execute(RepositoryConnection con) throws RepositoryException {
 		con.clear(getContexts());
 	}
 

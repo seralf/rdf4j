@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.rdf4j.common.annotation.InternalUseOnly;
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ASTBasicGraphPattern;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ASTBlankNode;
@@ -27,18 +28,20 @@ import org.eclipse.rdf4j.query.parser.sparql.ast.VisitorException;
  * Processes blank nodes in the query body, replacing them with variables while retaining scope.
  * 
  * @author Arjohn Kampman
+ * 
+ * @deprecated since 3.0. This feature is for internal use only: its existence, signature or behavior may change without
+ *             warning from one release to the next.
  */
+@Deprecated
+@InternalUseOnly
 public class BlankNodeVarProcessor extends AbstractASTVisitor {
 
-	public static Set<String> process(ASTOperationContainer qc)
-		throws MalformedQueryException
-	{
+	public static Set<String> process(ASTOperationContainer qc) throws MalformedQueryException {
 		try {
 			BlankNodeToVarConverter converter = new BlankNodeToVarConverter();
 			qc.jjtAccept(converter, null);
 			return converter.getUsedBNodeIDs();
-		}
-		catch (VisitorException e) {
+		} catch (VisitorException e) {
 			throw new MalformedQueryException(e);
 		}
 	}
@@ -51,9 +54,9 @@ public class BlankNodeVarProcessor extends AbstractASTVisitor {
 
 		private int anonVarNo = 1;
 
-		private Map<String, String> conversionMap = new HashMap<String, String>();
+		private Map<String, String> conversionMap = new HashMap<>();
 
-		private Set<String> usedBNodeIDs = new HashSet<String>();
+		private Set<String> usedBNodeIDs = new HashSet<>();
 
 		private String createAnonVarName() {
 			return "_anon_" + anonVarNo++;
@@ -65,9 +68,7 @@ public class BlankNodeVarProcessor extends AbstractASTVisitor {
 		}
 
 		@Override
-		public Object visit(ASTBasicGraphPattern node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTBasicGraphPattern node, Object data) throws VisitorException {
 			// The same Blank node ID cannot be used across Graph Patterns
 			usedBNodeIDs.addAll(conversionMap.keySet());
 
@@ -78,9 +79,7 @@ public class BlankNodeVarProcessor extends AbstractASTVisitor {
 		}
 
 		@Override
-		public Object visit(ASTBlankNode node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTBlankNode node, Object data) throws VisitorException {
 			String bnodeID = node.getID();
 			String varName = findVarName(bnodeID);
 
@@ -101,9 +100,7 @@ public class BlankNodeVarProcessor extends AbstractASTVisitor {
 			return super.visit(node, data);
 		}
 
-		private String findVarName(String bnodeID)
-			throws VisitorException
-		{
+		private String findVarName(String bnodeID) throws VisitorException {
 			if (bnodeID == null)
 				return null;
 			String varName = conversionMap.get(bnodeID);
@@ -113,17 +110,13 @@ public class BlankNodeVarProcessor extends AbstractASTVisitor {
 		}
 
 		@Override
-		public Object visit(ASTBlankNodePropertyList node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTBlankNodePropertyList node, Object data) throws VisitorException {
 			node.setVarName(createAnonVarName());
 			return super.visit(node, data);
 		}
 
 		@Override
-		public Object visit(ASTCollection node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTCollection node, Object data) throws VisitorException {
 			node.setVarName(createAnonVarName());
 			return super.visit(node, data);
 		}

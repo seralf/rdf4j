@@ -28,7 +28,7 @@ public abstract class LookAheadIterator<E> extends AbstractCloseableIterator<E> 
 	 * Constructors *
 	 *--------------*/
 
-	public LookAheadIterator() {
+	protected LookAheadIterator() {
 	}
 
 	/*---------*
@@ -64,8 +64,7 @@ public abstract class LookAheadIterator<E> extends AbstractCloseableIterator<E> 
 		if (result != null) {
 			nextElement = null;
 			return result;
-		}
-		else {
+		} else {
 			throw new NoSuchElementException();
 		}
 	}
@@ -82,8 +81,7 @@ public abstract class LookAheadIterator<E> extends AbstractCloseableIterator<E> 
 			if (nextElement == null) {
 				try {
 					close();
-				}
-				catch (IOException ioe) {
+				} catch (IOException ioe) {
 					closeException = ioe;
 				}
 			}
@@ -93,26 +91,22 @@ public abstract class LookAheadIterator<E> extends AbstractCloseableIterator<E> 
 	/**
 	 * Throws an {@link UnsupportedOperationException}.
 	 */
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected void handleClose()
-		throws IOException
-	{
+	protected void handleClose() throws IOException {
 		try {
 			super.handleClose();
-		}
-		finally {
+		} finally {
 			nextElement = null;
 		}
 	}
 
 	@Override
-	protected void handleAlreadyClosed()
-		throws IOException
-	{
+	protected void handleAlreadyClosed() throws IOException {
 		IOException toThrowException = closeException;
 		if (toThrowException != null) {
 			throw toThrowException;

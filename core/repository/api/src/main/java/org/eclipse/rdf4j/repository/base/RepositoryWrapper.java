@@ -32,61 +32,64 @@ public class RepositoryWrapper implements DelegatingRepository {
 	}
 
 	/**
-	 * Creates a new <tt>RepositoryWrapper</tt> and calls {@link #setDelegate(Repository)} with the supplied
-	 * delegate repository.
+	 * Creates a new <tt>RepositoryWrapper</tt> and calls {@link #setDelegate(Repository)} with the supplied delegate
+	 * repository.
 	 */
 	public RepositoryWrapper(Repository delegate) {
 		setDelegate(delegate);
 	}
 
+	@Override
 	public void setDelegate(Repository delegate) {
 		this.delegate = delegate;
 	}
 
+	@Override
 	public Repository getDelegate() {
 		return delegate;
 	}
 
+	@Override
 	public void setDataDir(File dataDir) {
 		getDelegate().setDataDir(dataDir);
 	}
 
+	@Override
 	public File getDataDir() {
 		return getDelegate().getDataDir();
 	}
 
-	public void initialize()
-		throws RepositoryException
-	{
+	@Override
+	public void initialize() throws RepositoryException {
 		getDelegate().initialize();
 	}
 
-	public void shutDown()
-		throws RepositoryException
-	{
+	@Override
+	public void shutDown() throws RepositoryException {
 		getDelegate().shutDown();
 	}
 
-	public boolean isWritable()
-		throws RepositoryException
-	{
+	@Override
+	public boolean isWritable() throws RepositoryException {
 		return getDelegate().isWritable();
 	}
 
-	public RepositoryConnection getConnection()
-		throws RepositoryException
-	{
+	@Override
+	public RepositoryConnection getConnection() throws RepositoryException {
 		return getDelegate().getConnection();
 	}
 
+	@Override
 	public ValueFactory getValueFactory() {
 		return getDelegate().getValueFactory();
 	}
 
+	@Override
 	public String toString() {
 		return getDelegate().toString();
 	}
 
+	@Override
 	public boolean isInitialized() {
 		return getDelegate().isInitialized();
 	}

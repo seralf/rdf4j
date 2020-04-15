@@ -43,9 +43,8 @@ public class AddStatementOperation extends StatementOperation implements Seriali
 		setObject(obj);
 	}
 
-	public void execute(RepositoryConnection con)
-		throws RepositoryException
-	{
+	@Override
+	public void execute(RepositoryConnection con) throws RepositoryException {
 		con.add(getSubject(), getPredicate(), getObject(), getContexts());
 	}
 

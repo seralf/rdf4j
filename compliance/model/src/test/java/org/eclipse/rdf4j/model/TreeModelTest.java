@@ -7,26 +7,16 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.model;
 
-import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.model.ModelTest;
-import org.eclipse.rdf4j.model.TreeModelTest;
 import org.eclipse.rdf4j.model.impl.TreeModel;
 
-import junit.framework.Test;
+/**
+ * @author Peter Ansell
+ */
+public class TreeModelTest extends AbstractModelTest {
 
-public class TreeModelTest extends ModelTest {
-
-	public static Test suite()
-		throws Exception
-	{
-		return ModelTest.suite(TreeModelTest.class);
-	}
-
-	public TreeModelTest(String name) {
-		super(name);
-	}
-
-	public Model makeEmptyModel() {
+	@Override
+	protected Model getNewModel() {
 		return new TreeModel();
 	}
+
 }

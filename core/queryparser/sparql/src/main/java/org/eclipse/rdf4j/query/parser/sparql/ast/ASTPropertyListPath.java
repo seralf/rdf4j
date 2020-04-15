@@ -20,9 +20,8 @@ public class ASTPropertyListPath extends SimpleNode {
 	}
 
 	/** Accept the visitor. **/
-	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	@Override
+	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		return visitor.visit(this, data);
 	}
 
@@ -31,12 +30,12 @@ public class ASTPropertyListPath extends SimpleNode {
 	}
 
 	public ASTObjectList getObjectList() {
-		return (ASTObjectList)children.get(1);
+		return (ASTObjectList) children.get(1);
 	}
 
 	public ASTPropertyListPath getNextPropertyList() {
 		if (children.size() >= 3) {
-			return (ASTPropertyListPath)children.get(2);
+			return (ASTPropertyListPath) children.get(2);
 		}
 		return null;
 	}

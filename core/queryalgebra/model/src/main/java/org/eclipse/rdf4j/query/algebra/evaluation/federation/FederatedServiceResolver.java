@@ -10,8 +10,8 @@ package org.eclipse.rdf4j.query.algebra.evaluation.federation;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 
 /**
- * The {@link FederatedServiceResolver} is used to manage a set of {@link FederatedService} instances, which
- * are used to evaluate SERVICE expressions for particular service Urls.
+ * The {@link FederatedServiceResolver} is used to manage a set of {@link FederatedService} instances, which are used to
+ * evaluate SERVICE expressions for particular service Urls.
  * <p>
  * Lookup can be done via the serviceUrl using the method {@link #getService(String)}.
  * 
@@ -21,16 +21,15 @@ import org.eclipse.rdf4j.query.QueryEvaluationException;
 public interface FederatedServiceResolver {
 
 	/**
-	 * Retrieve the {@link FederatedService} registered for serviceUrl. If there is no service registered for
-	 * serviceUrl, a new {@link SPARQLFederatedService} is created and registered.
+	 * Retrieve the {@link org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedService} registered for
+	 * serviceUrl. If there is no service registered for serviceUrl, a new
+	 * {@link org.eclipse.rdf4j.query.algebra.evaluation.federation.SPARQLFederatedService} is created and registered.
 	 * 
-	 * @param serviceUrl
-	 *        locator for the federation service
-	 * @return the {@link FederatedService}, created fresh if necessary
-	 * @throws QueryEvaluationException
-	 *         If there was an exception generated while retrieving the service.
+	 * @param serviceUrl locator for the federation service
+	 * @return the {@link org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedService}, created fresh if
+	 *         necessary
+	 * @throws QueryEvaluationException If there was an exception generated while retrieving the service.
 	 */
-	FederatedService getService(String serviceUrl)
-		throws QueryEvaluationException;
+	FederatedService getService(String serviceUrl) throws QueryEvaluationException;
 
 }

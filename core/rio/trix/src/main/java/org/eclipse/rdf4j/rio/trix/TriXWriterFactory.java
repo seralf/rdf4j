@@ -24,6 +24,7 @@ public class TriXWriterFactory implements RDFWriterFactory {
 	/**
 	 * Returns {@link RDFFormat#TRIX}.
 	 */
+	@Override
 	public RDFFormat getRDFFormat() {
 		return RDFFormat.TRIX;
 	}
@@ -31,6 +32,7 @@ public class TriXWriterFactory implements RDFWriterFactory {
 	/**
 	 * Returns a new instance of {@link TriXWriter}.
 	 */
+	@Override
 	public RDFWriter getWriter(OutputStream out) {
 		return new TriXWriter(out);
 	}
@@ -38,7 +40,24 @@ public class TriXWriterFactory implements RDFWriterFactory {
 	/**
 	 * Returns a new instance of {@link TriXWriter}.
 	 */
+	@Override
+	public RDFWriter getWriter(OutputStream out, String baseURI) {
+		return new TriXWriter(out);
+	}
+
+	/**
+	 * Returns a new instance of {@link TriXWriter}.
+	 */
+	@Override
 	public RDFWriter getWriter(Writer writer) {
+		return new TriXWriter(writer);
+	}
+
+	/**
+	 * Returns a new instance of {@link TriXWriter}.
+	 */
+	@Override
+	public RDFWriter getWriter(Writer writer, String baseURI) {
 		return new TriXWriter(writer);
 	}
 }

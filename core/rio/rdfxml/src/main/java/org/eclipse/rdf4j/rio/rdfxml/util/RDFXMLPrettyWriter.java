@@ -14,6 +14,7 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.util.Stack;
 
+import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
@@ -28,23 +29,22 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.rdfxml.RDFXMLWriter;
 
 /**
- * An extension of RDFXMLWriter that outputs a more concise form of RDF/XML. The resulting output is
- * semantically equivalent to the output of an RDFXMLWriter (it produces the same set of statements), but it
- * is usually easier to read for humans.
+ * An extension of RDFXMLWriter that outputs a more concise form of RDF/XML. The resulting output is semantically
+ * equivalent to the output of an RDFXMLWriter (it produces the same set of statements), but it is usually easier to
+ * read for humans.
  * <p>
- * This is a quasi-streaming RDFWriter. Statements are cached as long as the striped syntax is followed (i.e.
- * the subject of the next statement is the object of the previous statement) and written to the output when
- * the stripe is broken.
+ * This is a quasi-streaming RDFWriter. Statements are cached as long as the striped syntax is followed (i.e. the
+ * subject of the next statement is the object of the previous statement) and written to the output when the stripe is
+ * broken.
  * <p>
- * The abbreviations used are
- * <a href="http://www.w3.org/TR/rdf-syntax-grammar/#section-Syntax-typed-nodes" >typed node elements</a>,
- * <a href= "http://www.w3.org/TR/rdf-syntax-grammar/#section-Syntax-empty-property-elements" >empty property
- * elements</a> and
- * <a href= "http://www.w3.org/TR/rdf-syntax-grammar/#section-Syntax-node-property-elements" >striped
- * syntax</a>. Note that these abbreviations require that statements are written in the appropriate order.
+ * The abbreviations used are <a href="http://www.w3.org/TR/rdf-syntax-grammar/#section-Syntax-typed-nodes" >typed node
+ * elements</a>, <a href= "http://www.w3.org/TR/rdf-syntax-grammar/#section-Syntax-empty-property-elements" >empty
+ * property elements</a> and
+ * <a href= "http://www.w3.org/TR/rdf-syntax-grammar/#section-Syntax-node-property-elements" >striped syntax</a>. Note
+ * that these abbreviations require that statements are written in the appropriate order.
  * <p>
- * Striped syntax means that when the object of a statement is the subject of the next statement we can nest
- * the descriptions in each other.
+ * Striped syntax means that when the object of a statement is the subject of the next statement we can nest the
+ * descriptions in each other.
  * <p>
  * Example:
  * 
@@ -112,12 +112,12 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	/**
 	 * Stack for remembering the nodes (subjects/objects) of statements at each level.
 	 */
-	private final Stack<Node> nodeStack = new Stack<Node>();
+	private final Stack<Node> nodeStack = new Stack<>();
 
 	/**
 	 * Stack for remembering the predicate of statements at each level.
 	 */
-	private final Stack<IRI> predicateStack = new Stack<IRI>();
+	private final Stack<IRI> predicateStack = new Stack<>();
 
 	/*--------------*
 	 * Constructors *
@@ -126,21 +126,38 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	/**
 	 * Creates a new RDFXMLPrintWriter that will write to the supplied OutputStream.
 	 * 
-	 * @param out
-	 *        The OutputStream to write the RDF/XML document to.
+	 * @param out The OutputStream to write the RDF/XML document to.
 	 */
 	public RDFXMLPrettyWriter(OutputStream out) {
 		super(out);
 	}
 
 	/**
+	 * Creates a new RDFXMLPrintWriter that will write to the supplied OutputStream.
+	 *
+	 * @param out The OutputStream to write the RDF/XML document to.
+	 */
+	public RDFXMLPrettyWriter(OutputStream out, ParsedIRI baseIRI) {
+		super(out, baseIRI);
+	}
+
+	/**
 	 * Creates a new RDFXMLPrintWriter that will write to the supplied Writer.
 	 * 
-	 * @param out
-	 *        The Writer to write the RDF/XML document to.
+	 * @param out The Writer to write the RDF/XML document to.
 	 */
 	public RDFXMLPrettyWriter(Writer out) {
 		super(out);
+	}
+
+	/**
+	 * Creates a new RDFXMLPrintWriter that will write to the supplied Writer.
+	 *
+	 * @param writer  the Writer to write the RDF/XML document to
+	 * @param baseIRI base IRI
+	 */
+	public RDFXMLPrettyWriter(Writer writer, ParsedIRI baseIRI) {
+		super(writer, baseIRI);
 	}
 
 	/*---------*
@@ -148,9 +165,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	 *---------*/
 
 	@Override
-	protected void writeHeader()
-		throws IOException
-	{
+	protected void writeHeader() throws IOException {
 		// This export format needs the RDF Schema namespace to be defined:
 		setNamespace(RDFS.PREFIX, RDFS.NAMESPACE);
 
@@ -158,9 +173,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	}
 
 	@Override
-	public void flush()
-		throws IOException
-	{
+	public void flush() throws IOException {
 		if (writingStarted) {
 			if (!headerWritten) {
 				writeHeader();
@@ -168,12 +181,10 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 
 			try {
 				flushPendingStatements();
-			}
-			catch (RDFHandlerException e) {
+			} catch (RDFHandlerException e) {
 				if (e.getCause() != null && e.getCause() instanceof IOException) {
-					throw (IOException)e.getCause();
-				}
-				else {
+					throw (IOException) e.getCause();
+				} else {
 					throw new IOException(e);
 				}
 			}
@@ -183,23 +194,18 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	}
 
 	@Override
-	public void close()
-		throws IOException
-	{
+	public void close() throws IOException {
 		try {
 			if (writingStarted) {
 				endRDF();
 			}
-		}
-		catch (RDFHandlerException e) {
+		} catch (RDFHandlerException e) {
 			if (e.getCause() != null && e.getCause() instanceof IOException) {
-				throw (IOException)e.getCause();
-			}
-			else {
+				throw (IOException) e.getCause();
+			} else {
 				throw new IOException(e);
 			}
-		}
-		finally {
+		} finally {
 			nodeStack.clear();
 			predicateStack.clear();
 			writer.close();
@@ -207,9 +213,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	}
 
 	@Override
-	protected void flushPendingStatements()
-		throws IOException, RDFHandlerException
-	{
+	protected void flushPendingStatements() throws IOException, RDFHandlerException {
 		if (!nodeStack.isEmpty()) {
 			popStacks(null);
 		}
@@ -220,9 +224,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	 * 
 	 * @param newSubject
 	 */
-	private void popStacks(Resource newSubject)
-		throws IOException, RDFHandlerException
-	{
+	private void popStacks(Resource newSubject) throws IOException, RDFHandlerException {
 		// Write start tags for the part of the stacks that are not yet
 		// written
 		for (int i = 0; i < nodeStack.size() - 1; i++) {
@@ -252,16 +254,14 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 			writeIndents(nodeStack.size() * 2);
 			writeNodeEmptyTag(topNode);
 			writeNewLine();
-		}
-		else {
+		} else {
 			IRI topPredicate = predicateStack.pop();
 
 			if (!topNode.hasType()) {
 				// we can use an abbreviated predicate
 				writeIndents(nodeStack.size() * 2 - 1);
 				writeAbbreviatedPredicate(topPredicate, topNode.getValue());
-			}
-			else {
+			} else {
 				// we cannot use an abbreviated predicate because the type needs to
 				// written out as well
 
@@ -286,8 +286,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 
 			if (nextElement.getValue().equals(newSubject)) {
 				break;
-			}
-			else {
+			} else {
 				nodeStack.pop();
 
 				// We have already written out the subject/object,
@@ -310,9 +309,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	}
 
 	@Override
-	public void handleStatement(Statement st)
-		throws RDFHandlerException
-	{
+	public void handleStatement(Statement st) throws RDFHandlerException {
 		if (!writingStarted) {
 			throw new RDFHandlerException("Document writing has not yet been started");
 		}
@@ -346,13 +343,10 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 			// element is possible
 			// FIXME: verify that an XML namespace-qualified name can be created
 			// for the type URI
-			if (pred.equals(RDF.TYPE) && obj instanceof IRI && !topSubject.hasType()
-					&& !topSubject.isWritten())
-			{
+			if (pred.equals(RDF.TYPE) && obj instanceof IRI && !topSubject.hasType() && !topSubject.isWritten()) {
 				// Use typed node element
-				topSubject.setType((IRI)obj);
-			}
-			else {
+				topSubject.setType((IRI) obj);
+			} else {
 				if (!nodeStack.isEmpty() && pred.equals(nodeStack.peek().nextLi())) {
 					pred = RDF.LI;
 					nodeStack.peek().incrementNextLi();
@@ -362,36 +356,31 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 				predicateStack.push(pred);
 				nodeStack.push(new Node(obj));
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RDFHandlerException(e);
 		}
 	}
 
 	/**
-	 * Write out the opening tag of the subject or object of a statement up to (but not including) the end of
-	 * the tag. Used both in writeStartSubject and writeEmptySubject.
+	 * Write out the opening tag of the subject or object of a statement up to (but not including) the end of the tag.
+	 * Used both in writeStartSubject and writeEmptySubject.
 	 */
-	private void writeNodeStartOfStartTag(Node node)
-		throws IOException, RDFHandlerException
-	{
+	private void writeNodeStartOfStartTag(Node node) throws IOException, RDFHandlerException {
 		Value value = node.getValue();
 
 		if (node.hasType()) {
 			// We can use abbreviated syntax
 			writeStartOfStartTag(node.getType().getNamespace(), node.getType().getLocalName());
-		}
-		else {
+		} else {
 			// We cannot use abbreviated syntax
 			writeStartOfStartTag(RDF.NAMESPACE, "Description");
 		}
 
 		if (value instanceof IRI) {
-			IRI uri = (IRI)value;
+			IRI uri = (IRI) value;
 			writeAttribute(RDF.NAMESPACE, "about", uri.toString());
-		}
-		else {
-			BNode bNode = (BNode)value;
+		} else {
+			BNode bNode = (BNode) value;
 			writeAttribute(RDF.NAMESPACE, "nodeID", getValidNodeId(bNode));
 		}
 	}
@@ -399,9 +388,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	/**
 	 * Write out the opening tag of the subject or object of a statement.
 	 */
-	private void writeNodeStartTag(Node node)
-		throws IOException, RDFHandlerException
-	{
+	private void writeNodeStartTag(Node node) throws IOException, RDFHandlerException {
 		writeNodeStartOfStartTag(node);
 		writeEndOfStartTag();
 		writeNewLine();
@@ -410,13 +397,10 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	/**
 	 * Write out the closing tag for the subject or object of a statement.
 	 */
-	private void writeNodeEndTag(Node node)
-		throws IOException
-	{
+	private void writeNodeEndTag(Node node) throws IOException {
 		if (node.getType() != null) {
 			writeEndTag(node.getType().getNamespace(), node.getType().getLocalName());
-		}
-		else {
+		} else {
 			writeEndTag(RDF.NAMESPACE, "Description");
 		}
 		writeNewLine();
@@ -425,9 +409,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	/**
 	 * Write out an empty tag for the subject or object of a statement.
 	 */
-	private void writeNodeEmptyTag(Node node)
-		throws IOException, RDFHandlerException
-	{
+	private void writeNodeEmptyTag(Node node) throws IOException, RDFHandlerException {
 		writeNodeStartOfStartTag(node);
 		writeEndOfEmptyTag();
 	}
@@ -435,27 +417,23 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	/**
 	 * Write out an empty property element.
 	 */
-	private void writeAbbreviatedPredicate(IRI pred, Value obj)
-		throws IOException, RDFHandlerException
-	{
+	private void writeAbbreviatedPredicate(IRI pred, Value obj) throws IOException, RDFHandlerException {
 		writeStartOfStartTag(pred.getNamespace(), pred.getLocalName());
 
 		if (obj instanceof Resource) {
-			Resource objRes = (Resource)obj;
+			Resource objRes = (Resource) obj;
 
 			if (objRes instanceof IRI) {
-				IRI uri = (IRI)objRes;
+				IRI uri = (IRI) objRes;
 				writeAttribute(RDF.NAMESPACE, "resource", uri.toString());
-			}
-			else {
-				BNode bNode = (BNode)objRes;
+			} else {
+				BNode bNode = (BNode) objRes;
 				writeAttribute(RDF.NAMESPACE, "nodeID", getValidNodeId(bNode));
 			}
 
 			writeEndOfEmptyTag();
-		}
-		else if (obj instanceof Literal) {
-			Literal objLit = (Literal)obj;
+		} else if (obj instanceof Literal) {
+			Literal objLit = (Literal) obj;
 			// datatype attribute
 			IRI datatype = objLit.getDatatype();
 			// Check if datatype is rdf:XMLLiteral
@@ -464,12 +442,10 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 			// language attribute
 			if (Literals.isLanguageLiteral(objLit)) {
 				writeAttribute("xml:lang", objLit.getLanguage().get());
-			}
-			else {
+			} else {
 				if (isXmlLiteral) {
 					writeAttribute(RDF.NAMESPACE, "parseType", "Literal");
-				}
-				else {
+				} else {
 					writeAttribute(RDF.NAMESPACE, "datatype", datatype.toString());
 				}
 			}
@@ -480,8 +456,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 			if (isXmlLiteral) {
 				// Write XML literal as plain XML
 				writer.write(objLit.getLabel());
-			}
-			else {
+			} else {
 				writeCharacterData(objLit.getLabel());
 			}
 
@@ -491,9 +466,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 		writeNewLine();
 	}
 
-	protected void writeStartTag(String namespace, String localName)
-		throws IOException
-	{
+	protected void writeStartTag(String namespace, String localName) throws IOException {
 		writeStartOfStartTag(namespace, localName);
 		writeEndOfStartTag();
 	}
@@ -501,9 +474,7 @@ public class RDFXMLPrettyWriter extends RDFXMLWriter implements Closeable, Flush
 	/**
 	 * Writes <tt>n</tt> indents.
 	 */
-	protected void writeIndents(int n)
-		throws IOException
-	{
+	protected void writeIndents(int n) throws IOException {
 		for (int i = 0; i < n; i++) {
 			writeIndent();
 		}

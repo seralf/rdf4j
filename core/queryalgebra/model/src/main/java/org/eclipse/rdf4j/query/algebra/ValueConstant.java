@@ -44,9 +44,8 @@ public class ValueConstant extends AbstractQueryModelNode implements ValueExpr {
 		this.value = value;
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -65,7 +64,7 @@ public class ValueConstant extends AbstractQueryModelNode implements ValueExpr {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ValueConstant) {
-			ValueConstant o = (ValueConstant)other;
+			ValueConstant o = (ValueConstant) other;
 			return value.equals(o.getValue());
 		}
 		return false;
@@ -78,6 +77,6 @@ public class ValueConstant extends AbstractQueryModelNode implements ValueExpr {
 
 	@Override
 	public ValueConstant clone() {
-		return (ValueConstant)super.clone();
+		return (ValueConstant) super.clone();
 	}
 }

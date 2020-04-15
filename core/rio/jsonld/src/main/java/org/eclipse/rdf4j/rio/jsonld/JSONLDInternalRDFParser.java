@@ -10,17 +10,18 @@ package org.eclipse.rdf4j.rio.jsonld;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.BNode;
-import org.eclipse.rdf4j.model.Graph;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Namespace;
+import org.eclipse.rdf4j.model.NamespaceAware;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
+import com.github.jsonldjava.core.JsonLdConsts;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.RDFDataset;
 
@@ -47,7 +48,7 @@ class JSONLDInternalRDFParser implements com.github.jsonldjava.core.RDFParser {
 		final String graphName = getResourceValue(nextStatement.getContext());
 
 		if (object instanceof Literal) {
-			final Literal literal = (Literal)object;
+			final Literal literal = (Literal) object;
 			final String value = literal.getLabel();
 
 			String datatype = getResourceValue(literal.getDatatype());
@@ -64,45 +65,38 @@ class JSONLDInternalRDFParser implements com.github.jsonldjava.core.RDFParser {
 				datatype = XMLSchema.STRING.stringValue();
 			}
 
-			result.addQuad(subject, predicate, value, datatype, literal.getLanguage().orElse(null),
-					graphName);
-		}
-		else {
-			result.addQuad(subject, predicate, getResourceValue((Resource)object), graphName);
+			result.addQuad(subject, predicate, value, datatype, literal.getLanguage().orElse(null), graphName);
+		} else {
+			result.addQuad(subject, predicate, getResourceValue((Resource) object), graphName);
 		}
 	}
 
 	private String getResourceValue(Resource subject) {
 		if (subject == null) {
 			return null;
-		}
-		else if (subject instanceof IRI) {
+		} else if (subject instanceof IRI) {
 			return subject.stringValue();
-		}
-		else if (subject instanceof BNode) {
-			return "_:" + subject.stringValue();
+		} else if (subject instanceof BNode) {
+			return JsonLdConsts.BLANK_NODE_PREFIX + subject.stringValue();
 		}
 
 		throw new IllegalStateException("Did not recognise resource type: " + subject.getClass().getName());
 	}
 
 	@Override
-	public RDFDataset parse(Object input)
-		throws JsonLdError
-	{
+	public RDFDataset parse(Object input) throws JsonLdError {
 		final RDFDataset result = new RDFDataset();
 		if (input instanceof Statement) {
-			handleStatement(result, (Statement)input);
-		}
-		else if (input instanceof Graph) {
-			if (input instanceof Model) {
-				final Set<Namespace> namespaces = ((Model)input).getNamespaces();
+			handleStatement(result, (Statement) input);
+		} else if (input instanceof Model) {
+			if (input instanceof NamespaceAware) {
+				final Set<Namespace> namespaces = ((NamespaceAware) input).getNamespaces();
 				for (final Namespace nextNs : namespaces) {
 					result.setNamespace(nextNs.getName(), nextNs.getPrefix());
 				}
 			}
 
-			for (final Statement nextStatement : (Graph)input) {
+			for (final Statement nextStatement : (Model) input) {
 				handleStatement(result, nextStatement);
 			}
 		}

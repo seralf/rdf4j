@@ -36,32 +36,32 @@ public class Join extends BinaryTupleOperator {
 	 *---------*/
 
 	/**
-	 * @deprecated Since 2.7.3. Use {@link TupleExprs#containsProjection(TupleExpr)} instead.
-	 * @return <code>true</code> if the right argument of this Join contains a projection, <code>false</code>
-	 *         otherwise.
+	 * @deprecated since 2.0. Use {@link TupleExprs#containsProjection(TupleExpr)} instead.
+	 * @return <code>true</code> if the right argument of this Join contains a projection, <code>false</code> otherwise.
 	 */
 	@Deprecated
 	public boolean hasSubSelectInRightArg() {
 		return TupleExprs.containsSubquery(rightArg);
 	}
 
+	@Override
 	public Set<String> getBindingNames() {
-		Set<String> bindingNames = new LinkedHashSet<String>(16);
+		Set<String> bindingNames = new LinkedHashSet<>(16);
 		bindingNames.addAll(getLeftArg().getBindingNames());
 		bindingNames.addAll(getRightArg().getBindingNames());
 		return bindingNames;
 	}
 
+	@Override
 	public Set<String> getAssuredBindingNames() {
-		Set<String> bindingNames = new LinkedHashSet<String>(16);
+		Set<String> bindingNames = new LinkedHashSet<>(16);
 		bindingNames.addAll(getLeftArg().getAssuredBindingNames());
 		bindingNames.addAll(getRightArg().getAssuredBindingNames());
 		return bindingNames;
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -77,7 +77,7 @@ public class Join extends BinaryTupleOperator {
 
 	@Override
 	public Join clone() {
-		return (Join)super.clone();
+		return (Join) super.clone();
 	}
 
 }

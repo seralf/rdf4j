@@ -20,13 +20,11 @@ public class ASTPathExprUnion extends ASTPathExpr {
 	}
 
 	@Override
-	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		return visitor.visit(this, data);
 	}
 
 	public List<ASTPathExpr> getPathExprList() {
-		return new CastingList<ASTPathExpr>(children);
+		return new CastingList<>(children);
 	}
 }

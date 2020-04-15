@@ -27,9 +27,8 @@ public class LangMatches extends BinaryValueOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -45,6 +44,6 @@ public class LangMatches extends BinaryValueOperator {
 
 	@Override
 	public LangMatches clone() {
-		return (LangMatches)super.clone();
+		return (LangMatches) super.clone();
 	}
 }

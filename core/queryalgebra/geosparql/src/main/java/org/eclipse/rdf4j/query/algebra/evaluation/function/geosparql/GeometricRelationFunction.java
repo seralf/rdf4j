@@ -11,27 +11,27 @@ import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.query.algebra.evaluation.ValueExprEvaluationException;
 import org.eclipse.rdf4j.query.algebra.evaluation.function.Function;
-
-import com.spatial4j.core.context.SpatialContext;
-import com.spatial4j.core.shape.Shape;
+import org.locationtech.spatial4j.context.SpatialContext;
+import org.locationtech.spatial4j.shape.Shape;
 
 abstract class GeometricRelationFunction implements Function {
 
 	@Override
-	public Value evaluate(ValueFactory valueFactory, Value... args)
-		throws ValueExprEvaluationException
-	{
+	public Value evaluate(ValueFactory valueFactory, Value... args) throws ValueExprEvaluationException {
 		if (args.length != 2) {
-			throw new ValueExprEvaluationException(
-					getURI() + " requires exactly 2 arguments, got " + args.length);
+			throw new ValueExprEvaluationException(getURI() + " requires exactly 2 arguments, got " + args.length);
 		}
 
 		SpatialContext geoContext = SpatialSupport.getSpatialContext();
 		Shape geom1 = FunctionArguments.getShape(this, args[0], geoContext);
 		Shape geom2 = FunctionArguments.getShape(this, args[1], geoContext);
-		boolean result = relation(geom1, geom2);
+		try {
+			boolean result = relation(geom1, geom2);
 
-		return valueFactory.createLiteral(result);
+			return valueFactory.createLiteral(result);
+		} catch (RuntimeException e) {
+			throw new ValueExprEvaluationException("error evaluating geospatial relation", e);
+		}
 	}
 
 	protected abstract boolean relation(Shape g1, Shape g2);

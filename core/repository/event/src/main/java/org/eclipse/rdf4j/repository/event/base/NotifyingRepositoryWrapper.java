@@ -21,8 +21,8 @@ import org.eclipse.rdf4j.repository.event.RepositoryConnectionListener;
 import org.eclipse.rdf4j.repository.event.RepositoryListener;
 
 /**
- * This notifying decorator allows listeners to register with the repository or connection and be notified
- * when events occur.
+ * This notifying decorator allows listeners to register with the repository or connection and be notified when events
+ * occur.
  * 
  * @author James Leigh
  * @author Herko ter Horst
@@ -39,9 +39,9 @@ public class NotifyingRepositoryWrapper extends RepositoryWrapper implements Not
 
 	private boolean defaultReportDeltas = false;
 
-	private Set<RepositoryListener> listeners = new CopyOnWriteArraySet<RepositoryListener>();
+	private Set<RepositoryListener> listeners = new CopyOnWriteArraySet<>();
 
-	private Set<RepositoryConnectionListener> conListeners = new CopyOnWriteArraySet<RepositoryConnectionListener>();
+	private Set<RepositoryConnectionListener> conListeners = new CopyOnWriteArraySet<>();
 
 	/*--------------*
 	 * Constructors *
@@ -73,9 +73,10 @@ public class NotifyingRepositoryWrapper extends RepositoryWrapper implements Not
 	}
 
 	/**
-	 * Registers a <tt>RepositoryListener</tt> that will receive notifications of operations that are
-	 * performed on this repository.
+	 * Registers a <tt>RepositoryListener</tt> that will receive notifications of operations that are performed on this
+	 * repository.
 	 */
+	@Override
 	public void addRepositoryListener(RepositoryListener listener) {
 		listeners.add(listener);
 		activated = true;
@@ -84,15 +85,17 @@ public class NotifyingRepositoryWrapper extends RepositoryWrapper implements Not
 	/**
 	 * Removes a registered <tt>RepositoryListener</tt> from this repository.
 	 */
+	@Override
 	public void removeRepositoryListener(RepositoryListener listener) {
 		listeners.remove(listener);
 		activated = !listeners.isEmpty();
 	}
 
 	/**
-	 * Registers a <tt>RepositoryConnectionListener</tt> that will receive notifications of operations that
-	 * are performed on any< connections that are created by this repository.
+	 * Registers a <tt>RepositoryConnectionListener</tt> that will receive notifications of operations that are
+	 * performed on any< connections that are created by this repository.
 	 */
+	@Override
 	public void addRepositoryConnectionListener(RepositoryConnectionListener listener) {
 		conListeners.add(listener);
 	}
@@ -100,14 +103,13 @@ public class NotifyingRepositoryWrapper extends RepositoryWrapper implements Not
 	/**
 	 * Removes a registered <tt>RepositoryConnectionListener</tt> from this repository.
 	 */
+	@Override
 	public void removeRepositoryConnectionListener(RepositoryConnectionListener listener) {
 		conListeners.remove(listener);
 	}
 
 	@Override
-	public NotifyingRepositoryConnection getConnection()
-		throws RepositoryException
-	{
+	public NotifyingRepositoryConnection getConnection() throws RepositoryException {
 		RepositoryConnection con = getDelegate().getConnection();
 		NotifyingRepositoryConnection ncon = new NotifyingRepositoryConnectionWrapper(this, con,
 				getDefaultReportDeltas());
@@ -125,9 +127,7 @@ public class NotifyingRepositoryWrapper extends RepositoryWrapper implements Not
 	}
 
 	@Override
-	public void initialize()
-		throws RepositoryException
-	{
+	public void initialize() throws RepositoryException {
 		super.initialize();
 
 		if (activated) {
@@ -149,9 +149,7 @@ public class NotifyingRepositoryWrapper extends RepositoryWrapper implements Not
 	}
 
 	@Override
-	public void shutDown()
-		throws RepositoryException
-	{
+	public void shutDown() throws RepositoryException {
 		super.shutDown();
 
 		if (activated) {

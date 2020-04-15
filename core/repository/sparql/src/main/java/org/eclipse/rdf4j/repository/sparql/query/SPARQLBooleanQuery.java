@@ -28,28 +28,20 @@ public class SPARQLBooleanQuery extends AbstractHTTPQuery implements BooleanQuer
 		super(httpClient, QueryLanguage.SPARQL, queryString, baseURI);
 	}
 
-	public boolean evaluate()
-		throws QueryEvaluationException
-	{
+	@Override
+	public boolean evaluate() throws QueryEvaluationException {
 
 		SPARQLProtocolSession client = getHttpClient();
 
 		try {
-			return client.sendBooleanQuery(queryLanguage, getQueryString(), baseURI, dataset,
-					getIncludeInferred(), getMaxExecutionTime(), getBindingsArray());
-		}
-		catch (IOException e) {
-			throw new QueryEvaluationException(e.getMessage(), e);
-		}
-		catch (RepositoryException e) {
-			throw new QueryEvaluationException(e.getMessage(), e);
-		}
-		catch (MalformedQueryException e) {
+			return client.sendBooleanQuery(queryLanguage, getQueryString(), baseURI, dataset, getIncludeInferred(),
+					getMaxExecutionTime(), getBindingsArray());
+		} catch (IOException | RepositoryException | MalformedQueryException e) {
 			throw new QueryEvaluationException(e.getMessage(), e);
 		}
 	}
 
 	private String getQueryString() {
-		return QueryStringUtil.getQueryString(queryString, getBindings());
+		return QueryStringUtil.getBooleanQueryString(queryString, getBindings());
 	}
 }

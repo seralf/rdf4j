@@ -7,26 +7,16 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.model;
 
-import org.eclipse.rdf4j.model.LinkedHashModelTest;
-import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.model.ModelTest;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 
-import junit.framework.Test;
+/**
+ * @author Peter Ansell
+ */
+public class LinkedHashModelTest extends AbstractModelTest {
 
-public class LinkedHashModelTest extends ModelTest {
-
-	public static Test suite()
-		throws Exception
-	{
-		return ModelTest.suite(LinkedHashModelTest.class);
-	}
-
-	public LinkedHashModelTest(String name) {
-		super(name);
-	}
-
-	public Model makeEmptyModel() {
+	@Override
+	protected Model getNewModel() {
 		return new LinkedHashModel();
 	}
+
 }

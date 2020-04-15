@@ -27,17 +27,16 @@ import org.eclipse.rdf4j.repository.event.InterceptingRepositoryConnection;
 import org.eclipse.rdf4j.repository.event.RepositoryConnectionInterceptor;
 
 /**
- * Wrapper that notifies interceptors of events on RepositoryConnections before they happen. Any interceptor
- * can block the operation by returning true from the relevant notification method. To do so will also cause
- * the notification process to stop, i.e. no other interceptors will be notified. The order in which
- * interceptors are notified is unspecified.
+ * Wrapper that notifies interceptors of events on RepositoryConnections before they happen. Any interceptor can block
+ * the operation by returning true from the relevant notification method. To do so will also cause the notification
+ * process to stop, i.e. no other interceptors will be notified. The order in which interceptors are notified is
+ * unspecified.
  * 
  * @author Herko ter Horst
  * @see InterceptingRepositoryWrapper
  */
 public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectionWrapper
-		implements InterceptingRepositoryConnection
-{
+		implements InterceptingRepositoryConnection {
 
 	/*-----------*
 	 * Variables *
@@ -45,7 +44,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 
 	private boolean activated;
 
-	private Set<RepositoryConnectionInterceptor> interceptors = new CopyOnWriteArraySet<RepositoryConnectionInterceptor>();
+	private Set<RepositoryConnectionInterceptor> interceptors = new CopyOnWriteArraySet<>();
 
 	/*--------------*
 	 * Construcotrs *
@@ -60,9 +59,10 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	 *---------*/
 
 	/**
-	 * Registers a <tt>RepositoryConnectionInterceptor</tt> that will receive notifications of operations that
-	 * are performed on this connection.
+	 * Registers a <tt>RepositoryConnectionInterceptor</tt> that will receive notifications of operations that are
+	 * performed on this connection.
 	 */
+	@Override
 	public void addRepositoryConnectionInterceptor(RepositoryConnectionInterceptor interceptor) {
 		interceptors.add(interceptor);
 		activated = true;
@@ -71,6 +71,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	/**
 	 * Removes a registered <tt>RepositoryConnectionInterceptor</tt> from this connection.
 	 */
+	@Override
 	public void removeRepositoryConnectionInterceptor(RepositoryConnectionInterceptor interceptor) {
 		interceptors.remove(interceptor);
 		activated = !interceptors.isEmpty();
@@ -88,8 +89,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 
 	@Override
 	public void addWithoutCommit(Resource subject, IRI predicate, Value object, Resource... contexts)
-		throws RepositoryException
-	{
+			throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -105,9 +105,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	}
 
 	@Override
-	public void clear(Resource... contexts)
-		throws RepositoryException
-	{
+	public void clear(Resource... contexts) throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -123,9 +121,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	}
 
 	@Override
-	public void begin()
-		throws RepositoryException
-	{
+	public void begin() throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -141,9 +137,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	}
 
 	@Override
-	public void close()
-		throws RepositoryException
-	{
+	public void close() throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -159,9 +153,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	}
 
 	@Override
-	public void commit()
-		throws RepositoryException
-	{
+	public void commit() throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -178,8 +170,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 
 	@Override
 	public void removeWithoutCommit(Resource subject, IRI predicate, Value object, Resource... contexts)
-		throws RepositoryException
-	{
+			throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -196,9 +187,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	}
 
 	@Override
-	public void removeNamespace(String prefix)
-		throws RepositoryException
-	{
+	public void removeNamespace(String prefix) throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -214,9 +203,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	}
 
 	@Override
-	public void clearNamespaces()
-		throws RepositoryException
-	{
+	public void clearNamespaces() throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -232,9 +219,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	}
 
 	@Override
-	public void rollback()
-		throws RepositoryException
-	{
+	public void rollback() throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -251,9 +236,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 
 	@Override
 	@Deprecated
-	public void setAutoCommit(boolean autoCommit)
-		throws RepositoryException
-	{
+	public void setAutoCommit(boolean autoCommit) throws RepositoryException {
 		boolean denied = false;
 		boolean wasAutoCommit = isAutoCommit();
 		if (activated && wasAutoCommit != autoCommit) {
@@ -271,9 +254,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 	}
 
 	@Override
-	public void setNamespace(String prefix, String name)
-		throws RepositoryException
-	{
+	public void setNamespace(String prefix, String name) throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -290,8 +271,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 
 	@Override
 	public Update prepareUpdate(final QueryLanguage ql, final String update, final String baseURI)
-		throws MalformedQueryException, RepositoryException
-	{
+			throws MalformedQueryException, RepositoryException {
 		if (activated) {
 			return new Update() {
 
@@ -299,9 +279,8 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 
 				private final Update delegate = conn.prepareUpdate(ql, update, baseURI);
 
-				public void execute()
-					throws UpdateExecutionException
-				{
+				@Override
+				public void execute() throws UpdateExecutionException {
 					boolean denied = false;
 					if (activated) {
 						for (RepositoryConnectionInterceptor interceptor : interceptors) {
@@ -316,34 +295,42 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 					}
 				}
 
+				@Override
 				public void setBinding(String name, Value value) {
 					delegate.setBinding(name, value);
 				}
 
+				@Override
 				public void removeBinding(String name) {
 					delegate.removeBinding(name);
 				}
 
+				@Override
 				public void clearBindings() {
 					delegate.clearBindings();
 				}
 
+				@Override
 				public BindingSet getBindings() {
 					return delegate.getBindings();
 				}
 
+				@Override
 				public void setDataset(Dataset dataset) {
 					delegate.setDataset(dataset);
 				}
 
+				@Override
 				public Dataset getDataset() {
 					return delegate.getDataset();
 				}
 
+				@Override
 				public void setIncludeInferred(boolean includeInferred) {
 					delegate.setIncludeInferred(includeInferred);
 				}
 
+				@Override
 				public boolean getIncludeInferred() {
 					return delegate.getIncludeInferred();
 				}
@@ -358,8 +345,7 @@ public class InterceptingRepositoryConnectionWrapper extends RepositoryConnectio
 					return delegate.getMaxExecutionTime();
 				}
 			};
-		}
-		else {
+		} else {
 			return getDelegate().prepareUpdate(ql, update, baseURI);
 		}
 	}

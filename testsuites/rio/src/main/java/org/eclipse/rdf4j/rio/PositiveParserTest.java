@@ -17,9 +17,10 @@ import junit.framework.TestCase;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.util.Models;
-import org.eclipse.rdf4j.rio.RDFParser;
 import org.eclipse.rdf4j.rio.helpers.ParseErrorCollector;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PositiveParserTest extends TestCase {
 
@@ -39,14 +40,14 @@ public class PositiveParserTest extends TestCase {
 
 	protected IRI testUri;
 
+	private static final Logger logger = LoggerFactory.getLogger(PositiveParserTest.class);
+
 	/*--------------*
 	 * Constructors *
 	 *--------------*/
 
 	public PositiveParserTest(IRI testUri, String testName, String inputURL, String outputURL, String baseURL,
-			RDFParser targetParser, RDFParser ntriplesParser)
-		throws MalformedURLException
-	{
+			RDFParser targetParser, RDFParser ntriplesParser) throws MalformedURLException {
 		super(testName);
 		this.testUri = testUri;
 		this.inputURL = inputURL;
@@ -63,43 +64,37 @@ public class PositiveParserTest extends TestCase {
 	 *---------*/
 
 	@Override
-	protected void runTest()
-		throws Exception
-	{
+	protected void runTest() throws Exception {
 		// Parse input data
 		// targetParser.setDatatypeHandling(RDFParser.DatatypeHandling.IGNORE);
 
-		Set<Statement> inputCollection = new LinkedHashSet<Statement>();
+		Set<Statement> inputCollection = new LinkedHashSet<>();
 		StatementCollector inputCollector = new StatementCollector(inputCollection);
 		targetParser.setRDFHandler(inputCollector);
 
 		InputStream in = this.getClass().getResourceAsStream(inputURL);
 		assertNotNull("Test resource was not found: inputURL=" + inputURL, in);
 
-		System.err.println("test: " + inputURL);
+		logger.debug("test: " + inputURL);
 
 		ParseErrorCollector el = new ParseErrorCollector();
 		targetParser.setParseErrorListener(el);
 
 		try {
 			targetParser.parse(in, baseURL);
-		}
-		finally {
+		} finally {
 			in.close();
 
 			if (!el.getFatalErrors().isEmpty()) {
-				System.err.println("[Turtle] Input file had fatal parsing errors: ");
-				System.err.println(el.getFatalErrors());
+				logger.error("[Turtle] Input file had fatal parsing errors: \n" + el.getFatalErrors());
 			}
 
 			if (!el.getErrors().isEmpty()) {
-				System.err.println("[Turtle] Input file had parsing errors: ");
-				System.err.println(el.getErrors());
+				logger.error("[Turtle] Input file had parsing errors: \n" + el.getErrors());
 			}
 
 			if (!el.getWarnings().isEmpty()) {
-				System.err.println("[Turtle] Input file had parsing warnings: ");
-				System.err.println(el.getWarnings());
+				logger.warn("[Turtle] Input file had parsing warnings: \n" + el.getWarnings());
 			}
 		}
 
@@ -107,24 +102,23 @@ public class PositiveParserTest extends TestCase {
 			// Parse expected output data
 			ntriplesParser.setDatatypeHandling(RDFParser.DatatypeHandling.IGNORE);
 
-			Set<Statement> outputCollection = new LinkedHashSet<Statement>();
+			Set<Statement> outputCollection = new LinkedHashSet<>();
 			StatementCollector outputCollector = new StatementCollector(outputCollection);
 			ntriplesParser.setRDFHandler(outputCollector);
 
 			in = this.getClass().getResourceAsStream(outputURL);
 			try {
 				ntriplesParser.parse(in, baseURL);
-			}
-			finally {
+			} finally {
 				in.close();
 			}
 
 			// Check equality of the two models
 			if (!Models.isomorphic(inputCollection, outputCollection)) {
-				System.err.println("===models not equal===");
-				System.err.println("Expected: " + outputCollection);
-				System.err.println("Actual  : " + inputCollection);
-				System.err.println("======================");
+				logger.error("===models not equal===\n"
+						+ "Expected: " + outputCollection + "\n"
+						+ "Actual  : " + inputCollection + "\n"
+						+ "======================");
 
 				fail("models not equal");
 			}

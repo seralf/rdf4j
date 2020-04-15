@@ -25,10 +25,8 @@ public class Intersection extends BinaryTupleOperator {
 	/**
 	 * Creates a new intersection operator that operates on the two specified arguments.
 	 * 
-	 * @param leftArg
-	 *        The left argument of the intersection operator.
-	 * @param rightArg
-	 *        The right argument of the intersection operator.
+	 * @param leftArg  The left argument of the intersection operator.
+	 * @param rightArg The right argument of the intersection operator.
 	 */
 	public Intersection(TupleExpr leftArg, TupleExpr rightArg) {
 		super(leftArg, rightArg);
@@ -38,23 +36,24 @@ public class Intersection extends BinaryTupleOperator {
 	 * Methods *
 	 *---------*/
 
+	@Override
 	public Set<String> getBindingNames() {
-		Set<String> bindingNames = new LinkedHashSet<String>(16);
+		Set<String> bindingNames = new LinkedHashSet<>(16);
 		bindingNames.addAll(getLeftArg().getBindingNames());
 		bindingNames.retainAll(getRightArg().getBindingNames());
 		return bindingNames;
 	}
 
+	@Override
 	public Set<String> getAssuredBindingNames() {
-		Set<String> bindingNames = new LinkedHashSet<String>(16);
+		Set<String> bindingNames = new LinkedHashSet<>(16);
 		bindingNames.addAll(getLeftArg().getAssuredBindingNames());
 		bindingNames.retainAll(getRightArg().getAssuredBindingNames());
 		return bindingNames;
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -70,6 +69,6 @@ public class Intersection extends BinaryTupleOperator {
 
 	@Override
 	public Intersection clone() {
-		return (Intersection)super.clone();
+		return (Intersection) super.clone();
 	}
 }

@@ -8,7 +8,6 @@
 package org.eclipse.rdf4j.rio.n3;
 
 import org.eclipse.rdf4j.rio.RDFParser;
-import org.eclipse.rdf4j.rio.n3.N3ParserTestCase;
 import org.eclipse.rdf4j.rio.turtle.TurtleParser;
 import org.junit.Ignore;
 
@@ -21,9 +20,7 @@ import junit.framework.Test;
 @Ignore("FIXME: This test is badly broken")
 public class N3ParserTest extends N3ParserTestCase {
 
-	public static Test suite()
-		throws Exception
-	{
+	public static Test suite() throws Exception {
 		return new N3ParserTest().createTestSuite();
 	}
 

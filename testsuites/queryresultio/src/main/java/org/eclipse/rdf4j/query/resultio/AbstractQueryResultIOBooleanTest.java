@@ -5,13 +5,11 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/org/documents/edl-v10.php.
  *******************************************************************************/
+
 package org.eclipse.rdf4j.query.resultio;
 
 import java.util.Arrays;
 
-import org.eclipse.rdf4j.query.resultio.BooleanQueryResultFormat;
-import org.eclipse.rdf4j.query.resultio.QueryResultFormat;
-import org.eclipse.rdf4j.query.resultio.TupleQueryResultFormat;
 import org.junit.Test;
 
 /**
@@ -39,83 +37,63 @@ public abstract class AbstractQueryResultIOBooleanTest extends AbstractQueryResu
 	protected abstract TupleQueryResultFormat getMatchingTupleFormatOrNull();
 
 	@Test
-	public final void testBooleanNoLinks()
-		throws Exception
-	{
+	public final void testBooleanNoLinks() throws Exception {
 		doBooleanNoLinks(getBooleanFormat(), true);
 		doBooleanNoLinks(getBooleanFormat(), false);
 	}
 
 	@Test
-	public final void testBooleanEmptyLinks()
-		throws Exception
-	{
-		doBooleanLinks(getBooleanFormat(), true, Arrays.<String> asList());
-		doBooleanLinks(getBooleanFormat(), false, Arrays.<String> asList());
+	public final void testBooleanEmptyLinks() throws Exception {
+		doBooleanLinks(getBooleanFormat(), true, Arrays.<String>asList());
+		doBooleanLinks(getBooleanFormat(), false, Arrays.<String>asList());
 	}
 
 	@Test
-	public final void testBooleanOneLink()
-		throws Exception
-	{
+	public final void testBooleanOneLink() throws Exception {
 		doBooleanLinks(getBooleanFormat(), true, Arrays.asList("info"));
 		doBooleanLinks(getBooleanFormat(), false, Arrays.asList("info"));
 	}
 
 	@Test
-	public final void testBooleanMultipleLinks()
-		throws Exception
-	{
+	public final void testBooleanMultipleLinks() throws Exception {
 		doBooleanLinks(getBooleanFormat(), true, Arrays.asList("info", "alternate", "other", "another"));
 		doBooleanLinks(getBooleanFormat(), false, Arrays.asList("info", "alternate", "other", "another"));
 	}
 
 	@Test
-	public final void testBooleanEmptyLinksOnly()
-		throws Exception
-	{
-		doBooleanLinksOnly(getBooleanFormat(), true, Arrays.<String> asList());
-		doBooleanLinksOnly(getBooleanFormat(), false, Arrays.<String> asList());
+	public final void testBooleanEmptyLinksOnly() throws Exception {
+		doBooleanLinksOnly(getBooleanFormat(), true, Arrays.<String>asList());
+		doBooleanLinksOnly(getBooleanFormat(), false, Arrays.<String>asList());
 	}
 
 	@Test
-	public final void testBooleanOneLinkOnly()
-		throws Exception
-	{
+	public final void testBooleanOneLinkOnly() throws Exception {
 		doBooleanLinksOnly(getBooleanFormat(), true, Arrays.asList("info"));
 		doBooleanLinksOnly(getBooleanFormat(), false, Arrays.asList("info"));
 	}
 
 	@Test
-	public final void testBooleanMultipleLinksOnly()
-		throws Exception
-	{
+	public final void testBooleanMultipleLinksOnly() throws Exception {
 		doBooleanLinksOnly(getBooleanFormat(), true, Arrays.asList("info", "alternate", "other", "another"));
 		doBooleanLinksOnly(getBooleanFormat(), false, Arrays.asList("info", "alternate", "other", "another"));
 	}
 
 	@Test
-	public final void testBooleanMultipleLinksWithStylesheet()
-		throws Exception
-	{
-		doBooleanLinksAndStylesheet(getBooleanFormat(), true,
-				Arrays.asList("info", "alternate", "other", "another"), "test.xsl");
-		doBooleanLinksAndStylesheet(getBooleanFormat(), false,
-				Arrays.asList("info", "alternate", "other", "another"), "test.xsl");
+	public final void testBooleanMultipleLinksWithStylesheet() throws Exception {
+		doBooleanLinksAndStylesheet(getBooleanFormat(), true, Arrays.asList("info", "alternate", "other", "another"),
+				"test.xsl");
+		doBooleanLinksAndStylesheet(getBooleanFormat(), false, Arrays.asList("info", "alternate", "other", "another"),
+				"test.xsl");
 	}
 
 	@Test
-	public final void testMultipleResultsAndStylesheet()
-		throws Exception
-	{
+	public final void testMultipleResultsAndStylesheet() throws Exception {
 		doBooleanStylesheet(getBooleanFormat(), true, "test.xsl");
 		doBooleanStylesheet(getBooleanFormat(), false, "test.xsl");
 	}
 
 	@Test
-	public final void testInvalidBooleanAfterStartQueryResult()
-		throws Exception
-	{
+	public final void testInvalidBooleanAfterStartQueryResult() throws Exception {
 		doInvalidBooleanAfterStartQueryResult(getBooleanFormat(), true,
 				Arrays.asList("info", "alternate", "other", "another"));
 		doInvalidBooleanAfterStartQueryResult(getBooleanFormat(), false,
@@ -123,33 +101,25 @@ public abstract class AbstractQueryResultIOBooleanTest extends AbstractQueryResu
 	}
 
 	@Test
-	public final void testBooleanNoHandler()
-		throws Exception
-	{
+	public final void testBooleanNoHandler() throws Exception {
 		doBooleanNoHandler(getBooleanFormat(), true);
 		doBooleanNoHandler(getBooleanFormat(), false);
 	}
 
 	@Test
-	public final void testBooleanParseNoHandlerOnTupleResultsNoResults()
-		throws Exception
-	{
+	public final void testBooleanParseNoHandlerOnTupleResultsNoResults() throws Exception {
 		doBooleanParseNoHandlerOnTupleResults(getBooleanFormat(), createTupleNoBindingSets(),
 				getMatchingTupleFormatOrNull());
 	}
 
 	@Test
-	public final void testBooleanParseNoHandlerOnTupleResultsSingleVarMultipleBindingSets()
-		throws Exception
-	{
+	public final void testBooleanParseNoHandlerOnTupleResultsSingleVarMultipleBindingSets() throws Exception {
 		doBooleanParseNoHandlerOnTupleResults(getBooleanFormat(), createTupleSingleVarMultipleBindingSets(),
 				getMatchingTupleFormatOrNull());
 	}
 
 	@Test
-	public final void testBooleanParseNoHandlerOnTupleResultsMultipleBindingsMultipleBindingSets()
-		throws Exception
-	{
+	public final void testBooleanParseNoHandlerOnTupleResultsMultipleBindingsMultipleBindingSets() throws Exception {
 		doBooleanParseNoHandlerOnTupleResults(getBooleanFormat(), createTupleMultipleBindingSets(),
 				getMatchingTupleFormatOrNull());
 	}

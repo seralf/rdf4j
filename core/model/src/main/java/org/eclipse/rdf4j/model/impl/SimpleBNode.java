@@ -11,7 +11,7 @@ import org.eclipse.rdf4j.model.BNode;
 
 /**
  * An simple default implementation of the {@link BNode} interface.
- * 
+ *
  * @author Arjohn Kampman
  */
 public class SimpleBNode implements BNode {
@@ -36,17 +36,16 @@ public class SimpleBNode implements BNode {
 	 *--------------*/
 
 	/**
-	 * Creates a new, unitialized blank node. This blank node's ID needs to be {@link #setID(String) set}
-	 * before the normal methods can be used.
+	 * Creates a new, unitialized blank node. This blank node's ID needs to be {@link #setID(String) set} before the
+	 * normal methods can be used.
 	 */
 	protected SimpleBNode() {
 	}
 
 	/**
 	 * Creates a new blank node with the supplied identifier.
-	 * 
-	 * @param id
-	 *        The identifier for this blank node, must not be <tt>null</tt>.
+	 *
+	 * @param id The identifier for this blank node, must not be <tt>null</tt>.
 	 */
 	protected SimpleBNode(String id) {
 		this();
@@ -57,6 +56,7 @@ public class SimpleBNode implements BNode {
 	 * Methods *
 	 *---------*/
 
+	@Override
 	public String getID() {
 		return id;
 	}
@@ -65,6 +65,7 @@ public class SimpleBNode implements BNode {
 		this.id = id;
 	}
 
+	@Override
 	public String stringValue() {
 		return id;
 	}
@@ -77,8 +78,10 @@ public class SimpleBNode implements BNode {
 		}
 
 		if (o instanceof BNode) {
-			BNode otherNode = (BNode)o;
-			return this.getID().equals(otherNode.getID());
+			String a = getID();
+			String b = ((BNode) o).getID();
+
+			return a.equals(b);
 		}
 
 		return false;

@@ -6,15 +6,15 @@
   </head>
   <results>
     <result>
-      <binding name="service"><uri>http://localhost:18080/openrdf/repositories/endpoint1</uri></binding>
+      <binding name="service"><uri>http://localhost:18080/rdf4j-server/repositories/endpoint1</uri></binding>
       <binding name="title"><literal>Query remote RDF Data</literal></binding>
     </result>
     <result>
-      <binding name="service"><uri>http://localhost:18080/openrdf/repositories/endpoint1</uri></binding>
+      <binding name="service"><uri>http://localhost:18080/rdf4j-server/repositories/endpoint1</uri></binding>
       <binding name="title"><literal>Query multiple SPARQL endpoints</literal></binding>
     </result>
 	<result>
-      <binding name="service"><uri>http://localhost:18080/openrdf/repositories/endpoint2</uri></binding>
+      <binding name="service"><uri>http://localhost:18080/rdf4j-server/repositories/endpoint2</uri></binding>
       <binding name="title"><literal>Update remote RDF Data</literal></binding>
     </result>
   </results>

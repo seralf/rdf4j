@@ -13,14 +13,15 @@ package org.eclipse.rdf4j.queryrender.builder;
  * </p>
  * 
  * @author Michael Grove
+ * @deprecated use {@link org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder} instead.
  */
+@Deprecated
 public interface SupportsGroups<T> {
 
 	/**
 	 * Add this group from the query
 	 * 
-	 * @param theGroup
-	 *        the group to add
+	 * @param theGroup the group to add
 	 * @return this builder
 	 */
 	public T addGroup(Group theGroup);
@@ -28,8 +29,7 @@ public interface SupportsGroups<T> {
 	/**
 	 * Remove this group from the query
 	 * 
-	 * @param theGroup
-	 *        the group to remove
+	 * @param theGroup the group to remove
 	 * @return this builder
 	 */
 	public T removeGroup(Group theGroup);

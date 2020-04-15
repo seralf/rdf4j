@@ -30,7 +30,7 @@ public class SingletonIteration<E, X extends Exception> extends AbstractCloseabl
 	 * Creates a new EmptyIteration.
 	 */
 	public SingletonIteration(E value) {
-		this.value = new AtomicReference<E>(value);
+		this.value = new AtomicReference<>(value);
 	}
 
 	/*---------*
@@ -43,9 +43,7 @@ public class SingletonIteration<E, X extends Exception> extends AbstractCloseabl
 	}
 
 	@Override
-	public E next()
-		throws X
-	{
+	public E next() throws X {
 		E result = value.getAndSet(null);
 		if (result == null) {
 			close();
@@ -60,13 +58,10 @@ public class SingletonIteration<E, X extends Exception> extends AbstractCloseabl
 	}
 
 	@Override
-	protected void handleClose()
-		throws X
-	{
+	protected void handleClose() throws X {
 		try {
 			super.handleClose();
-		}
-		finally {
+		} finally {
 			value.set(null);
 		}
 	}

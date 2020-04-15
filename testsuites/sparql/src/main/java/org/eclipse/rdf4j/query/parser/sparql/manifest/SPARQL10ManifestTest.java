@@ -44,37 +44,33 @@ public class SPARQL10ManifestTest {
 
 	private static final boolean REMOTE = false;
 
-	public static TestSuite suite(SPARQLQueryTest.Factory factory)
-		throws Exception
-	{
+	public static TestSuite suite(SPARQLQueryTest.Factory factory) throws Exception {
 		final String manifestFile;
 		final File tmpDir;
 
 		if (REMOTE) {
 			manifestFile = "http://www.w3.org/2001/sw/DataAccess/tests/data-r2/manifest-evaluation.ttl";
 			tmpDir = null;
-		}
-		else {
-			URL url = SPARQL10ManifestTest.class.getResource("/testcases-sparql-1.0-w3c/data-r2/manifest-evaluation.ttl");
+		} else {
+			URL url = SPARQL10ManifestTest.class
+					.getResource("/testcases-sparql-1.0-w3c/data-r2/manifest-evaluation.ttl");
 
 			if ("jar".equals(url.getProtocol())) {
 				// Extract manifest files to a temporary directory
 				try {
 					tmpDir = FileUtil.createTempDir("sparql-evaluation");
 
-					JarURLConnection con = (JarURLConnection)url.openConnection();
+					JarURLConnection con = (JarURLConnection) url.openConnection();
 					JarFile jar = con.getJarFile();
 
 					ZipUtil.extract(jar, tmpDir);
 
 					File localFile = new File(tmpDir, con.getEntryName());
 					manifestFile = localFile.toURI().toURL().toString();
-				}
-				catch (IOException e) {
+				} catch (IOException e) {
 					throw new AssertionError(e);
 				}
-			}
-			else {
+			} else {
 				manifestFile = url.toString();
 				tmpDir = null;
 			}
@@ -86,15 +82,13 @@ public class SPARQL10ManifestTest {
 			public void run(TestResult result) {
 				try {
 					super.run(result);
-				}
-				finally {
+				} finally {
 					if (tmpDir != null) {
 						try {
 							FileUtil.deleteDir(tmpDir);
-						}
-						catch (IOException e) {
-							System.err.println("Unable to clean up temporary directory '" + tmpDir + "': "
-									+ e.getMessage());
+						} catch (IOException e) {
+							System.err.println(
+									"Unable to clean up temporary directory '" + tmpDir + "': " + e.getMessage());
 						}
 					}
 				}
@@ -128,8 +122,7 @@ public class SPARQL10ManifestTest {
 	}
 
 	static void addTurtle(RepositoryConnection con, URL url, String baseURI, Resource... contexts)
-		throws IOException, RepositoryException, RDFParseException, RDFHandlerException
-	{
+			throws IOException, RepositoryException, RDFParseException, RDFHandlerException {
 		OpenRDFUtil.verifyContextNotNull(contexts);
 		if (baseURI == null) {
 			baseURI = url.toExternalForm();
@@ -155,28 +148,24 @@ public class SPARQL10ManifestTest {
 			try {
 				rdfParser.parse(in, baseURI);
 				con.commit();
-			}
-			catch (RDFHandlerException e) {
+			} catch (RDFHandlerException e) {
 				if (con.isActive()) {
 					con.rollback();
 				}
 				if (e.getCause() != null && e.getCause() instanceof RepositoryException) {
 					// RDFInserter only throws wrapped RepositoryExceptions
-					throw (RepositoryException)e.getCause();
-				}
-				else {
+					throw (RepositoryException) e.getCause();
+				} else {
 					throw e;
 				}
 
-			}
-			catch (RuntimeException e) {
+			} catch (RuntimeException e) {
 				if (con.isActive()) {
 					con.rollback();
 				}
 				throw e;
 			}
-		}
-		finally {
+		} finally {
 			in.close();
 		}
 	}

@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import org.eclipse.rdf4j.common.io.IOUtil;
 import org.eclipse.rdf4j.model.IRI;
@@ -84,12 +85,10 @@ public abstract class SeRQLParserTestCase extends TestCase {
 	 *---------*/
 
 	@Override
-	protected void runTest()
-		throws Exception
-	{
+	protected void runTest() throws Exception {
 		// Read query from file
 		InputStream stream = url(queryFile).openStream();
-		String query = IOUtil.readString(new InputStreamReader(stream, "UTF-8"));
+		String query = IOUtil.readString(new InputStreamReader(stream, StandardCharsets.UTF_8));
 		stream.close();
 
 		try {
@@ -98,12 +97,10 @@ public abstract class SeRQLParserTestCase extends TestCase {
 			if (MFX_PARSE_ERROR.equals(result)) {
 				fail("Negative syntax test failed. Malformed query caused no error.");
 			}
-		}
-		catch (MalformedQueryException e) {
+		} catch (MalformedQueryException e) {
 			if (MFX_CORRECT.equals(result)) {
 				fail("Positive syntax test failed: " + e.getMessage());
-			}
-			else {
+			} else {
 				return;
 			}
 		}
@@ -115,9 +112,7 @@ public abstract class SeRQLParserTestCase extends TestCase {
 	 * Test methods *
 	 *--------------*/
 
-	public static Test suite(Factory factory)
-		throws Exception
-	{
+	public static Test suite(Factory factory) throws Exception {
 		TestSuite suite = new TestSuite();
 		suite.setName("SeRQL Syntax Tests");
 
@@ -150,11 +145,9 @@ public abstract class SeRQLParserTestCase extends TestCase {
 			Value result = testBindings.getValue("result");
 			if (MFX_CORRECT.equals(result)) {
 				positiveTests.addTest(factory.createTest(testName, queryFile, result));
-			}
-			else if (MFX_PARSE_ERROR.equals(result)) {
+			} else if (MFX_PARSE_ERROR.equals(result)) {
 				negativeTests.addTest(factory.createTest(testName, queryFile, result));
-			}
-			else {
+			} else {
 				logger.warn("Unexpected result value for test \"" + testName + "\": " + result);
 			}
 		}
@@ -168,9 +161,7 @@ public abstract class SeRQLParserTestCase extends TestCase {
 		return suite;
 	}
 
-	private static URL url(String uri)
-		throws MalformedURLException
-	{
+	private static URL url(String uri) throws MalformedURLException {
 		return new URL(uri);
 	}
 

@@ -39,9 +39,8 @@ public class RemoveStatementsOperation extends StatementOperation implements Ser
 		setObject(obj);
 	}
 
-	public void execute(RepositoryConnection con)
-		throws RepositoryException
-	{
+	@Override
+	public void execute(RepositoryConnection con) throws RepositoryException {
 		con.remove(getSubject(), getPredicate(), getObject(), getContexts());
 	}
 

@@ -8,6 +8,7 @@
 package org.eclipse.rdf4j.rio.turtle;
 
 import org.eclipse.rdf4j.rio.RDFParser;
+import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesParser;
 
 import junit.framework.Test;
@@ -18,15 +19,14 @@ import junit.framework.Test;
  */
 public class TurtleParserTest extends TurtleParserTestCase {
 
-	public static Test suite()
-		throws Exception
-	{
+	public static Test suite() throws Exception {
 		return new TurtleParserTest().createTestSuite();
 	}
 
 	@Override
 	protected RDFParser createTurtleParser() {
 		RDFParser result = new TurtleParser();
+		result.set(BasicParserSettings.VERIFY_DATATYPE_VALUES, true);
 		return result;
 	}
 

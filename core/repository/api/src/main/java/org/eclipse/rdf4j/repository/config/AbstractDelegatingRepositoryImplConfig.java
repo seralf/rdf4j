@@ -17,33 +17,33 @@ import org.eclipse.rdf4j.model.util.Models;
  * @author Herko ter Horst
  */
 public abstract class AbstractDelegatingRepositoryImplConfig extends AbstractRepositoryImplConfig
-		implements DelegatingRepositoryImplConfig
-{
+		implements DelegatingRepositoryImplConfig {
 
 	private RepositoryImplConfig delegate;
 
 	/**
 	 * Create a new DelegatingRepositoryImplConfigBase.
 	 */
-	public AbstractDelegatingRepositoryImplConfig() {
+	protected AbstractDelegatingRepositoryImplConfig() {
 		super();
 	}
 
 	/**
 	 * Create a new DelegatingRepositoryImplConfigBase.
 	 */
-	public AbstractDelegatingRepositoryImplConfig(String type) {
+	protected AbstractDelegatingRepositoryImplConfig(String type) {
 		super(type);
 	}
 
 	/**
 	 * Create a new DelegatingRepositoryImplConfigBase.
 	 */
-	public AbstractDelegatingRepositoryImplConfig(String type, RepositoryImplConfig delegate) {
+	protected AbstractDelegatingRepositoryImplConfig(String type, RepositoryImplConfig delegate) {
 		this(type);
 		setDelegate(delegate);
 	}
 
+	@Override
 	public RepositoryImplConfig getDelegate() {
 		return delegate;
 	}
@@ -53,9 +53,7 @@ public abstract class AbstractDelegatingRepositoryImplConfig extends AbstractRep
 	}
 
 	@Override
-	public void validate()
-		throws RepositoryConfigException
-	{
+	public void validate() throws RepositoryConfigException {
 		super.validate();
 		if (delegate == null) {
 			throw new RepositoryConfigException("No delegate specified for " + getType() + " repository");
@@ -76,12 +74,10 @@ public abstract class AbstractDelegatingRepositoryImplConfig extends AbstractRep
 	}
 
 	@Override
-	public void parse(Model model, Resource resource)
-		throws RepositoryConfigException
-	{
+	public void parse(Model model, Resource resource) throws RepositoryConfigException {
 		super.parse(model, resource);
 
-		Models.objectResource(model.filter(resource, DELEGATE, null)).ifPresent(
-				delegate -> setDelegate(create(model, delegate)));
+		Models.objectResource(model.filter(resource, DELEGATE, null))
+				.ifPresent(delegate -> setDelegate(create(model, delegate)));
 	}
 }

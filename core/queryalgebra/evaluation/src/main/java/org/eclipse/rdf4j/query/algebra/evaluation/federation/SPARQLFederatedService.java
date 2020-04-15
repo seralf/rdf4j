@@ -14,20 +14,12 @@ import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
  * Federated Service wrapping the {@link SPARQLRepository} to communicate with a SPARQL endpoint.
  * 
  * @author Andreas Schwarte
+ * @deprecated since 2.3 use {@link org.eclipse.rdf4j.repository.sparql.federation.SPARQLFederatedService}
  */
-public class SPARQLFederatedService extends RepositoryFederatedService {
+@Deprecated
+public class SPARQLFederatedService extends org.eclipse.rdf4j.repository.sparql.federation.SPARQLFederatedService {
 
-	private static SPARQLRepository createSPARQLRepository(String serviceUrl, HttpClientSessionManager client) {
-		SPARQLRepository rep = new SPARQLRepository(serviceUrl);
-		rep.setHttpClientSessionManager(client);
-		return rep;
-	}
-
-	/**
-	 * @param serviceUrl
-	 *        the serviceUrl use to initialize the inner {@link SPARQLRepository}
-	 */
 	public SPARQLFederatedService(String serviceUrl, HttpClientSessionManager client) {
-		super(createSPARQLRepository(serviceUrl, client));
+		super(serviceUrl, client);
 	}
 }

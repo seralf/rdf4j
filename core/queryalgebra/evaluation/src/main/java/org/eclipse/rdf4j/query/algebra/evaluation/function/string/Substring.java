@@ -8,10 +8,12 @@
 package org.eclipse.rdf4j.query.algebra.evaluation.function.string;
 
 import java.util.Optional;
+import org.eclipse.rdf4j.model.IRI;
 
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.vocabulary.FN;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.query.algebra.evaluation.ValueExprEvaluationException;
@@ -26,16 +28,15 @@ import org.eclipse.rdf4j.query.algebra.evaluation.util.QueryEvaluationUtil;
  */
 public class Substring implements Function {
 
+	@Override
 	public String getURI() {
 		return FN.SUBSTRING.toString();
 	}
 
-	public Literal evaluate(ValueFactory valueFactory, Value... args)
-		throws ValueExprEvaluationException
-	{
+	@Override
+	public Literal evaluate(ValueFactory valueFactory, Value... args) throws ValueExprEvaluationException {
 		if (args.length < 2 || args.length > 3) {
-			throw new ValueExprEvaluationException(
-					"Incorrect number of arguments for SUBSTR: " + args.length);
+			throw new ValueExprEvaluationException("Incorrect number of arguments for SUBSTR: " + args.length);
 		}
 
 		Value argValue = args[0];
@@ -46,7 +47,7 @@ public class Substring implements Function {
 		}
 
 		if (argValue instanceof Literal) {
-			Literal literal = (Literal)argValue;
+			Literal literal = (Literal) argValue;
 
 			// substr function accepts string literals only.
 			if (QueryEvaluationUtil.isStringLiteral(literal)) {
@@ -55,21 +56,18 @@ public class Substring implements Function {
 				// determine start index.
 				int startIndex = 0;
 				if (startIndexValue instanceof Literal) {
+					// If it is not an int we need to round it per spec
+					int startLiteral = intFromLiteral((Literal) startIndexValue);
+
 					try {
 						// xpath:substring startIndex is 1-based.
-						startIndex = ((Literal)startIndexValue).intValue() - 1;
 
-						if (startIndex < 0) {
-							throw new ValueExprEvaluationException(
-									"illegal start index value (expected 1 or larger): " + startIndexValue);
-						}
-					}
-					catch (NumberFormatException e) {
+						startIndex = startLiteral - 1;
+					} catch (NumberFormatException e) {
 						throw new ValueExprEvaluationException(
 								"illegal start index value (expected int value): " + startIndexValue);
 					}
-				}
-				else if (startIndexValue != null) {
+				} else if (startIndexValue != null) {
 					throw new ValueExprEvaluationException(
 							"illegal start index value (expected literal value): " + startIndexValue);
 				}
@@ -79,46 +77,64 @@ public class Substring implements Function {
 				int endIndex = lexicalValue.length();
 				if (lengthValue instanceof Literal) {
 					try {
-						int length = ((Literal)lengthValue).intValue();
-						endIndex = startIndex + length;
-					}
-					catch (NumberFormatException e) {
+						int length = intFromLiteral((Literal) lengthValue);
+						if (length < 1) {
+							return convert("", literal, valueFactory);
+						}
+						endIndex = Math.min(startIndex + length, endIndex);
+						if (endIndex < 0) {
+							return convert("", literal, valueFactory);
+						}
+					} catch (NumberFormatException e) {
 						throw new ValueExprEvaluationException(
 								"illegal length value (expected int value): " + lengthValue);
 					}
-				}
-				else if (lengthValue != null) {
+				} else if (lengthValue != null) {
 					throw new ValueExprEvaluationException(
 							"illegal length value (expected literal value): " + lengthValue);
 				}
 
 				try {
-					Optional<String> language = literal.getLanguage();
+					startIndex = Math.max(startIndex, 0);
 					lexicalValue = lexicalValue.substring(startIndex, endIndex);
-
-					if (language.isPresent()) {
-						return valueFactory.createLiteral(lexicalValue, language.get());
-					}
-					else if (XMLSchema.STRING.equals(literal.getDatatype())) {
-						return valueFactory.createLiteral(lexicalValue, XMLSchema.STRING);
-					}
-					else {
-						return valueFactory.createLiteral(lexicalValue);
-					}
+					return convert(lexicalValue, literal, valueFactory);
+				} catch (IndexOutOfBoundsException e) {
+					throw new ValueExprEvaluationException(
+							"could not determine substring, index out of bounds " + startIndex + "length:" + endIndex,
+							e);
 				}
-				catch (IndexOutOfBoundsException e) {
-					throw new ValueExprEvaluationException("could not determine substring", e);
-				}
+			} else {
+				throw new ValueExprEvaluationException("unexpected input value for function substring: " + argValue);
 			}
-			else {
-				throw new ValueExprEvaluationException(
-						"unexpected input value for function substring: " + argValue);
-			}
-		}
-		else {
-			throw new ValueExprEvaluationException(
-					"unexpected input value for function substring: " + argValue);
+		} else {
+			throw new ValueExprEvaluationException("unexpected input value for function substring: " + argValue);
 		}
 	}
 
+	private Literal convert(String lexicalValue, Literal literal, ValueFactory valueFactory) {
+		Optional<String> language = literal.getLanguage();
+		if (language.isPresent()) {
+			return valueFactory.createLiteral(lexicalValue, language.get());
+		} else if (XMLSchema.STRING.equals(literal.getDatatype())) {
+			return valueFactory.createLiteral(lexicalValue, XMLSchema.STRING);
+		} else {
+			return valueFactory.createLiteral(lexicalValue);
+		}
+	}
+
+	public static int intFromLiteral(Literal literal) throws ValueExprEvaluationException {
+
+		IRI datatype = literal.getDatatype();
+
+		// function accepts only numeric literals
+		if (datatype != null && XMLDatatypeUtil.isNumericDatatype(datatype)) {
+			if (XMLDatatypeUtil.isIntegerDatatype(datatype)) {
+				return literal.intValue();
+			} else {
+				throw new ValueExprEvaluationException("unexpected datatype for function operand: " + literal);
+			}
+		} else {
+			throw new ValueExprEvaluationException("unexpected input value for function: " + literal);
+		}
+	}
 }

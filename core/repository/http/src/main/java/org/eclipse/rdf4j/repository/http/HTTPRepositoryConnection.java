@@ -66,6 +66,7 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.repository.UnknownTransactionStateException;
 import org.eclipse.rdf4j.repository.base.AbstractRepositoryConnection;
+import org.eclipse.rdf4j.repository.http.helpers.HTTPRepositorySettings;
 import org.eclipse.rdf4j.rio.ParserConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFHandler;
@@ -77,9 +78,9 @@ import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 
 /**
- * RepositoryConnection that communicates with a server using the HTTP protocol. Methods in this class may
- * throw the specific RepositoryException subclasses UnautorizedException and NotAllowedException, the
- * semantics of which are defined by the HTTP protocol.
+ * RepositoryConnection that communicates with a server using the HTTP protocol. Methods in this class may throw the
+ * specific RepositoryException subclasses UnautorizedException and NotAllowedException, the semantics of which are
+ * defined by the HTTP protocol.
  * 
  * @see org.eclipse.rdf4j.http.protocol.UnauthorizedException
  * @see org.eclipse.rdf4j.http.protocol.NotAllowedException
@@ -92,8 +93,7 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 	 * Variables *
 	 *-----------*/
 
-	private List<TransactionOperation> txn = Collections.synchronizedList(
-			new ArrayList<TransactionOperation>());
+	private List<TransactionOperation> txn = Collections.synchronizedList(new ArrayList<>());
 
 	private final RDF4JProtocolSession client;
 
@@ -102,12 +102,6 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 	private Model toAdd;
 
 	private Model toRemove;
-
-	/**
-	 * Maximum size (in number of statements) allowed for statement buffers before they are forcibly flushed.
-	 * TODO: make this setting configurable.
-	 */
-	private static final long MAX_STATEMENT_BUFFER_SIZE = 200000;
 
 	/*--------------*
 	 * Constructors *
@@ -123,16 +117,20 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		setParserConfig(new ParserConfig());
 		getParserConfig().set(BasicParserSettings.VERIFY_DATATYPE_VALUES, true);
 		getParserConfig().set(BasicParserSettings.PRESERVE_BNODE_IDS, true);
+		getParserConfig().set(HTTPRepositorySettings.MAX_STATEMENT_BUFFER_SIZE,
+				HTTPRepositorySettings.MAX_STATEMENT_BUFFER_SIZE.getDefaultValue());
 	}
 
 	/*---------*
 	 * Methods *
 	 *---------*/
 
+	@Override
 	public HttpClient getHttpClient() {
 		return client.getHttpClient();
 	}
 
+	@Override
 	public void setHttpClient(HttpClient httpClient) {
 		client.setHttpClient(httpClient);
 	}
@@ -144,12 +142,11 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 
 	@Override
 	public HTTPRepository getRepository() {
-		return (HTTPRepository)super.getRepository();
+		return (HTTPRepository) super.getRepository();
 	}
 
-	public void begin()
-		throws RepositoryException
-	{
+	@Override
+	public void begin() throws RepositoryException {
 		verifyIsOpen();
 		verifyNotTxnActive("Connection already has an active transaction");
 
@@ -161,44 +158,33 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		try {
 			client.beginTransaction(this.getIsolationLevel());
 			active = true;
-		}
-		catch (RepositoryException e) {
+		} catch (RepositoryException e) {
 			throw e;
-		}
-		catch (RDF4JException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IllegalStateException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IOException e) {
+		} catch (RDF4JException | IllegalStateException | IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
 	/**
-	 * Prepares a {@Link Query} for evaluation on this repository. Note that the preferred way of preparing
-	 * queries is to use the more specific {@link #prepareTupleQuery(QueryLanguage, String, String)},
+	 * Prepares a {@Link Query} for evaluation on this repository. Note that the preferred way of preparing queries is
+	 * to use the more specific {@link #prepareTupleQuery(QueryLanguage, String, String)},
 	 * {@link #prepareBooleanQuery(QueryLanguage, String, String)}, or
 	 * {@link #prepareGraphQuery(QueryLanguage, String, String)} methods instead.
 	 * 
-	 * @throws UnsupportedOperationException
-	 *         if the method is not supported for the supplied query language.
+	 * @throws UnsupportedOperationException if the method is not supported for the supplied query language.
 	 */
+	@Override
 	public Query prepareQuery(QueryLanguage ql, String queryString, String baseURI) {
 		if (QueryLanguage.SPARQL.equals(ql)) {
 			String strippedQuery = QueryParserUtil.removeSPARQLQueryProlog(queryString).toUpperCase();
 			if (strippedQuery.startsWith("SELECT")) {
 				return prepareTupleQuery(ql, queryString, baseURI);
-			}
-			else if (strippedQuery.startsWith("ASK")) {
+			} else if (strippedQuery.startsWith("ASK")) {
 				return prepareBooleanQuery(ql, queryString, baseURI);
-			}
-			else {
+			} else {
 				return prepareGraphQuery(ql, queryString, baseURI);
 			}
-		}
-		else if (QueryLanguage.SERQL.equals(ql)) {
+		} else if (QueryLanguage.SERQL.equals(ql)) {
 			String strippedQuery = queryString;
 
 			// remove all opening brackets
@@ -207,105 +193,87 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 
 			if (strippedQuery.toUpperCase().startsWith("SELECT")) {
 				return prepareTupleQuery(ql, queryString, baseURI);
-			}
-			else {
+			} else {
 				return prepareGraphQuery(ql, queryString, baseURI);
 			}
-		}
-		else {
+		} else {
 			throw new UnsupportedOperationException("Operation not supported for query language " + ql);
 		}
 	}
 
+	@Override
 	public TupleQuery prepareTupleQuery(QueryLanguage ql, String queryString, String baseURI) {
 		return new HTTPTupleQuery(this, ql, queryString, baseURI);
 	}
 
+	@Override
 	public GraphQuery prepareGraphQuery(QueryLanguage ql, String queryString, String baseURI) {
 		return new HTTPGraphQuery(this, ql, queryString, baseURI);
 	}
 
+	@Override
 	public BooleanQuery prepareBooleanQuery(QueryLanguage ql, String queryString, String baseURI) {
 		return new HTTPBooleanQuery(this, ql, queryString, baseURI);
 	}
 
-	public RepositoryResult<Resource> getContextIDs()
-		throws RepositoryException
-	{
+	@Override
+	public RepositoryResult<Resource> getContextIDs() throws RepositoryException {
 		try {
-			List<Resource> contextList = new ArrayList<Resource>();
+			List<Resource> contextList = new ArrayList<>();
 
-			TupleQueryResult contextIDs = client.getContextIDs();
-			try {
+			try (TupleQueryResult contextIDs = client.getContextIDs()) {
 				while (contextIDs.hasNext()) {
 					BindingSet bindingSet = contextIDs.next();
 					Value context = bindingSet.getValue("contextID");
 
 					if (context instanceof Resource) {
-						contextList.add((Resource)context);
+						contextList.add((Resource) context);
 					}
 				}
 			}
-			finally {
-				contextIDs.close();
-			}
 
 			return createRepositoryResult(contextList);
-		}
-		catch (QueryEvaluationException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IOException e) {
+		} catch (QueryEvaluationException | IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	public RepositoryResult<Statement> getStatements(Resource subj, IRI pred, Value obj,
-			boolean includeInferred, Resource... contexts)
-		throws RepositoryException
-	{
+	@Override
+	public RepositoryResult<Statement> getStatements(Resource subj, IRI pred, Value obj, boolean includeInferred,
+			Resource... contexts) throws RepositoryException {
 		try {
 			StatementCollector collector = new StatementCollector();
 			exportStatements(subj, pred, obj, includeInferred, collector, contexts);
 			return createRepositoryResult(collector.getStatements());
-		}
-		catch (RDFHandlerException e) {
+		} catch (RDFHandlerException e) {
 			// found a bug in StatementCollector?
 			throw new RuntimeException(e);
 		}
 	}
 
-	public void exportStatements(Resource subj, IRI pred, Value obj, boolean includeInferred,
-			RDFHandler handler, Resource... contexts)
-		throws RDFHandlerException, RepositoryException
-	{
+	@Override
+	public void exportStatements(Resource subj, IRI pred, Value obj, boolean includeInferred, RDFHandler handler,
+			Resource... contexts) throws RDFHandlerException, RepositoryException {
 		flushTransactionState(Action.GET);
 		try {
 			client.getStatements(subj, pred, obj, includeInferred, handler, contexts);
-		}
-		catch (IOException e) {
-			throw new RepositoryException(e);
-		}
-		catch (QueryInterruptedException e) {
+		} catch (IOException | QueryInterruptedException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	public long size(Resource... contexts)
-		throws RepositoryException
-	{
+	@Override
+	public long size(Resource... contexts) throws RepositoryException {
 		flushTransactionState(Action.SIZE);
 		try {
 			return client.size(contexts);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	public void commit()
-		throws RepositoryException
-	{
+	@Override
+	public void commit() throws RepositoryException {
 
 		if (this.getRepository().useCompatibleMode()) {
 			synchronized (txn) {
@@ -313,8 +281,7 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 					try {
 						client.sendTransaction(txn);
 						txn.clear();
-					}
-					catch (IOException e) {
+					} catch (IOException e) {
 						throw new RepositoryException(e);
 					}
 				}
@@ -327,21 +294,13 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		try {
 			client.commitTransaction();
 			active = false;
-		}
-		catch (RDF4JException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IllegalStateException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IOException e) {
+		} catch (RDF4JException | IllegalStateException | IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	public void rollback()
-		throws RepositoryException
-	{
+	@Override
+	public void rollback() throws RepositoryException {
 		if (this.getRepository().useCompatibleMode()) {
 			txn.clear();
 			active = false;
@@ -352,54 +311,44 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		try {
 			client.rollbackTransaction();
 			active = false;
-		}
-		catch (RDF4JException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IllegalStateException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IOException e) {
+		} catch (RDF4JException | IllegalStateException | IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
 	@Override
-	public void close()
-		throws RepositoryException
-	{
-		if (isActive()) {
-			logger.warn("Rolling back transaction due to connection close", new Throwable());
-			rollback();
+	public void close() throws RepositoryException {
+		try {
+			if (isActive()) {
+				logger.warn("Rolling back transaction due to connection close", new Throwable());
+				rollback();
+			}
+		} finally {
+			super.close();
+			client.close();
 		}
-
-		super.close();
 	}
 
+	@Override
 	public void add(File file, String baseURI, RDFFormat dataFormat, Resource... contexts)
-		throws IOException, RDFParseException, RepositoryException
-	{
+			throws IOException, RDFParseException, RepositoryException {
 		if (baseURI == null) {
 			// default baseURI to file
 			baseURI = file.toURI().toString();
 		}
 		if (dataFormat == null) {
-			dataFormat = Rio.getParserFormatForFileName(file.getName()).orElseThrow(
-					Rio.unsupportedFormat(file.getName()));
+			dataFormat = Rio.getParserFormatForFileName(file.getName())
+					.orElseThrow(Rio.unsupportedFormat(file.getName()));
 		}
 
-		InputStream in = new FileInputStream(file);
-		try {
+		try (InputStream in = new FileInputStream(file)) {
 			add(in, baseURI, dataFormat, contexts);
-		}
-		finally {
-			in.close();
 		}
 	}
 
+	@Override
 	public void add(URL url, String baseURI, RDFFormat dataFormat, Resource... contexts)
-		throws IOException, RDFParseException, RepositoryException
-	{
+			throws IOException, RDFParseException, RepositoryException {
 		if (baseURI == null) {
 			baseURI = url.toExternalForm();
 		}
@@ -411,8 +360,7 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 			for (String mimeType : dataFormat.getMIMETypes()) {
 				con.addRequestProperty("Accept", mimeType);
 			}
-		}
-		else {
+		} else {
 			Set<RDFFormat> rdfFormats = RDFParserRegistry.getInstance().getKeys();
 			List<String> acceptParams = RDFFormat.getAcceptParams(rdfFormats, true, null);
 			for (String acceptParam : acceptParams) {
@@ -429,22 +377,20 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 			if (semiColonIdx >= 0) {
 				mimeType = mimeType.substring(0, semiColonIdx);
 			}
-			dataFormat = Rio.getParserFormatForMIMEType(mimeType).orElse(
-					Rio.getParserFormatForFileName(url.getPath()).orElseThrow(
-							Rio.unsupportedFormat(mimeType)));
+			dataFormat = Rio.getParserFormatForMIMEType(mimeType)
+					.orElse(Rio.getParserFormatForFileName(url.getPath()).orElseThrow(Rio.unsupportedFormat(mimeType)));
 		}
 
 		try {
 			add(in, baseURI, dataFormat, contexts);
-		}
-		finally {
+		} finally {
 			in.close();
 		}
 	}
 
+	@Override
 	public void add(InputStream in, String baseURI, RDFFormat dataFormat, Resource... contexts)
-		throws IOException, RDFParseException, RepositoryException
-	{
+			throws IOException, RDFParseException, RepositoryException {
 		if (this.getRepository().useCompatibleMode()) {
 
 			dataFormat = getBackwardCompatibleFormat(dataFormat);
@@ -452,8 +398,7 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 			if (!isActive()) {
 				// Send bytes directly to the server
 				client.upload(in, baseURI, dataFormat, false, false, contexts);
-			}
-			else {
+			} else {
 				// Parse files locally
 				super.add(in, baseURI, dataFormat, contexts);
 
@@ -482,9 +427,9 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		return format;
 	}
 
+	@Override
 	public void add(Reader reader, String baseURI, RDFFormat dataFormat, Resource... contexts)
-		throws IOException, RDFParseException, RepositoryException
-	{
+			throws IOException, RDFParseException, RepositoryException {
 
 		if (this.getRepository().useCompatibleMode()) {
 
@@ -493,8 +438,7 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 			if (!isActive()) {
 				// Send bytes directly to the server
 				client.upload(reader, baseURI, dataFormat, false, false, contexts);
-			}
-			else {
+			} else {
 				// Parse files locally
 				super.add(reader, baseURI, dataFormat, contexts);
 
@@ -507,9 +451,7 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 	}
 
 	@Override
-	public void add(Statement st, Resource... contexts)
-		throws RepositoryException
-	{
+	public void add(Statement st, Resource... contexts) throws RepositoryException {
 		if (!isActive()) {
 			// operation is not part of a transaction - just send directly
 			OpenRDFUtil.verifyContextNotNull(contexts);
@@ -520,21 +462,17 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 				// if no context is specified in the method call, statement's own
 				// context (if any) is used.
 				m.add(st.getSubject(), st.getPredicate(), st.getObject(), st.getContext());
-			}
-			else {
+			} else {
 				m.add(st.getSubject(), st.getPredicate(), st.getObject(), contexts);
 			}
 			addModel(m);
-		}
-		else {
+		} else {
 			super.add(st, contexts);
 		}
 	}
 
 	@Override
-	public void add(Resource subject, IRI predicate, Value object, Resource... contexts)
-		throws RepositoryException
-	{
+	public void add(Resource subject, IRI predicate, Value object, Resource... contexts) throws RepositoryException {
 		if (!isActive()) {
 			logger.debug("adding statement directly: {} {} {} {}",
 					new Object[] { subject, predicate, object, contexts });
@@ -543,27 +481,24 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 			final Model m = new LinkedHashModel();
 			m.add(subject, predicate, object, contexts);
 			addModel(m);
-		}
-		else {
-			logger.debug("adding statement in txn: {} {} {} {}",
-					new Object[] { subject, predicate, object, contexts });
+		} else {
+			logger.debug("adding statement in txn: {} {} {} {}", new Object[] { subject, predicate, object, contexts });
 			super.add(subject, predicate, object, contexts);
 		}
 	}
 
 	/*
-	 * @Override public void remove(Resource subject, URI predicate, Value object, Resource... contexts)
-	 * throws RepositoryException { if (!isActive()) { // operation is not part of a transaction - just send
-	 * directly OpenRDFUtil.verifyContextNotNull(contexts); if (subject == null) { subject = SESAME.WILDCARD;
-	 * } if (predicate == null) { predicate = SESAME.WILDCARD; } if (object == null) { object =
-	 * SESAME.WILDCARD; } final Model m = new LinkedHashModel(); m.add(subject, predicate, object, contexts);
-	 * removeModel(m); } else { super.remove(subject, predicate, object, contexts); } }
+	 * @Override public void remove(Resource subject, URI predicate, Value object, Resource... contexts) throws
+	 * RepositoryException { if (!isActive()) { // operation is not part of a transaction - just send directly
+	 * OpenRDFUtil.verifyContextNotNull(contexts); if (subject == null) { subject = SESAME.WILDCARD; } if (predicate ==
+	 * null) { predicate = SESAME.WILDCARD; } if (object == null) { object = SESAME.WILDCARD; } final Model m = new
+	 * LinkedHashModel(); m.add(subject, predicate, object, contexts); removeModel(m); } else { super.remove(subject,
+	 * predicate, object, contexts); } }
 	 */
 
 	@Override
 	protected void addWithoutCommit(Resource subject, IRI predicate, Value object, Resource... contexts)
-		throws RepositoryException
-	{
+			throws RepositoryException {
 		if (this.getRepository().useCompatibleMode()) {
 			txn.add(new AddStatementOperation(subject, predicate, object, contexts));
 			return;
@@ -577,9 +512,7 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		toAdd.add(subject, predicate, object, contexts);
 	}
 
-	private void addModel(Model m)
-		throws RepositoryException
-	{
+	private void addModel(Model m) throws RepositoryException {
 		// TODO we should dynamically pick a format from the available writers
 		// perhaps?
 		RDFFormat format = RDFFormat.BINARY;
@@ -589,21 +522,14 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 			ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 			client.addData(in, null, format);
 
-		}
-		catch (RDFHandlerException e) {
+		} catch (RDFHandlerException e) {
 			throw new RepositoryException("error while writing statement", e);
-		}
-		catch (RDFParseException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IOException e) {
+		} catch (RDFParseException | IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	private void removeModel(Model m)
-		throws RepositoryException
-	{
+	private void removeModel(Model m) throws RepositoryException {
 		RDFFormat format = RDFFormat.BINARY;
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -611,66 +537,60 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 			ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 			client.removeData(in, null, format);
 
-		}
-		catch (RDFHandlerException e) {
+		} catch (RDFHandlerException e) {
 			throw new RepositoryException("error while writing statement", e);
-		}
-		catch (RDFParseException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IOException e) {
+		} catch (RDFParseException | IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	protected void flushTransactionState(Action action)
-		throws RepositoryException
-	{
+	protected void flushTransactionState(Action action) throws RepositoryException {
 		if (this.getRepository().useCompatibleMode()) {
 			// no need to flush, using old-style transactions.
 			return;
 		}
 
 		if (isActive()) {
+			int maxBufferSize = getParserConfig().get(HTTPRepositorySettings.MAX_STATEMENT_BUFFER_SIZE);
 			switch (action) {
-				case ADD:
-					if (toRemove != null) {
-						removeModel(toRemove);
-						toRemove = null;
-					}
-					if (toAdd != null && MAX_STATEMENT_BUFFER_SIZE <= toAdd.size()) {
-						addModel(toAdd);
-						toAdd = null;
-					}
-					break;
-				case DELETE:
-					if (toAdd != null) {
-						addModel(toAdd);
-						toAdd = null;
-					}
-					if (toRemove != null && MAX_STATEMENT_BUFFER_SIZE <= toRemove.size()) {
-						removeModel(toRemove);
-						toRemove = null;
-					}
-					break;
-				case GET:
-				case UPDATE:
-				case COMMIT:
-				case QUERY:
-				case SIZE:
-					if (toAdd != null) {
-						addModel(toAdd);
-						toAdd = null;
-					}
-					if (toRemove != null) {
-						removeModel(toRemove);
-						toRemove = null;
-					}
-					break;
-				case ROLLBACK:
-					toAdd = null;
+			case ADD:
+				if (toRemove != null) {
+					removeModel(toRemove);
 					toRemove = null;
-					break;
+				}
+				if (toAdd != null && maxBufferSize <= toAdd.size()) {
+					addModel(toAdd);
+					toAdd = null;
+				}
+				break;
+			case DELETE:
+				if (toAdd != null) {
+					addModel(toAdd);
+					toAdd = null;
+				}
+				if (toRemove != null && maxBufferSize <= toRemove.size()) {
+					removeModel(toRemove);
+					toRemove = null;
+				}
+				break;
+			case GET:
+			case UPDATE:
+			case COMMIT:
+			case QUERY:
+			case SIZE:
+				if (toAdd != null) {
+					addModel(toAdd);
+					toAdd = null;
+				}
+				if (toRemove != null) {
+					removeModel(toRemove);
+					toRemove = null;
+				}
+				break;
+			case ROLLBACK:
+				toAdd = null;
+				toRemove = null;
+				break;
 
 			}
 		}
@@ -678,8 +598,7 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 
 	@Override
 	protected void removeWithoutCommit(Resource subject, IRI predicate, Value object, Resource... contexts)
-		throws RepositoryException
-	{
+			throws RepositoryException {
 		if (this.getRepository().useCompatibleMode()) {
 			txn.add(new RemoveStatementsOperation(subject, predicate, object, contexts));
 			return;
@@ -703,24 +622,20 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 	}
 
 	@Override
-	public void clear(Resource... contexts)
-		throws RepositoryException
-	{
+	public void clear(Resource... contexts) throws RepositoryException {
 		boolean localTransaction = startLocalTransaction();
 
 		if (this.getRepository().useCompatibleMode()) {
 			txn.add(new ClearOperation(contexts));
-		}
-		else {
+		} else {
 			remove(null, null, null, contexts);
 		}
 
 		conditionalCommit(localTransaction);
 	}
 
-	public void removeNamespace(String prefix)
-		throws RepositoryException
-	{
+	@Override
+	public void removeNamespace(String prefix) throws RepositoryException {
 		if (prefix == null) {
 			throw new NullPointerException("prefix must not be null");
 		}
@@ -730,13 +645,11 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		try {
 			if (this.getRepository().useCompatibleMode()) {
 				txn.add(new RemoveNamespaceOperation(prefix));
-			}
-			else {
+			} else {
 				client.removeNamespacePrefix(prefix);
 			}
 			conditionalCommit(localTransaction);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			// TODO if rollback throws an exception too, the original ioexception
 			// is silently ignored. Should we throw the rollback exception or the
 			// original exception (and/or should we log one of the exceptions?)
@@ -746,9 +659,8 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 
 	}
 
-	public void clearNamespaces()
-		throws RepositoryException
-	{
+	@Override
+	public void clearNamespaces() throws RepositoryException {
 		if (this.getRepository().useCompatibleMode()) {
 			boolean localTransaction = startLocalTransaction();
 			txn.add(new ClearNamespacesOperation());
@@ -758,15 +670,13 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 
 		try {
 			client.clearNamespaces();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	public void setNamespace(String prefix, String name)
-		throws RepositoryException
-	{
+	@Override
+	public void setNamespace(String prefix, String name) throws RepositoryException {
 		if (prefix == null) {
 			throw new NullPointerException("prefix must not be null");
 		}
@@ -783,56 +693,44 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 
 		try {
 			client.setNamespacePrefix(prefix, name);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	public RepositoryResult<Namespace> getNamespaces()
-		throws RepositoryException
-	{
+	@Override
+	public RepositoryResult<Namespace> getNamespaces() throws RepositoryException {
 		try {
-			List<Namespace> namespaceList = new ArrayList<Namespace>();
+			List<Namespace> namespaceList = new ArrayList<>();
 
-			TupleQueryResult namespaces = client.getNamespaces();
-			try {
+			try (TupleQueryResult namespaces = client.getNamespaces()) {
 				while (namespaces.hasNext()) {
 					BindingSet bindingSet = namespaces.next();
 					Value prefix = bindingSet.getValue("prefix");
 					Value namespace = bindingSet.getValue("namespace");
 
 					if (prefix instanceof Literal && namespace instanceof Literal) {
-						String prefixStr = ((Literal)prefix).getLabel();
-						String namespaceStr = ((Literal)namespace).getLabel();
+						String prefixStr = ((Literal) prefix).getLabel();
+						String namespaceStr = ((Literal) namespace).getLabel();
 						namespaceList.add(new SimpleNamespace(prefixStr, namespaceStr));
 					}
 				}
 			}
-			finally {
-				namespaces.close();
-			}
 
 			return createRepositoryResult(namespaceList);
-		}
-		catch (QueryEvaluationException e) {
-			throw new RepositoryException(e);
-		}
-		catch (IOException e) {
+		} catch (QueryEvaluationException | IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
 
-	public String getNamespace(String prefix)
-		throws RepositoryException
-	{
+	@Override
+	public String getNamespace(String prefix) throws RepositoryException {
 		if (prefix == null) {
 			throw new NullPointerException("prefix must not be null");
 		}
 		try {
 			return client.getNamespace(prefix);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RepositoryException(e);
 		}
 	}
@@ -851,22 +749,19 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 	 * Creates a RepositoryResult for the supplied element set.
 	 */
 	protected <E> RepositoryResult<E> createRepositoryResult(Iterable<? extends E> elements) {
-		return new RepositoryResult<E>(
-				new CloseableIteratorIteration<E, RepositoryException>(elements.iterator()));
+		return new RepositoryResult<>(new CloseableIteratorIteration<E, RepositoryException>(elements.iterator()));
 	}
 
+	@Override
 	public Update prepareUpdate(QueryLanguage ql, String update, String baseURI)
-		throws RepositoryException, MalformedQueryException
-	{
+			throws RepositoryException, MalformedQueryException {
 		return new HTTPUpdate(this, ql, update, baseURI);
 	}
 
 	/**
 	 * Verifies that the connection is open, throws a {@link StoreException} if it isn't.
 	 */
-	protected void verifyIsOpen()
-		throws RepositoryException
-	{
+	protected void verifyIsOpen() throws RepositoryException {
 		if (!isOpen()) {
 			throw new RepositoryException("Connection has been closed");
 		}
@@ -875,29 +770,23 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 	/**
 	 * Verifies that the connection has an active transaction, throws a {@link StoreException} if it hasn't.
 	 */
-	protected void verifyTxnActive()
-		throws RepositoryException
-	{
+	protected void verifyTxnActive() throws RepositoryException {
 		if (!isActive()) {
 			throw new RepositoryException("Connection does not have an active transaction");
 		}
 	}
 
 	/**
-	 * Verifies that the connection does not have an active transaction, throws a {@link RepositoryException}
-	 * if it has.
+	 * Verifies that the connection does not have an active transaction, throws a {@link RepositoryException} if it has.
 	 */
-	protected void verifyNotTxnActive(String msg)
-		throws RepositoryException
-	{
+	protected void verifyNotTxnActive(String msg) throws RepositoryException {
 		if (isActive()) {
 			throw new RepositoryException(msg);
 		}
 	}
 
-	public boolean isActive()
-		throws UnknownTransactionStateException, RepositoryException
-	{
+	@Override
+	public boolean isActive() throws UnknownTransactionStateException, RepositoryException {
 		return active;
 	}
 

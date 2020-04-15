@@ -19,18 +19,18 @@ import org.eclipse.rdf4j.query.algebra.evaluation.ValueExprEvaluationException;
 import org.eclipse.rdf4j.query.algebra.evaluation.function.Function;
 
 /**
- * A {@link Function} that tries to cast its argument to an <tt>xsd:decimal</tt>.
+ * A {@link org.eclipse.rdf4j.query.algebra.evaluation.function.Function} that tries to cast its argument to an
+ * <tt>xsd:decimal</tt>.
  * 
  * @author Arjohn Kampman
  * @author Jeen Broekstra
  */
 public class DecimalCast extends CastFunction {
 
-	protected Literal convert(ValueFactory valueFactory, Value value)
-		throws ValueExprEvaluationException
-	{
+	@Override
+	protected Literal convert(ValueFactory valueFactory, Value value) throws ValueExprEvaluationException {
 		if (value instanceof Literal) {
-			Literal literal = (Literal)value;
+			Literal literal = (Literal) value;
 			IRI datatype = literal.getDatatype();
 
 			if (XMLDatatypeUtil.isNumericDatatype(datatype)) {
@@ -39,17 +39,13 @@ public class DecimalCast extends CastFunction {
 				try {
 					BigDecimal decimalValue = literal.decimalValue();
 					return valueFactory.createLiteral(decimalValue.toPlainString(), XMLSchema.DECIMAL);
-				}
-				catch (NumberFormatException e) {
+				} catch (NumberFormatException e) {
 					throw typeError(literal, e);
 				}
-			}
-			else if (datatype.equals(XMLSchema.BOOLEAN)) {
+			} else if (datatype.equals(XMLSchema.BOOLEAN)) {
 				try {
-					return valueFactory.createLiteral(literal.booleanValue() ? "1.0" : "0.0",
-							XMLSchema.DECIMAL);
-				}
-				catch (IllegalArgumentException e) {
+					return valueFactory.createLiteral(literal.booleanValue() ? "1.0" : "0.0", XMLSchema.DECIMAL);
+				} catch (IllegalArgumentException e) {
 					throw typeError(literal, e);
 				}
 			}

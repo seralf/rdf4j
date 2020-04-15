@@ -7,9 +7,11 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.query.algebra.evaluation.function.geosparql;
 
-import com.spatial4j.core.shape.Shape;
+import org.locationtech.spatial4j.shape.Shape;
 
 public interface SpatialAlgebra {
+
+	Shape buffer(Shape s, double distance);
 
 	Shape convexHull(Shape s);
 
@@ -27,7 +29,7 @@ public interface SpatialAlgebra {
 
 	boolean relate(Shape s1, Shape s2, String intersectionPattern);
 
-	boolean equals(Shape s1, Shape s2);
+	boolean sfEquals(Shape s1, Shape s2);
 
 	boolean sfDisjoint(Shape s1, Shape s2);
 
@@ -42,6 +44,8 @@ public interface SpatialAlgebra {
 	boolean sfContains(Shape s1, Shape s2);
 
 	boolean sfOverlaps(Shape s1, Shape s2);
+
+	boolean ehEquals(Shape s1, Shape s2);
 
 	boolean ehDisjoint(Shape s1, Shape s2);
 
@@ -70,4 +74,6 @@ public interface SpatialAlgebra {
 	boolean rcc8ntpp(Shape s1, Shape s2);
 
 	boolean rcc8ntppi(Shape s1, Shape s2);
+
+	boolean rcc8eq(Shape s1, Shape s2);
 }

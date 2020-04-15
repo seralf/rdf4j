@@ -7,16 +7,13 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.query.parser.sparql.manifest;
 
+import java.net.URL;
 import java.util.Map;
 
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.query.parser.sparql.manifest.SPARQL11ManifestTest;
-import org.eclipse.rdf4j.query.parser.sparql.manifest.SPARQLUpdateConformanceTest;
 import org.eclipse.rdf4j.repository.Repository;
-import org.eclipse.rdf4j.repository.contextaware.ContextAwareRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import junit.framework.Test;
 
 import junit.framework.Test;
 
@@ -26,33 +23,29 @@ import junit.framework.Test;
 public class W3CApprovedSPARQL11UpdateTest extends SPARQLUpdateConformanceTest {
 
 	public W3CApprovedSPARQL11UpdateTest(String testURI, String name, String requestFile, IRI defaultGraphURI,
-			Map<String, IRI> inputNamedGraphs, IRI resultDefaultGraphURI,
-			Map<String, IRI> resultNamedGraphs)
-	{
-		super(testURI, name, requestFile, defaultGraphURI, inputNamedGraphs, resultDefaultGraphURI,
-				resultNamedGraphs);
+			Map<String, IRI> inputNamedGraphs, IRI resultDefaultGraphURI, Map<String, IRI> resultNamedGraphs) {
+		super(testURI, name, requestFile, defaultGraphURI, inputNamedGraphs, resultDefaultGraphURI, resultNamedGraphs);
 	}
 
-	public static Test suite()
-		throws Exception
-	{
+	public static Test suite() throws Exception {
+
+		URL manifestUrl = SPARQL11ManifestTest.class.getResource("/testcases-sparql-1.1-w3c/manifest-all.ttl");
+
 		return SPARQL11ManifestTest.suite(new Factory() {
 
-			public W3CApprovedSPARQL11UpdateTest createSPARQLUpdateConformanceTest(String testURI,
-					String name, String requestFile, IRI defaultGraphURI, Map<String, IRI> inputNamedGraphs,
-					IRI resultDefaultGraphURI, Map<String, IRI> resultNamedGraphs)
-			{
-				return new W3CApprovedSPARQL11UpdateTest(testURI, name, requestFile, defaultGraphURI,
-						inputNamedGraphs, resultDefaultGraphURI, resultNamedGraphs);
+			@Override
+			public W3CApprovedSPARQL11UpdateTest createSPARQLUpdateConformanceTest(String testURI, String name,
+					String requestFile, IRI defaultGraphURI, Map<String, IRI> inputNamedGraphs,
+					IRI resultDefaultGraphURI, Map<String, IRI> resultNamedGraphs) {
+				return new W3CApprovedSPARQL11UpdateTest(testURI, name, requestFile, defaultGraphURI, inputNamedGraphs,
+						resultDefaultGraphURI, resultNamedGraphs);
 			}
 
-		}, true, true, false);
+		}, manifestUrl.toString(), true);
 	}
 
 	@Override
-	protected Repository newRepository()
-		throws Exception
-	{
+	protected Repository newRepository() throws Exception {
 		SailRepository repo = new SailRepository(new MemoryStore());
 
 		return repo;

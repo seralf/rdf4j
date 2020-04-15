@@ -10,7 +10,6 @@ package org.eclipse.rdf4j.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
@@ -40,9 +39,8 @@ public abstract class ModelNamespacesTest {
 	 * Implementing tests must return a new, empty, Model for each call to this method.
 	 * 
 	 * @return A new empty implementation of {@link Model} that implements the namespace related methods,
-	 *         {@link Model#getNamespace(String)}, {@link Model#getNamespaces()},
-	 *         {@link Model#setNamespace(Namespace)}, {@link Model#setNamespace(String, String)}, and
-	 *         {@link Model#removeNamespace(String)}.
+	 *         {@link Model#getNamespace(String)}, {@link Model#getNamespaces()}, {@link Model#setNamespace(Namespace)},
+	 *         {@link Model#setNamespace(String, String)}, and {@link Model#removeNamespace(String)}.
 	 */
 	protected abstract Model getModelImplementation();
 
@@ -50,9 +48,7 @@ public abstract class ModelNamespacesTest {
 	 * @throws java.lang.Exception
 	 */
 	@Before
-	public void setUp()
-		throws Exception
-	{
+	public void setUp() throws Exception {
 		testModel = getModelImplementation();
 	}
 
@@ -60,9 +56,7 @@ public abstract class ModelNamespacesTest {
 	 * @throws java.lang.Exception
 	 */
 	@After
-	public void tearDown()
-		throws Exception
-	{
+	public void tearDown() throws Exception {
 		testModel = null;
 	}
 
@@ -152,8 +146,7 @@ public abstract class ModelNamespacesTest {
 				namespaces.contains(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE)));
 
 		assertFalse(testModel.getNamespace(RDF.PREFIX).isPresent());
-		assertEquals(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE),
-				testModel.getNamespace(RDFS.PREFIX).get());
+		assertEquals(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE), testModel.getNamespace(RDFS.PREFIX).get());
 		assertFalse(testModel.getNamespace(DC.PREFIX).isPresent());
 		assertFalse(testModel.getNamespace(SKOS.PREFIX).isPresent());
 		assertFalse(testModel.getNamespace(SESAME.PREFIX).isPresent());
@@ -176,15 +169,11 @@ public abstract class ModelNamespacesTest {
 		assertFalse(namespaces.isEmpty());
 		assertEquals(5, namespaces.size());
 
-		assertEquals(new SimpleNamespace(RDF.PREFIX, RDF.NAMESPACE),
-				testModel.getNamespace(RDF.PREFIX).get());
-		assertEquals(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE),
-				testModel.getNamespace(RDFS.PREFIX).get());
+		assertEquals(new SimpleNamespace(RDF.PREFIX, RDF.NAMESPACE), testModel.getNamespace(RDF.PREFIX).get());
+		assertEquals(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE), testModel.getNamespace(RDFS.PREFIX).get());
 		assertEquals(new SimpleNamespace(DC.PREFIX, DC.NAMESPACE), testModel.getNamespace(DC.PREFIX).get());
-		assertEquals(new SimpleNamespace(SKOS.PREFIX, SKOS.NAMESPACE),
-				testModel.getNamespace(SKOS.PREFIX).get());
-		assertEquals(new SimpleNamespace(SESAME.PREFIX, SESAME.NAMESPACE),
-				testModel.getNamespace(SESAME.PREFIX).get());
+		assertEquals(new SimpleNamespace(SKOS.PREFIX, SKOS.NAMESPACE), testModel.getNamespace(SKOS.PREFIX).get());
+		assertEquals(new SimpleNamespace(SESAME.PREFIX, SESAME.NAMESPACE), testModel.getNamespace(SESAME.PREFIX).get());
 	}
 
 	/**
@@ -220,15 +209,11 @@ public abstract class ModelNamespacesTest {
 		assertFalse(namespaces.isEmpty());
 		assertEquals(5, namespaces.size());
 
-		assertEquals(new SimpleNamespace(RDF.PREFIX, RDF.NAMESPACE),
-				testModel.getNamespace(RDF.PREFIX).get());
-		assertEquals(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE),
-				testModel.getNamespace(RDFS.PREFIX).get());
+		assertEquals(new SimpleNamespace(RDF.PREFIX, RDF.NAMESPACE), testModel.getNamespace(RDF.PREFIX).get());
+		assertEquals(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE), testModel.getNamespace(RDFS.PREFIX).get());
 		assertEquals(new SimpleNamespace(DC.PREFIX, DC.NAMESPACE), testModel.getNamespace(DC.PREFIX).get());
-		assertEquals(new SimpleNamespace(SKOS.PREFIX, SKOS.NAMESPACE),
-				testModel.getNamespace(SKOS.PREFIX).get());
-		assertEquals(new SimpleNamespace(SESAME.PREFIX, SESAME.NAMESPACE),
-				testModel.getNamespace(SESAME.PREFIX).get());
+		assertEquals(new SimpleNamespace(SKOS.PREFIX, SKOS.NAMESPACE), testModel.getNamespace(SKOS.PREFIX).get());
+		assertEquals(new SimpleNamespace(SESAME.PREFIX, SESAME.NAMESPACE), testModel.getNamespace(SESAME.PREFIX).get());
 	}
 
 	/**
@@ -282,8 +267,7 @@ public abstract class ModelNamespacesTest {
 
 		assertFalse(testModel.removeNamespace(RDF.NAMESPACE).isPresent());
 		assertFalse(testModel.removeNamespace(RDFS.NAMESPACE).isPresent());
-		assertEquals(new SimpleNamespace(DC.PREFIX, DC.NAMESPACE),
-				testModel.removeNamespace(DC.PREFIX).get());
+		assertEquals(new SimpleNamespace(DC.PREFIX, DC.NAMESPACE), testModel.removeNamespace(DC.PREFIX).get());
 		assertFalse(testModel.removeNamespace(SKOS.NAMESPACE).isPresent());
 		assertFalse(testModel.removeNamespace(SESAME.NAMESPACE).isPresent());
 
@@ -310,14 +294,10 @@ public abstract class ModelNamespacesTest {
 		assertFalse(namespaces.isEmpty());
 		assertEquals(5, namespaces.size());
 
-		assertEquals(new SimpleNamespace(RDF.PREFIX, RDF.NAMESPACE),
-				testModel.removeNamespace(RDF.PREFIX).get());
-		assertEquals(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE),
-				testModel.removeNamespace(RDFS.PREFIX).get());
-		assertEquals(new SimpleNamespace(DC.PREFIX, DC.NAMESPACE),
-				testModel.removeNamespace(DC.PREFIX).get());
-		assertEquals(new SimpleNamespace(SKOS.PREFIX, SKOS.NAMESPACE),
-				testModel.removeNamespace(SKOS.PREFIX).get());
+		assertEquals(new SimpleNamespace(RDF.PREFIX, RDF.NAMESPACE), testModel.removeNamespace(RDF.PREFIX).get());
+		assertEquals(new SimpleNamespace(RDFS.PREFIX, RDFS.NAMESPACE), testModel.removeNamespace(RDFS.PREFIX).get());
+		assertEquals(new SimpleNamespace(DC.PREFIX, DC.NAMESPACE), testModel.removeNamespace(DC.PREFIX).get());
+		assertEquals(new SimpleNamespace(SKOS.PREFIX, SKOS.NAMESPACE), testModel.removeNamespace(SKOS.PREFIX).get());
 		assertEquals(new SimpleNamespace(SESAME.PREFIX, SESAME.NAMESPACE),
 				testModel.removeNamespace(SESAME.PREFIX).get());
 

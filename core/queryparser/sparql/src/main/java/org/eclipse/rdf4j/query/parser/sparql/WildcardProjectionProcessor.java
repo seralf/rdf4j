@@ -11,6 +11,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.rdf4j.query.MalformedQueryException;
+import org.eclipse.rdf4j.query.parser.sparql.ast.ASTBind;
+import org.eclipse.rdf4j.query.parser.sparql.ast.ASTConstraint;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ASTDescribe;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ASTDescribeQuery;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ASTOperation;
@@ -29,12 +31,14 @@ import org.eclipse.rdf4j.query.parser.sparql.ast.VisitorException;
  * 
  * @author arjohn
  * @author Jeen Broekstra
+ * 
+ * @deprecated since 3.0. This feature is for internal use only: its existence, signature or behavior may change without
+ *             warning from one release to the next.
  */
+@Deprecated
 public class WildcardProjectionProcessor extends AbstractASTVisitor {
 
-	public static void process(ASTOperationContainer container)
-		throws MalformedQueryException
-	{
+	public static void process(ASTOperationContainer container) throws MalformedQueryException {
 
 		ASTOperation operation = container.getOperation();
 
@@ -52,15 +56,14 @@ public class WildcardProjectionProcessor extends AbstractASTVisitor {
 
 					for (ASTSelect selectClause : selectClauses) {
 						if (selectClause.isWildcard()) {
-							ASTSelectQuery q = (ASTSelectQuery)selectClause.jjtGetParent();
+							ASTSelectQuery q = (ASTSelectQuery) selectClause.jjtGetParent();
 
 							addQueryVars(q.getWhereClause(), selectClause);
 							selectClause.setWildcard(false);
 						}
 					}
 
-				}
-				catch (VisitorException e) {
+				} catch (VisitorException e) {
 					throw new MalformedQueryException(e);
 				}
 			}
@@ -69,16 +72,15 @@ public class WildcardProjectionProcessor extends AbstractASTVisitor {
 		if (operation instanceof ASTSelectQuery) {
 			// check for wildcard in upper SELECT query
 
-			ASTSelectQuery selectQuery = (ASTSelectQuery)operation;
+			ASTSelectQuery selectQuery = (ASTSelectQuery) operation;
 			ASTSelect selectClause = selectQuery.getSelect();
 			if (selectClause.isWildcard()) {
 				addQueryVars(selectQuery.getWhereClause(), selectClause);
 				selectClause.setWildcard(false);
 			}
-		}
-		else if (operation instanceof ASTDescribeQuery) {
+		} else if (operation instanceof ASTDescribeQuery) {
 			// check for possible wildcard in DESCRIBE query
-			ASTDescribeQuery describeQuery = (ASTDescribeQuery)operation;
+			ASTDescribeQuery describeQuery = (ASTDescribeQuery) operation;
 			ASTDescribe describeClause = describeQuery.getDescribe();
 
 			if (describeClause.isWildcard()) {
@@ -88,9 +90,7 @@ public class WildcardProjectionProcessor extends AbstractASTVisitor {
 		}
 	}
 
-	private static void addQueryVars(ASTWhereClause queryBody, Node wildcardNode)
-		throws MalformedQueryException
-	{
+	private static void addQueryVars(ASTWhereClause queryBody, Node wildcardNode) throws MalformedQueryException {
 		QueryVariableCollector visitor = new QueryVariableCollector();
 
 		try {
@@ -112,8 +112,7 @@ public class WildcardProjectionProcessor extends AbstractASTVisitor {
 
 			}
 
-		}
-		catch (VisitorException e) {
+		} catch (VisitorException e) {
 			throw new MalformedQueryException(e);
 		}
 	}
@@ -124,25 +123,21 @@ public class WildcardProjectionProcessor extends AbstractASTVisitor {
 
 	private static class QueryVariableCollector extends AbstractASTVisitor {
 
-		private Set<String> variableNames = new LinkedHashSet<String>();
+		private Set<String> variableNames = new LinkedHashSet<>();
 
 		public Set<String> getVariableNames() {
 			return variableNames;
 		}
 
 		@Override
-		public Object visit(ASTSelectQuery node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTSelectQuery node, Object data) throws VisitorException {
 			// stop visitor from processing body of sub-select, only add variables
 			// from the projection
 			return visit(node.getSelect(), data);
 		}
 
 		@Override
-		public Object visit(ASTProjectionElem node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTProjectionElem node, Object data) throws VisitorException {
 			// only include the actual alias from a projection element in a
 			// subselect, not any variables used as
 			// input to a function
@@ -150,16 +145,33 @@ public class WildcardProjectionProcessor extends AbstractASTVisitor {
 			if (alias != null) {
 				variableNames.add(alias);
 				return null;
-			}
-			else {
+			} else {
 				return super.visit(node, data);
 			}
 		}
 
 		@Override
-		public Object visit(ASTVar node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTBind node, Object data) throws VisitorException {
+			// only include the actual alias from a BIND
+			Node aliasNode = node.jjtGetChild(1);
+			String alias = ((ASTVar) aliasNode).getName();
+
+			if (alias != null) {
+				variableNames.add(alias);
+				return null;
+			} else {
+				return super.visit(node, data);
+			}
+		}
+
+		@Override
+		public Object visit(ASTConstraint node, Object data) throws VisitorException {
+			// ignore variables in filter expressions
+			return null;
+		}
+
+		@Override
+		public Object visit(ASTVar node, Object data) throws VisitorException {
 			if (!node.isAnonymous()) {
 				variableNames.add(node.getName());
 			}
@@ -173,16 +185,14 @@ public class WildcardProjectionProcessor extends AbstractASTVisitor {
 
 	private static class SelectClauseCollector extends AbstractASTVisitor {
 
-		private Set<ASTSelect> selectClauses = new LinkedHashSet<ASTSelect>();
+		private Set<ASTSelect> selectClauses = new LinkedHashSet<>();
 
 		public Set<ASTSelect> getSelectClauses() {
 			return selectClauses;
 		}
 
 		@Override
-		public Object visit(ASTSelect node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTSelect node, Object data) throws VisitorException {
 			selectClauses.add(node);
 			return super.visit(node, data);
 		}

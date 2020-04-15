@@ -17,10 +17,11 @@ import org.eclipse.rdf4j.query.parser.ParsedQuery;
  * </p>
  * 
  * @author Michael Grove
+ * @deprecated use {@link org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder} instead.
  */
+@Deprecated
 public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
-		implements SupportsGroups<UnionBuilder<T, E>>, Group
-{
+		implements SupportsGroups<UnionBuilder<T, E>>, Group {
 
 	/**
 	 * Left operand
@@ -47,7 +48,7 @@ public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
 	 * @return builder for left operand
 	 */
 	public GroupBuilder<T, UnionBuilder<T, E>> left() {
-		return new GroupBuilder<T, UnionBuilder<T, E>>(this);
+		return new GroupBuilder<>(this);
 	}
 
 	/**
@@ -56,7 +57,7 @@ public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
 	 * @return builder for right operand
 	 */
 	public GroupBuilder<T, UnionBuilder<T, E>> right() {
-		return new GroupBuilder<T, UnionBuilder<T, E>>(this);
+		return new GroupBuilder<>(this);
 	}
 
 	/**
@@ -71,6 +72,7 @@ public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public int size() {
 		return (mLeft == null ? 0 : mLeft.size()) + (mRight == null ? 0 : mRight.size());
 	}
@@ -78,16 +80,14 @@ public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public UnionBuilder<T, E> addGroup(final Group theGroup) {
 		if (mLeft == null) {
 			mLeft = theGroup;
-		}
-		else if (mRight == null) {
+		} else if (mRight == null) {
 			mRight = theGroup;
-		}
-		else {
-			throw new IllegalArgumentException(
-					"Cannot set left or right arguments of union, both already set");
+		} else {
+			throw new IllegalArgumentException("Cannot set left or right arguments of union, both already set");
 		}
 
 		return this;
@@ -96,11 +96,11 @@ public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public UnionBuilder<T, E> removeGroup(final Group theGroup) {
 		if (mLeft != null && mLeft.equals(theGroup)) {
 			mLeft = null;
-		}
-		else if (mRight != null && mRight.equals(theGroup)) {
+		} else if (mRight != null && mRight.equals(theGroup)) {
 			mRight = null;
 		}
 
@@ -110,6 +110,7 @@ public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public void addChild(final Group theGroup) {
 		addGroup(theGroup);
 	}
@@ -117,18 +118,16 @@ public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public TupleExpr expr() {
 		if (mLeft != null && mRight != null) {
 			return new Union(mLeft.expr(), mRight.expr());
-		}
-		else if (mLeft != null && mRight == null) {
+		} else if (mLeft != null && mRight == null) {
 			return mLeft.expr();
 
-		}
-		else if (mRight != null && mLeft == null) {
+		} else if (mRight != null && mLeft == null) {
 			return mRight.expr();
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
@@ -136,6 +135,7 @@ public class UnionBuilder<T extends ParsedQuery, E extends SupportsGroups>
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public boolean isOptional() {
 		return false;
 	}

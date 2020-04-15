@@ -11,7 +11,11 @@ import org.eclipse.rdf4j.query.algebra.ValueConstant;
 
 /**
  * @author Jeen
+ * 
+ * @deprecated since 3.0. This feature is for internal use only: its existence, signature or behavior may change without
+ *             warning from one release to the next.
  */
+@Deprecated
 public class PropertySetElem {
 
 	private boolean inverse;
@@ -19,8 +23,7 @@ public class PropertySetElem {
 	private ValueConstant predicate;
 
 	/**
-	 * @param inverse
-	 *        The inverse to set.
+	 * @param inverse The inverse to set.
 	 */
 	public void setInverse(boolean inverse) {
 		this.inverse = inverse;
@@ -34,8 +37,7 @@ public class PropertySetElem {
 	}
 
 	/**
-	 * @param predicate
-	 *        The predicate to set.
+	 * @param predicate The predicate to set.
 	 */
 	public void setPredicate(ValueConstant predicate) {
 		this.predicate = predicate;

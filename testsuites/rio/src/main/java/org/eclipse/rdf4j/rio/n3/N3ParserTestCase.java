@@ -15,20 +15,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.util.Models;
-import org.eclipse.rdf4j.query.BindingSet;
-import org.eclipse.rdf4j.query.QueryLanguage;
-import org.eclipse.rdf4j.query.TupleQueryResult;
-import org.eclipse.rdf4j.repository.Repository;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.eclipse.rdf4j.repository.sail.SailRepository;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFParser;
+import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesParser;
-import org.eclipse.rdf4j.sail.memory.MemoryStore;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -51,56 +51,41 @@ public abstract class N3ParserTestCase {
 	 * Static initializer *
 	 *--------------------*/
 
-	public TestSuite createTestSuite()
-		throws Exception
-	{
+	public TestSuite createTestSuite() throws Exception {
 		// Create test suite
 		TestSuite suite = new TestSuite(N3ParserTestCase.class.getName());
 
 		// Add the manifest to a repository and query it
-		Repository repository = new SailRepository(new MemoryStore());
-		repository.initialize();
-		RepositoryConnection con = repository.getConnection();
-
 		URL url = url(MANIFEST_URL);
-		con.add(url, base(MANIFEST_URL), RDFFormat.TURTLE);
 
-		// Add all positive parser tests to the test suite
-		String query = "SELECT testURI, inputURL, outputURL "
-				+ "FROM {testURI} rdf:type {n3test:PositiveParserTest}; "
-				+ "               n3test:inputDocument {inputURL}; "
-				+ "               n3test:outputDocument {outputURL} "
-				+ "USING NAMESPACE n3test = <http://www.w3.org/2004/11/n3test#>";
+		ValueFactory f = SimpleValueFactory.getInstance();
 
-		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SERQL, query).evaluate();
-		while (queryResult.hasNext()) {
-			BindingSet bindingSet = queryResult.next();
-			String testURI = bindingSet.getValue("testURI").toString();
-			String inputURL = bindingSet.getValue("inputURL").toString();
-			String outputURL = bindingSet.getValue("outputURL").toString();
+		String n3test = "http://www.w3.org/2004/11/n3test#";
 
-			suite.addTest(new PositiveParserTest(testURI, inputURL, outputURL));
+		IRI POSITIVE_PARSER_TEST = f.createIRI(n3test, "PositiveParserTest");
+		IRI NEGATIVE_PARSER_TEST = f.createIRI(n3test, "NegativeParserTest");
+
+		IRI INPUT_DOCUMENT = f.createIRI(n3test, "inputDocument");
+		IRI OUTPUT_DOCUMENT = f.createIRI(n3test, "outputDocument");
+
+		try (InputStream in = url.openStream()) {
+			Model manifest = Rio.parse(in, base(MANIFEST_URL), RDFFormat.TURTLE);
+
+			// add all positive parser tests
+			Set<Resource> positiveTests = manifest.filter(null, RDF.TYPE, POSITIVE_PARSER_TEST).subjects();
+			for (Resource s : positiveTests) {
+				String inputURL = Models.getProperty(manifest, s, INPUT_DOCUMENT).toString();
+				String outputURL = Models.getProperty(manifest, s, OUTPUT_DOCUMENT).toString();
+				suite.addTest(new PositiveParserTest(s.toString(), inputURL, outputURL));
+			}
+
+			// add all negative parser tests
+			Set<Resource> negativeTests = manifest.filter(null, RDF.TYPE, NEGATIVE_PARSER_TEST).subjects();
+			for (Resource s : negativeTests) {
+				String inputURL = Models.getProperty(manifest, s, INPUT_DOCUMENT).toString();
+				suite.addTest(new NegativeParserTest(s.toString(), inputURL));
+			}
 		}
-
-		queryResult.close();
-
-		// Add all negative parser tests to the test suite
-		query = "SELECT testURI, inputURL " + "FROM {testURI} rdf:type {n3test:NegativeParserTest}; "
-				+ "               n3test:inputDocument {inputURL} "
-				+ "USING NAMESPACE n3test = <http://www.w3.org/2004/11/n3test#>";
-
-		queryResult = con.prepareTupleQuery(QueryLanguage.SERQL, query).evaluate();
-
-		while (queryResult.hasNext()) {
-			BindingSet bindingSet = queryResult.next();
-			String testURI = bindingSet.getValue("testURI").toString();
-			String inputURL = bindingSet.getValue("inputURL").toString();
-
-			suite.addTest(new NegativeParserTest(testURI, inputURL));
-		}
-		queryResult.close();
-		con.close();
-		repository.shutDown();
 
 		return suite;
 	}
@@ -125,9 +110,7 @@ public abstract class N3ParserTestCase {
 		 * Constructors *
 		 *--------------*/
 
-		public PositiveParserTest(String testURI, String inputURL, String outputURL)
-			throws MalformedURLException
-		{
+		public PositiveParserTest(String testURI, String inputURL, String outputURL) throws MalformedURLException {
 			super(testURI);
 			this.inputURL = url(inputURL);
 			this.outputURL = url(outputURL);
@@ -138,14 +121,12 @@ public abstract class N3ParserTestCase {
 		 *---------*/
 
 		@Override
-		protected void runTest()
-			throws Exception
-		{
+		protected void runTest() throws Exception {
 			// Parse input data
 			RDFParser turtleParser = createRDFParser();
 			turtleParser.setDatatypeHandling(RDFParser.DatatypeHandling.IGNORE);
 
-			Set<Statement> inputCollection = new LinkedHashSet<Statement>();
+			Set<Statement> inputCollection = new LinkedHashSet<>();
 			StatementCollector inputCollector = new StatementCollector(inputCollection);
 			turtleParser.setRDFHandler(inputCollector);
 
@@ -157,7 +138,7 @@ public abstract class N3ParserTestCase {
 			NTriplesParser ntriplesParser = new NTriplesParser();
 			ntriplesParser.setDatatypeHandling(RDFParser.DatatypeHandling.IGNORE);
 
-			Set<Statement> outputCollection = new LinkedHashSet<Statement>();
+			Set<Statement> outputCollection = new LinkedHashSet<>();
 			StatementCollector outputCollector = new StatementCollector(outputCollection);
 			ntriplesParser.setRDFHandler(outputCollector);
 
@@ -172,10 +153,10 @@ public abstract class N3ParserTestCase {
 				// System.err.println("Actual : " + inputCollection);
 				// System.err.println("======================");
 
-				List<Statement> missing = new LinkedList<Statement>(outputCollection);
+				List<Statement> missing = new LinkedList<>(outputCollection);
 				missing.removeAll(inputCollection);
 
-				List<Statement> unexpected = new LinkedList<Statement>(inputCollection);
+				List<Statement> unexpected = new LinkedList<>(inputCollection);
 				unexpected.removeAll(outputCollection);
 
 				if (!missing.isEmpty()) {
@@ -207,9 +188,7 @@ public abstract class N3ParserTestCase {
 		 * Constructors *
 		 *--------------*/
 
-		public NegativeParserTest(String testURI, String inputURL)
-			throws MalformedURLException
-		{
+		public NegativeParserTest(String testURI, String inputURL) throws MalformedURLException {
 			super(testURI);
 			this.inputURL = url(inputURL);
 		}
@@ -233,20 +212,16 @@ public abstract class N3ParserTestCase {
 				in.close();
 
 				fail("Parser parses erroneous data without reporting errors");
-			}
-			catch (RDFParseException e) {
+			} catch (RDFParseException e) {
 				// This is expected as the input file is incorrect RDF
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				fail("Error: " + e.getMessage());
 			}
 		}
 
 	} // end inner class NegativeParserTest
 
-	private static URL url(String uri)
-		throws MalformedURLException
-	{
+	private static URL url(String uri) throws MalformedURLException {
 		return new URL(uri);
 	}
 

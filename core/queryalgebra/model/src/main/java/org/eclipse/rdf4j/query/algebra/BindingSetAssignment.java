@@ -8,6 +8,7 @@
 package org.eclipse.rdf4j.query.algebra;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.rdf4j.query.BindingSet;
@@ -34,7 +35,7 @@ public class BindingSetAssignment extends AbstractQueryModelNode implements Tupl
 	}
 
 	private Set<String> findBindingNames() {
-		Set<String> result = new HashSet<String>();
+		Set<String> result = new HashSet<>();
 		if (bindingSets != null) {
 			for (BindingSet set : bindingSets) {
 				result.addAll(set.getBindingNames());
@@ -44,38 +45,42 @@ public class BindingSetAssignment extends AbstractQueryModelNode implements Tupl
 	}
 
 	@Override
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		return other instanceof BindingSetAssignment;
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null || !(obj instanceof BindingSetAssignment)) {
+			return false;
+		}
+		BindingSetAssignment other = (BindingSetAssignment) obj;
+		return Objects.equals(this.bindingNames, other.bindingNames)
+				&& Objects.equals(this.bindingSets, other.bindingSets);
 	}
 
 	@Override
 	public int hashCode() {
-		return "BindingSetAssignment".hashCode();
+		return Objects.hash(bindingNames, bindingSets);
 	}
 
 	@Override
 	public BindingSetAssignment clone() {
-		return (BindingSetAssignment)super.clone();
+		return (BindingSetAssignment) super.clone();
 	}
 
 	/**
-	 * @param bindingNames
-	 *        The bindingNames to set if known.
+	 * @param bindingNames The bindingNames to set if known.
 	 */
 	public void setBindingNames(Set<String> bindingNames) {
 		this.bindingNames = bindingNames;
 	}
 
 	/**
-	 * @param bindingSets
-	 *        The bindingSets to set.
+	 * @param bindingSets The bindingSets to set.
 	 */
 	public void setBindingSets(Iterable<BindingSet> bindingSets) {
 		this.bindingSets = bindingSets;

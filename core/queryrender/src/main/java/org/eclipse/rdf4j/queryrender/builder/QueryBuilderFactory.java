@@ -22,7 +22,9 @@ import org.eclipse.rdf4j.query.parser.ParsedTupleQuery;
  * </p>
  * 
  * @author Michael Grove
+ * @deprecated use {@link org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder} instead.
  */
+@Deprecated
 public class QueryBuilderFactory {
 
 	/**
@@ -31,7 +33,7 @@ public class QueryBuilderFactory {
 	 * @return a select QueryBuilder
 	 */
 	public static QueryBuilder<ParsedBooleanQuery> ask() {
-		return new AbstractQueryBuilder<ParsedBooleanQuery>(new ParsedBooleanQuery());
+		return new AbstractQueryBuilder<>(new ParsedBooleanQuery());
 	}
 
 	/**
@@ -40,19 +42,17 @@ public class QueryBuilderFactory {
 	 * @return a select QueryBuilder
 	 */
 	public static QueryBuilder<ParsedTupleQuery> select() {
-		return new AbstractQueryBuilder<ParsedTupleQuery>(new ParsedTupleQuery());
+		return new AbstractQueryBuilder<>(new ParsedTupleQuery());
 	}
 
 	/**
 	 * Create a QueryBuilder for creating a select query
 	 * 
-	 * @param theProjectionVars
-	 *        the list of elements in the projection of the query
+	 * @param theProjectionVars the list of elements in the projection of the query
 	 * @return a select query builder
 	 */
 	public static QueryBuilder<ParsedTupleQuery> select(String... theProjectionVars) {
-		QueryBuilder<ParsedTupleQuery> aBuilder = new AbstractQueryBuilder<ParsedTupleQuery>(
-				new ParsedTupleQuery());
+		QueryBuilder<ParsedTupleQuery> aBuilder = new AbstractQueryBuilder<>(new ParsedTupleQuery());
 		aBuilder.addProjectionVar(theProjectionVars);
 
 		return aBuilder;
@@ -64,14 +64,13 @@ public class QueryBuilderFactory {
 	 * @return a construct QueryBuilder
 	 */
 	public static QueryBuilder<ParsedGraphQuery> construct() {
-		return new AbstractQueryBuilder<ParsedGraphQuery>(new ParsedGraphQuery());
+		return new AbstractQueryBuilder<>(new ParsedGraphQuery());
 	}
 
 	/**
 	 * Create a QueryBuilder for creating a describe query
 	 * 
-	 * @param theValues
-	 *        the specific bound URI values to be described
+	 * @param theValues the specific bound URI values to be described
 	 * @return a describe query builder
 	 */
 	public static QueryBuilder<ParsedGraphQuery> describe(Resource... theValues) {
@@ -81,15 +80,12 @@ public class QueryBuilderFactory {
 	/**
 	 * Create a QueryBuilder for creating a describe query
 	 * 
-	 * @param theVars
-	 *        the variables to be described
-	 * @param theValues
-	 *        the specific bound URI values to be described
+	 * @param theVars   the variables to be described
+	 * @param theValues the specific bound URI values to be described
 	 * @return a describe query builder
 	 */
 	public static QueryBuilder<ParsedGraphQuery> describe(String[] theVars, Resource... theValues) {
-		QueryBuilder<ParsedGraphQuery> aBuilder = new AbstractQueryBuilder<ParsedGraphQuery>(
-				new ParsedDescribeQuery());
+		QueryBuilder<ParsedGraphQuery> aBuilder = new AbstractQueryBuilder<>(new ParsedDescribeQuery());
 
 		aBuilder.reduced();
 		aBuilder.addProjectionVar("descr_subj", "descr_pred", "descr_obj");
@@ -100,8 +96,8 @@ public class QueryBuilderFactory {
 				Var aVarObj = new Var(aVar);
 				aVarObj.setAnonymous(true);
 
-				aGroup.filter().or(new SameTerm(aVarObj, new Var("descr_subj")),
-						new SameTerm(aVarObj, new Var("descr_obj")));
+				aGroup.filter()
+						.or(new SameTerm(aVarObj, new Var("descr_subj")), new SameTerm(aVarObj, new Var("descr_obj")));
 			}
 		}
 
@@ -113,8 +109,9 @@ public class QueryBuilderFactory {
 				Var aObjVar = new Var("descr_obj");
 				aObjVar.setAnonymous(true);
 
-				aGroup.filter().or(new SameTerm(new ValueConstant(aVar), aSubjVar),
-						new SameTerm(new ValueConstant(aVar), aObjVar));
+				aGroup.filter()
+						.or(new SameTerm(new ValueConstant(aVar), aSubjVar),
+								new SameTerm(new ValueConstant(aVar), aObjVar));
 			}
 		}
 

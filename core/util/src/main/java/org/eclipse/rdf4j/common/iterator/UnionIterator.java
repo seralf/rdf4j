@@ -35,8 +35,7 @@ public class UnionIterator<E> extends LookAheadIterator<E> {
 	/**
 	 * Creates a new UnionIterator that returns the bag union of the results of a number of Iterators.
 	 * 
-	 * @param args
-	 *        The Iterators containing the elements to iterate over.
+	 * @param args The Iterators containing the elements to iterate over.
 	 */
 	public UnionIterator(Iterable<? extends E>... args) {
 		this(Arrays.asList(args));
@@ -46,7 +45,7 @@ public class UnionIterator<E> extends LookAheadIterator<E> {
 		argIter = args.iterator();
 
 		// Initialize with empty iteration so that var is never null
-		currentIter = new EmptyIterator<E>();
+		currentIter = new EmptyIterator<>();
 	}
 
 	/*--------------*
@@ -64,8 +63,7 @@ public class UnionIterator<E> extends LookAheadIterator<E> {
 
 		if (argIter.hasNext()) {
 			currentIter = argIter.next().iterator();
-		}
-		else {
+		} else {
 			// All elements have been returned
 			return null;
 		}
@@ -74,15 +72,12 @@ public class UnionIterator<E> extends LookAheadIterator<E> {
 	}
 
 	@Override
-	protected void handleClose()
-		throws IOException
-	{
+	protected void handleClose() throws IOException {
 		try {
 			// Close this iteration, this will prevent lookAhead() from calling
 			// getNextElement() again
 			super.handleClose();
-		}
-		finally {
+		} finally {
 			Iterators.close(currentIter);
 		}
 	}

@@ -37,9 +37,7 @@ public class ProxyRepositoryConfig extends AbstractRepositoryImplConfig {
 	}
 
 	@Override
-	public void validate()
-		throws RepositoryConfigException
-	{
+	public void validate() throws RepositoryConfigException {
 		super.validate();
 		if (null == this.proxiedID) {
 			throw new RepositoryConfigException("No id specified for proxied repository");
@@ -50,6 +48,7 @@ public class ProxyRepositoryConfig extends AbstractRepositoryImplConfig {
 	public Resource export(Model model) {
 		Resource implNode = super.export(model);
 		if (null != this.proxiedID) {
+			model.setNamespace("proxy", ProxyRepositorySchema.NAMESPACE);
 			model.add(implNode, ProxyRepositorySchema.PROXIED_ID,
 					SimpleValueFactory.getInstance().createLiteral(this.proxiedID));
 		}
@@ -57,16 +56,13 @@ public class ProxyRepositoryConfig extends AbstractRepositoryImplConfig {
 	}
 
 	@Override
-	public void parse(Model model, Resource implNode)
-		throws RepositoryConfigException
-	{
+	public void parse(Model model, Resource implNode) throws RepositoryConfigException {
 		super.parse(model, implNode);
 
 		try {
-			Models.objectLiteral(model.filter(implNode, ProxyRepositorySchema.PROXIED_ID, null)).ifPresent(
-					lit -> setProxiedRepositoryID(lit.getLabel()));
-		}
-		catch (ModelException e) {
+			Models.objectLiteral(model.filter(implNode, ProxyRepositorySchema.PROXIED_ID, null))
+					.ifPresent(lit -> setProxiedRepositoryID(lit.getLabel()));
+		} catch (ModelException e) {
 			throw new RepositoryConfigException(e.getMessage(), e);
 		}
 	}

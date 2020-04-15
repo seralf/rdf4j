@@ -29,9 +29,8 @@ public class Label extends UnaryValueOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -47,6 +46,6 @@ public class Label extends UnaryValueOperator {
 
 	@Override
 	public Label clone() {
-		return (Label)super.clone();
+		return (Label) super.clone();
 	}
 }

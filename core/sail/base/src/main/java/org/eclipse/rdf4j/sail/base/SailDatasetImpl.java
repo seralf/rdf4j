@@ -21,7 +21,6 @@ import org.eclipse.rdf4j.common.iteration.CloseableIteration;
 import org.eclipse.rdf4j.common.iteration.CloseableIteratorIteration;
 import org.eclipse.rdf4j.common.iteration.EmptyIteration;
 import org.eclipse.rdf4j.common.iteration.FilterIteration;
-import org.eclipse.rdf4j.common.iteration.UnionIteration;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Namespace;
@@ -33,7 +32,7 @@ import org.eclipse.rdf4j.sail.SailException;
 
 /**
  * A view of an {@link SailSource} that is derived from a backing {@link SailDataset}.
- * 
+ *
  * @author James Leigh
  */
 class SailDatasetImpl implements SailDataset {
@@ -51,11 +50,9 @@ class SailDatasetImpl implements SailDataset {
 	/**
 	 * Create a derivative dataset that applies the given changeset. The life cycle of this and the given
 	 * {@link SailDataset} are bound.
-	 * 
-	 * @param derivedFrom
-	 *        will be released when this object is released
-	 * @param changes
-	 *        changeset to be observed with the given dataset
+	 *
+	 * @param derivedFrom will be released when this object is released
+	 * @param changes     changeset to be observed with the given dataset
 	 */
 	public SailDatasetImpl(SailDataset derivedFrom, Changeset changes) {
 		this.derivedFrom = derivedFrom;
@@ -69,35 +66,30 @@ class SailDatasetImpl implements SailDataset {
 	}
 
 	@Override
-	public void close()
-		throws SailException
-	{
+	public void close() throws SailException {
 		changes.removeRefback(this);
 		derivedFrom.close();
 	}
 
 	@Override
-	public String getNamespace(String prefix)
-		throws SailException
-	{
+	public String getNamespace(String prefix) throws SailException {
 		Map<String, String> addedNamespaces = changes.getAddedNamespaces();
-		if (addedNamespaces != null && addedNamespaces.containsKey(prefix))
+		if (addedNamespaces != null && addedNamespaces.containsKey(prefix)) {
 			return addedNamespaces.get(prefix);
+		}
 		Set<String> removedPrefixes = changes.getRemovedPrefixes();
-		if (removedPrefixes != null && removedPrefixes.contains(prefix) || changes.isNamespaceCleared())
+		if (removedPrefixes != null && removedPrefixes.contains(prefix) || changes.isNamespaceCleared()) {
 			return null;
+		}
 		return derivedFrom.getNamespace(prefix);
 	}
 
 	@Override
-	public CloseableIteration<? extends Namespace, SailException> getNamespaces()
-		throws SailException
-	{
+	public CloseableIteration<? extends Namespace, SailException> getNamespaces() throws SailException {
 		final CloseableIteration<? extends Namespace, SailException> namespaces;
 		if (changes.isNamespaceCleared()) {
-			namespaces = new EmptyIteration<Namespace, SailException>();
-		}
-		else {
+			namespaces = new EmptyIteration<>();
+		} else {
 			namespaces = derivedFrom.getNamespaces();
 		}
 		Iterator<Map.Entry<String, String>> added = null;
@@ -109,8 +101,9 @@ class SailDatasetImpl implements SailDataset {
 			}
 			removed = changes.getRemovedPrefixes();
 		}
-		if (added == null && removed == null)
+		if (added == null && removed == null) {
 			return namespaces;
+		}
 		final Iterator<Map.Entry<String, String>> addedIter = added;
 		final Set<String> removedSet = removed;
 		return new AbstractCloseableIteration<Namespace, SailException>() {
@@ -118,9 +111,7 @@ class SailDatasetImpl implements SailDataset {
 			volatile Namespace next;
 
 			@Override
-			public boolean hasNext()
-				throws SailException
-			{
+			public boolean hasNext() throws SailException {
 				if (isClosed()) {
 					return false;
 				}
@@ -138,9 +129,7 @@ class SailDatasetImpl implements SailDataset {
 			}
 
 			@Override
-			public Namespace next()
-				throws SailException
-			{
+			public Namespace next() throws SailException {
 				if (isClosed()) {
 					throw new NoSuchElementException("The iteration has been closed.");
 				}
@@ -157,8 +146,7 @@ class SailDatasetImpl implements SailDataset {
 					}
 					close();
 					throw new NoSuchElementException("The iteration has been closed.");
-				}
-				finally {
+				} finally {
 					next = null;
 				}
 			}
@@ -169,13 +157,10 @@ class SailDatasetImpl implements SailDataset {
 			}
 
 			@Override
-			public void handleClose()
-				throws SailException
-			{
+			public void handleClose() throws SailException {
 				try {
 					super.handleClose();
-				}
-				finally {
+				} finally {
 					namespaces.close();
 				}
 			}
@@ -183,9 +168,7 @@ class SailDatasetImpl implements SailDataset {
 	}
 
 	@Override
-	public CloseableIteration<? extends Resource, SailException> getContextIDs()
-		throws SailException
-	{
+	public CloseableIteration<? extends Resource, SailException> getContextIDs() throws SailException {
 		final CloseableIteration<? extends Resource, SailException> contextIDs;
 		contextIDs = derivedFrom.getContextIDs();
 		Iterator<Resource> added = null;
@@ -200,8 +183,9 @@ class SailDatasetImpl implements SailDataset {
 				removed = deprecatedContexts;
 			}
 		}
-		if (added == null && removed == null)
+		if (added == null && removed == null) {
 			return contextIDs;
+		}
 		final Iterator<Resource> addedIter = added;
 		final Set<Resource> removedSet = removed;
 		return new AbstractCloseableIteration<Resource, SailException>() {
@@ -209,9 +193,7 @@ class SailDatasetImpl implements SailDataset {
 			volatile Resource next;
 
 			@Override
-			public boolean hasNext()
-				throws SailException
-			{
+			public boolean hasNext() throws SailException {
 				if (isClosed()) {
 					return false;
 				}
@@ -229,9 +211,7 @@ class SailDatasetImpl implements SailDataset {
 			}
 
 			@Override
-			public Resource next()
-				throws SailException
-			{
+			public Resource next() throws SailException {
 				if (isClosed()) {
 					throw new NoSuchElementException("The iteration has been closed.");
 				}
@@ -247,27 +227,21 @@ class SailDatasetImpl implements SailDataset {
 					}
 					close();
 					throw new NoSuchElementException("The iteration has been closed.");
-				}
-				finally {
+				} finally {
 					next = null;
 				}
 			}
 
 			@Override
-			public void remove()
-				throws SailException
-			{
+			public void remove() throws SailException {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public void handleClose()
-				throws SailException
-			{
+			public void handleClose() throws SailException {
 				try {
 					super.handleClose();
-				}
-				finally {
+				} finally {
 					contextIDs.close();
 				}
 			}
@@ -275,25 +249,20 @@ class SailDatasetImpl implements SailDataset {
 	}
 
 	@Override
-	public CloseableIteration<? extends Statement, SailException> getStatements(Resource subj, IRI pred,
-			Value obj, Resource... contexts)
-		throws SailException
-	{
+	public CloseableIteration<? extends Statement, SailException> getStatements(Resource subj, IRI pred, Value obj,
+			Resource... contexts) throws SailException {
 		Set<Resource> deprecatedContexts = changes.getDeprecatedContexts();
 		CloseableIteration<? extends Statement, SailException> iter;
 		if (changes.isStatementCleared()
 				|| contexts == null && deprecatedContexts != null && deprecatedContexts.contains(null)
 				|| contexts.length > 0 && deprecatedContexts != null
-						&& deprecatedContexts.containsAll(Arrays.asList(contexts)))
-		{
+						&& deprecatedContexts.containsAll(Arrays.asList(contexts))) {
 			iter = null;
-		}
-		else if (contexts.length > 0 && deprecatedContexts != null) {
-			List<Resource> remaining = new ArrayList<Resource>(Arrays.asList(contexts));
+		} else if (contexts.length > 0 && deprecatedContexts != null) {
+			List<Resource> remaining = new ArrayList<>(Arrays.asList(contexts));
 			remaining.removeAll(deprecatedContexts);
-			iter = derivedFrom.getStatements(subj, pred, obj, contexts);
-		}
-		else {
+			iter = derivedFrom.getStatements(subj, pred, obj, remaining.toArray(new Resource[0]));
+		} else {
 			iter = derivedFrom.getStatements(subj, pred, obj, contexts);
 		}
 		Model deprecated = changes.getDeprecated();
@@ -302,44 +271,31 @@ class SailDatasetImpl implements SailDataset {
 		}
 		Model approved = changes.getApproved();
 		if (approved != null && iter != null) {
-			return union(iter, approved.filter(subj, pred, obj, contexts));
-		}
-		else if (approved != null) {
+
+			return new DistinctModelReducingUnionIteration(iter, approved, (m) -> m.filter(subj, pred, obj, contexts));
+
+		} else if (approved != null) {
 			Iterator<Statement> i = approved.filter(subj, pred, obj, contexts).iterator();
-			return new CloseableIteratorIteration<Statement, SailException>(i);
-		}
-		else if (iter != null) {
+			return new CloseableIteratorIteration<>(i);
+		} else if (iter != null) {
 			return iter;
-		}
-		else {
-			return new EmptyIteration<Statement, SailException>();
+		} else {
+			return new EmptyIteration<>();
 		}
 	}
 
 	private CloseableIteration<? extends Statement, SailException> difference(
-			CloseableIteration<? extends Statement, SailException> result, final Model excluded)
-	{
+			CloseableIteration<? extends Statement, SailException> result, final Model excluded) {
 		if (excluded.isEmpty()) {
 			return result;
 		}
 		return new FilterIteration<Statement, SailException>(result) {
 
+			@Override
 			protected boolean accept(Statement stmt) {
 				return !excluded.contains(stmt);
 			}
 		};
-	}
-
-	private CloseableIteration<? extends Statement, SailException> union(
-			CloseableIteration<? extends Statement, SailException> result, Model included)
-	{
-		if (included.isEmpty()) {
-			return result;
-		}
-		final Iterator<Statement> iter = included.iterator();
-		CloseableIteration<Statement, SailException> incl;
-		incl = new CloseableIteratorIteration<Statement, SailException>(iter);
-		return new UnionIteration<Statement, SailException>(incl, result);
 	}
 
 }

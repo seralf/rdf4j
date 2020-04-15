@@ -38,19 +38,20 @@ public class ContextAwareFactory implements RepositoryFactory {
 	/**
 	 * Returns the repository's type: <tt>openrdf:ContextAwareRepository</tt>.
 	 */
+	@Override
 	public String getRepositoryType() {
 		return REPOSITORY_TYPE;
 	}
 
+	@Override
 	public RepositoryImplConfig getConfig() {
 		return new ContextAwareConfig();
 	}
 
-	public Repository getRepository(RepositoryImplConfig configuration)
-		throws RepositoryConfigException
-	{
+	@Override
+	public Repository getRepository(RepositoryImplConfig configuration) throws RepositoryConfigException {
 		if (configuration instanceof ContextAwareConfig) {
-			ContextAwareConfig config = (ContextAwareConfig)configuration;
+			ContextAwareConfig config = (ContextAwareConfig) configuration;
 
 			ContextAwareRepository repo = new ContextAwareRepository();
 

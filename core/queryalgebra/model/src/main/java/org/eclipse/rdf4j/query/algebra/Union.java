@@ -25,10 +25,8 @@ public class Union extends BinaryTupleOperator {
 	/**
 	 * Creates a new union operator that operates on the two specified arguments.
 	 * 
-	 * @param leftArg
-	 *        The left argument of the union operator.
-	 * @param rightArg
-	 *        The right argument of the union operator.
+	 * @param leftArg  The left argument of the union operator.
+	 * @param rightArg The right argument of the union operator.
 	 */
 	public Union(TupleExpr leftArg, TupleExpr rightArg) {
 		super(leftArg, rightArg);
@@ -38,23 +36,24 @@ public class Union extends BinaryTupleOperator {
 	 * Methods *
 	 *---------*/
 
+	@Override
 	public Set<String> getBindingNames() {
-		Set<String> bindingNames = new LinkedHashSet<String>(16);
+		Set<String> bindingNames = new LinkedHashSet<>(16);
 		bindingNames.addAll(getLeftArg().getBindingNames());
 		bindingNames.addAll(getRightArg().getBindingNames());
 		return bindingNames;
 	}
 
+	@Override
 	public Set<String> getAssuredBindingNames() {
-		Set<String> bindingNames = new LinkedHashSet<String>(16);
+		Set<String> bindingNames = new LinkedHashSet<>(16);
 		bindingNames.addAll(getLeftArg().getAssuredBindingNames());
 		bindingNames.retainAll(getRightArg().getAssuredBindingNames());
 		return bindingNames;
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -70,6 +69,6 @@ public class Union extends BinaryTupleOperator {
 
 	@Override
 	public Union clone() {
-		return (Union)super.clone();
+		return (Union) super.clone();
 	}
 }

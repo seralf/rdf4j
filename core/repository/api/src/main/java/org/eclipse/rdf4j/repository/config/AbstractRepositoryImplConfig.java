@@ -32,12 +32,15 @@ public class AbstractRepositoryImplConfig implements RepositoryImplConfig {
 
 	/**
 	 * Create a new RepositoryConfigImpl.
+	 * 
+	 * @param type
 	 */
 	public AbstractRepositoryImplConfig(String type) {
 		this();
 		setType(type);
 	}
 
+	@Override
 	public String getType() {
 		return type;
 	}
@@ -46,14 +49,14 @@ public class AbstractRepositoryImplConfig implements RepositoryImplConfig {
 		this.type = type;
 	}
 
-	public void validate()
-		throws RepositoryConfigException
-	{
+	@Override
+	public void validate() throws RepositoryConfigException {
 		if (type == null) {
 			throw new RepositoryConfigException("No type specified for repository implementation");
 		}
 	}
 
+	@Override
 	public Resource export(Model model) {
 		BNode implNode = SimpleValueFactory.getInstance().createBNode();
 
@@ -64,41 +67,33 @@ public class AbstractRepositoryImplConfig implements RepositoryImplConfig {
 		return implNode;
 	}
 
-	public void parse(Model model, Resource resource)
-		throws RepositoryConfigException
-	{
-		Models.objectLiteral(model.filter(resource, REPOSITORYTYPE, null)).ifPresent(
-				typeLit -> setType(typeLit.getLabel()));
+	@Override
+	public void parse(Model model, Resource resource) throws RepositoryConfigException {
+		Models.objectLiteral(model.filter(resource, REPOSITORYTYPE, null))
+				.ifPresent(typeLit -> setType(typeLit.getLabel()));
 	}
 
 	/**
-	 * Utility method to create a new {@link RepositoryImplConfig} by reading data from the supplied
-	 * {@link Model}.
+	 * Utility method to create a new {@link RepositoryImplConfig} by reading data from the supplied {@link Model}.
 	 * 
-	 * @param model
-	 *        the {@link Model} to read configuration data from.
-	 * @param implNode
-	 *        the subject {@link Resource} identifying the configuration data in the Model.
+	 * @param model    the {@link Model} to read configuration data from.
+	 * @param resource the subject {@link Resource} identifying the configuration data in the Model.
 	 * @return a new {@link RepositoryImplConfig} initialized with the configuration from the input Model, or
-	 *         {@code null} if no {@link RepositoryConfigSchema#REPOSITORYTYPE} property was found in the
-	 *         configuration data..
-	 * @throws RepositoryConfigException
-	 *         if an error occurred reading the configuration data from the model.
+	 *         {@code null} if no {@link RepositoryConfigSchema#REPOSITORYTYPE} property was found in the configuration
+	 *         data..
+	 * @throws RepositoryConfigException if an error occurred reading the configuration data from the model.
 	 */
-	public static RepositoryImplConfig create(Model model, Resource resource)
-		throws RepositoryConfigException
-	{
+	public static RepositoryImplConfig create(Model model, Resource resource) throws RepositoryConfigException {
 		try {
 			// Literal typeLit = GraphUtil.getOptionalObjectLiteral(graph,
 			// implNode, REPOSITORYTYPE);
 
-			final Literal typeLit = Models.objectLiteral(model.filter(resource, REPOSITORYTYPE, null)).orElse(
-					null);
+			final Literal typeLit = Models.objectLiteral(model.filter(resource, REPOSITORYTYPE, null)).orElse(null);
 			if (typeLit != null) {
-				RepositoryFactory factory = RepositoryRegistry.getInstance().get(
-						typeLit.getLabel()).orElseThrow(
-								() -> new RepositoryConfigException(
-										"Unsupported repository type: " + typeLit.getLabel()));
+				RepositoryFactory factory = RepositoryRegistry.getInstance()
+						.get(typeLit.getLabel())
+						.orElseThrow(() -> new RepositoryConfigException(
+								"Unsupported repository type: " + typeLit.getLabel()));
 
 				RepositoryImplConfig implConfig = factory.getConfig();
 				implConfig.parse(model, resource);
@@ -106,8 +101,7 @@ public class AbstractRepositoryImplConfig implements RepositoryImplConfig {
 			}
 
 			return null;
-		}
-		catch (ModelException e) {
+		} catch (ModelException e) {
 			throw new RepositoryConfigException(e.getMessage(), e);
 		}
 	}

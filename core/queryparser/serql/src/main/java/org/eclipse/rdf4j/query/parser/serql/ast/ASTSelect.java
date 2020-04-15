@@ -26,9 +26,7 @@ public class ASTSelect extends SimpleNode {
 	}
 
 	@Override
-	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		return visitor.visit(this, data);
 	}
 
@@ -57,7 +55,7 @@ public class ASTSelect extends SimpleNode {
 	}
 
 	public List<ASTProjectionElem> getProjectionElemList() {
-		return new CastingList<ASTProjectionElem>(children);
+		return new CastingList<>(children);
 	}
 
 	@Override

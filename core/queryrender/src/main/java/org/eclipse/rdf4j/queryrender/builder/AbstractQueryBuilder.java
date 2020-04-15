@@ -50,20 +50,22 @@ import org.eclipse.rdf4j.query.parser.ParsedTupleQuery;
  * </p>
  * 
  * @author Michael Grove
+ * @deprecated use {@link org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder} instead.
  */
+@Deprecated
 public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder<T> {
 
 	// this is a bit of a hack making these protected so the select/construct
 	// query impl can access it.
 	// would be better to encapsulate building the projection element up so the
 	// subclasses just handle it.
-	protected List<StatementPattern> mProjectionPatterns = new ArrayList<StatementPattern>();
+	protected List<StatementPattern> mProjectionPatterns = new ArrayList<>();
 
-	protected List<String> mProjectionVars = new ArrayList<String>();
+	protected List<String> mProjectionVars = new ArrayList<>();
 
-	private List<Group> mQueryAtoms = new ArrayList<Group>();
+	private List<Group> mQueryAtoms = new ArrayList<>();
 
-	private List<OrderElem> mOrderByElems = new ArrayList<OrderElem>();
+	private List<OrderElem> mOrderByElems = new ArrayList<>();
 
 	/**
 	 * the current limit on the number of results
@@ -82,12 +84,12 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * the from clauses in the query
 	 */
-	private Set<IRI> mFrom = new HashSet<IRI>();
+	private Set<IRI> mFrom = new HashSet<>();
 
 	/**
 	 * The from named clauses of the query
 	 */
-	private Set<IRI> mFromNamed = new HashSet<IRI>();
+	private Set<IRI> mFromNamed = new HashSet<>();
 
 	/**
 	 * The query to be built
@@ -101,6 +103,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public void reset() {
 		mDistinct = mReduced = false;
 		mLimit = mOffset = -1;
@@ -112,6 +115,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public T query() {
 		UnaryTupleOperator aRoot = null;
 		UnaryTupleOperator aCurr = null;
@@ -136,8 +140,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 
 			if (aRoot == null) {
 				aRoot = aCurr = aOrder;
-			}
-			else {
+			} else {
 				aCurr.setArg(aOrder);
 				aCurr = aOrder;
 			}
@@ -148,8 +151,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 
 			if (aRoot == null) {
 				aRoot = aCurr = aDistinct;
-			}
-			else {
+			} else {
 				aCurr.setArg(aDistinct);
 				aCurr = aDistinct;
 			}
@@ -160,8 +162,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 
 			if (aRoot == null) {
 				aRoot = aCurr = aReduced;
-			}
-			else {
+			} else {
 				aCurr.setArg(aReduced);
 				aCurr = aReduced;
 			}
@@ -175,8 +176,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 			aJoin.visit(aCollector);
 
 			mProjectionVars.addAll(aCollector.getVarNames());
-		}
-		else if (mQuery instanceof ParsedGraphQuery && mProjectionPatterns.isEmpty()) {
+		} else if (mQuery instanceof ParsedGraphQuery && mProjectionPatterns.isEmpty()) {
 			StatementPatternCollector aCollector = new StatementPatternCollector();
 
 			aJoin.visit(aCollector);
@@ -188,17 +188,15 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 
 		if (aRoot == null) {
 			aRoot = aCurr = aProjection;
-		}
-		else {
+		} else {
 			aCurr.setArg(aProjection);
 		}
 
 		if (aProjection.getArg() == null) {
 			aCurr = aProjection;
-		}
-		else {
+		} else {
 			// I think this is always a safe cast
-			aCurr = (UnaryTupleOperator)aProjection.getArg();
+			aCurr = (UnaryTupleOperator) aProjection.getArg();
 		}
 
 		if (aJoin != null) {
@@ -227,6 +225,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> fromNamed(final IRI theURI) {
 		mFromNamed.add(theURI);
 		return this;
@@ -235,6 +234,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> from(final IRI theURI) {
 		mFrom.add(theURI);
 		return this;
@@ -243,6 +243,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> distinct() {
 		// crappy way to only let this be set for select queries
 		if (isSelect()) {
@@ -255,6 +256,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> reduced() {
 		mReduced = true;
 		return this;
@@ -263,6 +265,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> addProjectionVar(String... theNames) {
 		if (isSelect()) {
 			mProjectionVars.addAll(Arrays.asList(theNames));
@@ -284,12 +287,10 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
-	public QueryBuilder<T> addProjectionStatement(final String theSubj, final String thePred,
-			final String theObj)
-	{
+	@Override
+	public QueryBuilder<T> addProjectionStatement(final String theSubj, final String thePred, final String theObj) {
 		if (isConstruct()) {
-			mProjectionPatterns.add(
-					new StatementPattern(new Var(theSubj), new Var(thePred), new Var(theObj)));
+			mProjectionPatterns.add(new StatementPattern(new Var(theSubj), new Var(thePred), new Var(theObj)));
 		}
 
 		return this;
@@ -298,9 +299,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
-	public QueryBuilder<T> addProjectionStatement(final String theSubj, final Value thePred,
-			final Value theObj)
-	{
+	public QueryBuilder<T> addProjectionStatement(final String theSubj, final Value thePred, final Value theObj) {
 		if (isConstruct()) {
 			mProjectionPatterns.add(new StatementPattern(new Var(theSubj), GroupBuilder.valueToVar(thePred),
 					GroupBuilder.valueToVar(theObj)));
@@ -312,12 +311,11 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
-	public QueryBuilder<T> addProjectionStatement(final String theSubj, final String thePred,
-			final Value theObj)
-	{
+	@Override
+	public QueryBuilder<T> addProjectionStatement(final String theSubj, final String thePred, final Value theObj) {
 		if (isConstruct()) {
-			mProjectionPatterns.add(new StatementPattern(new Var(theSubj), new Var(thePred),
-					GroupBuilder.valueToVar(theObj)));
+			mProjectionPatterns
+					.add(new StatementPattern(new Var(theSubj), new Var(thePred), GroupBuilder.valueToVar(theObj)));
 		}
 
 		return this;
@@ -326,6 +324,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> addProjectionStatement(String theSubj, IRI thePred, Value theObj) {
 		if (isConstruct()) {
 			mProjectionPatterns.add(new StatementPattern(new Var(theSubj), GroupBuilder.valueToVar(thePred),
@@ -338,10 +337,11 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> addProjectionStatement(IRI theSubj, String thePred, String theObj) {
 		if (isConstruct()) {
-			mProjectionPatterns.add(new StatementPattern(GroupBuilder.valueToVar(theSubj), new Var(thePred),
-					new Var(theObj)));
+			mProjectionPatterns
+					.add(new StatementPattern(GroupBuilder.valueToVar(theSubj), new Var(thePred), new Var(theObj)));
 		}
 
 		return this;
@@ -350,6 +350,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> addProjectionStatement(IRI theSubj, IRI thePred, String theObj) {
 		if (isConstruct()) {
 			mProjectionPatterns.add(new StatementPattern(GroupBuilder.valueToVar(theSubj),
@@ -362,10 +363,11 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> addProjectionStatement(String theSubj, IRI thePred, String theObj) {
 		if (isConstruct()) {
-			mProjectionPatterns.add(new StatementPattern(new Var(theSubj), GroupBuilder.valueToVar(thePred),
-					new Var(theObj)));
+			mProjectionPatterns
+					.add(new StatementPattern(new Var(theSubj), GroupBuilder.valueToVar(thePred), new Var(theObj)));
 		}
 
 		return this;
@@ -374,11 +376,9 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	private TupleExpr join() {
 		if (mQueryAtoms.isEmpty()) {
 			throw new RuntimeException("Can't have an empty or missing join.");
-		}
-		else if (mQueryAtoms.size() == 1) {
+		} else if (mQueryAtoms.size() == 1) {
 			return mQueryAtoms.get(0).expr();
-		}
-		else {
+		} else {
 			return groupAsJoin(mQueryAtoms);
 		}
 	}
@@ -386,8 +386,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	private UnaryTupleOperator projection() {
 		if (!mProjectionPatterns.isEmpty()) {
 			return multiProjection();
-		}
-		else {
+		} else {
 			Extension aExt = null;
 
 			ProjectionElemList aList = new ProjectionElemList();
@@ -459,20 +458,23 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public GroupBuilder<T, QueryBuilder<T>> group() {
-		return new GroupBuilder<T, QueryBuilder<T>>(this, false, null);
+		return new GroupBuilder<>(this, false, null);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public GroupBuilder<T, QueryBuilder<T>> optional() {
-		return new GroupBuilder<T, QueryBuilder<T>>(this, true, null);
+		return new GroupBuilder<>(this, true, null);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> limit(int theLimit) {
 		mLimit = theLimit;
 		return this;
@@ -481,6 +483,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> offset(int theOffset) {
 		mOffset = theOffset;
 		return this;
@@ -489,6 +492,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> addGroup(Group theGroup) {
 		mQueryAtoms.add(theGroup);
 		return this;
@@ -497,6 +501,7 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryBuilder<T> removeGroup(Group theGroup) {
 		mQueryAtoms.remove(theGroup);
 		return this;
@@ -514,15 +519,13 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 			}
 
 			if (aExpr instanceof Filter
-					&& (((Filter)aExpr).getArg() == null || ((Filter)aExpr).getArg() instanceof EmptySet))
-			{
+					&& (((Filter) aExpr).getArg() == null || ((Filter) aExpr).getArg() instanceof EmptySet)) {
 				if (aFilter == null) {
-					aFilter = (Filter)aExpr;
-				}
-				else {
+					aFilter = (Filter) aExpr;
+				} else {
 					// if we already have a filter w/ an empty arg, let's And the
 					// conditions together.
-					aFilter.setCondition(new And(aFilter.getCondition(), ((Filter)aExpr).getCondition()));
+					aFilter.setCondition(new And(aFilter.getCondition(), ((Filter) aExpr).getCondition()));
 				}
 
 				continue;
@@ -552,11 +555,9 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 
 			if (aJoin.getLeftArg() == null) {
 				aJoin.setLeftArg(aExpr);
-			}
-			else if (aJoin.getRightArg() == null) {
+			} else if (aJoin.getRightArg() == null) {
 				aJoin.setRightArg(aExpr);
-			}
-			else {
+			} else {
 				Join aNewJoin = new Join();
 
 				aNewJoin.setLeftArg(aJoin);
@@ -579,14 +580,11 @@ public class AbstractQueryBuilder<T extends ParsedQuery> implements QueryBuilder
 	private TupleExpr joinOrExpr(BinaryTupleOperator theExpr) {
 		if (theExpr.getLeftArg() != null && theExpr.getRightArg() == null) {
 			return theExpr.getLeftArg();
-		}
-		else if (theExpr.getLeftArg() == null && theExpr.getRightArg() != null) {
+		} else if (theExpr.getLeftArg() == null && theExpr.getRightArg() != null) {
 			return theExpr.getRightArg();
-		}
-		else if (theExpr.getLeftArg() == null && theExpr.getRightArg() == null) {
+		} else if (theExpr.getLeftArg() == null && theExpr.getRightArg() == null) {
 			return null;
-		}
-		else {
+		} else {
 			return theExpr;
 		}
 	}

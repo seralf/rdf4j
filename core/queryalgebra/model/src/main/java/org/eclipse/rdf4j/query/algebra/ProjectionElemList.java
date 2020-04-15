@@ -21,7 +21,7 @@ public class ProjectionElemList extends AbstractQueryModelNode {
 	 * Variables *
 	 *-----------*/
 
-	private List<ProjectionElem> elements = new ArrayList<ProjectionElem>();
+	private List<ProjectionElem> elements = new ArrayList<>();
 
 	/*--------------*
 	 * Constructors *
@@ -69,7 +69,7 @@ public class ProjectionElemList extends AbstractQueryModelNode {
 	}
 
 	public Set<String> getTargetNames() {
-		Set<String> targetNames = new LinkedHashSet<String>(elements.size());
+		Set<String> targetNames = new LinkedHashSet<>(elements.size());
 
 		for (ProjectionElem pe : elements) {
 			targetNames.add(pe.getTargetName());
@@ -79,7 +79,7 @@ public class ProjectionElemList extends AbstractQueryModelNode {
 	}
 
 	public Set<String> getTargetNamesFor(Collection<String> sourceNames) {
-		Set<String> targetNames = new LinkedHashSet<String>(elements.size());
+		Set<String> targetNames = new LinkedHashSet<>(elements.size());
 
 		for (ProjectionElem pe : elements) {
 			if (sourceNames.contains(pe.getSourceName())) {
@@ -90,16 +90,13 @@ public class ProjectionElemList extends AbstractQueryModelNode {
 		return targetNames;
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
 	@Override
-	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor) throws X {
 		for (ProjectionElem pe : elements) {
 			pe.visit(visitor);
 		}
@@ -118,7 +115,7 @@ public class ProjectionElemList extends AbstractQueryModelNode {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ProjectionElemList) {
-			ProjectionElemList o = (ProjectionElemList)other;
+			ProjectionElemList o = (ProjectionElemList) other;
 			return elements.equals(o.getElements());
 		}
 		return false;
@@ -131,9 +128,9 @@ public class ProjectionElemList extends AbstractQueryModelNode {
 
 	@Override
 	public ProjectionElemList clone() {
-		ProjectionElemList clone = (ProjectionElemList)super.clone();
+		ProjectionElemList clone = (ProjectionElemList) super.clone();
 
-		clone.elements = new ArrayList<ProjectionElem>(getElements().size());
+		clone.elements = new ArrayList<>(getElements().size());
 		for (ProjectionElem pe : getElements()) {
 			clone.addElement(pe.clone());
 		}

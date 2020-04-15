@@ -30,31 +30,25 @@ public class BGPCollector<X extends Exception> extends QueryModelVisitorBase<X> 
 	}
 
 	public List<StatementPattern> getStatementPatterns() {
-		return (statementPatterns != null) ? statementPatterns : Collections.<StatementPattern> emptyList();
+		return (statementPatterns != null) ? statementPatterns : Collections.<StatementPattern>emptyList();
 	}
 
 	@Override
-	public void meet(Join node)
-		throws X
-	{
+	public void meet(Join node) throws X {
 		// by-pass meetNode()
 		node.visitChildren(this);
 	}
 
 	@Override
-	public void meet(StatementPattern sp)
-		throws X
-	{
+	public void meet(StatementPattern sp) throws X {
 		if (statementPatterns == null) {
-			statementPatterns = new ArrayList<StatementPattern>();
+			statementPatterns = new ArrayList<>();
 		}
 		statementPatterns.add(sp);
 	}
 
 	@Override
-	protected void meetNode(QueryModelNode node)
-		throws X
-	{
+	protected void meetNode(QueryModelNode node) throws X {
 		// resume previous visitor
 		node.visit(visitor);
 	}

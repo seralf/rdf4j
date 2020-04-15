@@ -37,15 +37,11 @@ public class ContextStatementTest {
 	private static final IRI g2 = vf.createIRI("urn:g2");
 
 	@Before
-	public void setUp()
-		throws Exception
-	{
+	public void setUp() throws Exception {
 	}
 
 	@After
-	public void tearDown()
-		throws Exception
-	{
+	public void tearDown() throws Exception {
 	}
 
 	@Test
@@ -61,7 +57,7 @@ public class ContextStatementTest {
 		assertEquals(st2, st4);
 		assertNotEquals(st2, st5);
 
-		Set<Statement> set = new HashSet<Statement>();
+		Set<Statement> set = new HashSet<>();
 		set.add(st1);
 		set.add(st2);
 		set.add(st3);

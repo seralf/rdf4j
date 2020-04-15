@@ -28,130 +28,95 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 
 /**
- * Utility methods for comparing sets of statements (graphs) with each other. The supplied comparison
- * operations map bnodes in the two supplied models on to each other and thus define a graph isomorphism.
- * 
+ * Utility methods for comparing sets of statements (graphs) with each other. The supplied comparison operations map
+ * bnodes in the two supplied models on to each other and thus define a graph isomorphism.
+ *
  * @author jeen
  * @author Arjohn Kampman
  */
 public class RepositoryUtil {
 
 	/**
-	 * Compares the models in the default contexts of the two supplied repositories and returns true if they
-	 * are equal. Models are equal if they contain the same set of statements. bNodes IDs are not relevant for
-	 * model equality, they are mapped from one model to the other by using the attached properties. Note that
-	 * the method pulls the entire default context of both repositories into main memory. Use with caution.
+	 * Compares the models in the default contexts of the two supplied repositories and returns true if they are equal.
+	 * Models are equal if they contain the same set of statements. bNodes IDs are not relevant for model equality, they
+	 * are mapped from one model to the other by using the attached properties. Note that the method pulls the entire
+	 * default context of both repositories into main memory. Use with caution.
 	 */
-	public static boolean equals(Repository rep1, Repository rep2)
-		throws RepositoryException
-	{
+	public static boolean equals(Repository rep1, Repository rep2) throws RepositoryException {
 		// Fetch statements from rep1 and rep2
 		Set<Statement> model1, model2;
 
-		RepositoryConnection con1 = rep1.getConnection();
-		try {
+		try (RepositoryConnection con1 = rep1.getConnection()) {
 			model1 = Iterations.asSet(con1.getStatements(null, null, null, true));
 		}
-		finally {
-			con1.close();
-		}
 
-		RepositoryConnection con2 = rep2.getConnection();
-		try {
+		try (RepositoryConnection con2 = rep2.getConnection()) {
 			model2 = Iterations.asSet(con2.getStatements(null, null, null, true));
-		}
-		finally {
-			con2.close();
 		}
 
 		return Models.isomorphic(model1, model2);
 	}
 
 	/**
-	 * Compares the models of the default context of two repositories and returns true if rep1 is a subset of
-	 * rep2. Note that the method pulls the entire default context of both repositories into main memory. Use
-	 * with caution.
+	 * Compares the models of the default context of two repositories and returns true if rep1 is a subset of rep2. Note
+	 * that the method pulls the entire default context of both repositories into main memory. Use with caution.
 	 */
-	public static boolean isSubset(Repository rep1, Repository rep2)
-		throws RepositoryException
-	{
+	public static boolean isSubset(Repository rep1, Repository rep2) throws RepositoryException {
 		Set<Statement> model1, model2;
 
-		RepositoryConnection con1 = rep1.getConnection();
-		try {
+		try (RepositoryConnection con1 = rep1.getConnection()) {
 			model1 = Iterations.asSet(con1.getStatements(null, null, null, true));
 		}
-		finally {
-			con1.close();
-		}
 
-		RepositoryConnection con2 = rep2.getConnection();
-		try {
+		try (RepositoryConnection con2 = rep2.getConnection()) {
 			model2 = Iterations.asSet(con2.getStatements(null, null, null, true));
-		}
-		finally {
-			con2.close();
 		}
 
 		return Models.isSubset(model1, model2);
 	}
 
 	/**
-	 * Compares two models defined by the default context of two repositories and returns the difference
-	 * between the first and the second model (that is, all statements that are present in rep1 but not in
-	 * rep2). Blank node IDs are not relevant for model equality, they are mapped from one model to the other
-	 * by using the attached properties. Note that the method pulls the entire default context of both
-	 * repositories into main memory. Use with caution.
+	 * Compares two models defined by the default context of two repositories and returns the difference between the
+	 * first and the second model (that is, all statements that are present in rep1 but not in rep2). Blank node IDs are
+	 * not relevant for model equality, they are mapped from one model to the other by using the attached properties.
+	 * Note that the method pulls the entire default context of both repositories into main memory. Use with caution.
 	 * <p>
-	 * <b>NOTE: this algorithm is currently broken; it doesn't actually map blank nodes between the two
-	 * models.</b>
-	 * 
+	 * <b>NOTE: this algorithm is currently broken; it doesn't actually map blank nodes between the two models.</b>
+	 *
 	 * @return The collection of statements that is the difference between rep1 and rep2.
 	 */
 	public static Collection<? extends Statement> difference(Repository rep1, Repository rep2)
-		throws RepositoryException
-	{
-		Collection<Statement> model1 = new HashSet<Statement>();
-		Collection<Statement> model2 = new HashSet<Statement>();
+			throws RepositoryException {
+		Collection<Statement> model1;
+		Collection<Statement> model2;
 
-		RepositoryConnection con1 = rep1.getConnection();
-		try {
-			Iterations.addAll(con1.getStatements(null, null, null, false), model1);
-		}
-		finally {
-			con1.close();
+		try (RepositoryConnection con1 = rep1.getConnection()) {
+			model1 = Iterations.asSet(con1.getStatements(null, null, null, false));
 		}
 
-		RepositoryConnection con2 = rep2.getConnection();
-		try {
-			Iterations.addAll(con2.getStatements(null, null, null, false), model2);
-		}
-		finally {
-			con2.close();
+		try (RepositoryConnection con2 = rep2.getConnection()) {
+			model2 = Iterations.asSet(con2.getStatements(null, null, null, false));
 		}
 
 		return difference(model1, model2);
 	}
 
 	/**
-	 * Compares two models, defined by two statement collections, and returns the difference between the first
-	 * and the second model (that is, all statements that are present in model1 but not in model2). Blank node
-	 * IDs are not relevant for model equality, they are mapped from one model to the other by using the
-	 * attached properties. *
+	 * Compares two models, defined by two statement collections, and returns the difference between the first and the
+	 * second model (that is, all statements that are present in model1 but not in model2). Blank node IDs are not
+	 * relevant for model equality, they are mapped from one model to the other by using the attached properties. *
 	 * <p>
-	 * <b>NOTE: this algorithm is currently broken; it doesn't actually map blank nodes between the two
-	 * models.</b>
-	 * 
+	 * <b>NOTE: this algorithm is currently broken; it doesn't actually map blank nodes between the two models.</b>
+	 *
 	 * @return The collection of statements that is the difference between model1 and model2.
 	 */
 	public static Collection<? extends Statement> difference(Collection<? extends Statement> model1,
-			Collection<? extends Statement> model2)
-	{
+			Collection<? extends Statement> model2) {
 		// Create working copies
-		LinkedList<Statement> copy1 = new LinkedList<Statement>(model1);
-		LinkedList<Statement> copy2 = new LinkedList<Statement>(model2);
+		LinkedList<Statement> copy1 = new LinkedList<>(model1);
+		LinkedList<Statement> copy2 = new LinkedList<>(model2);
 
-		Collection<Statement> result = new ArrayList<Statement>();
+		Collection<Statement> result = new ArrayList<>();
 
 		// Compare statements that don't contain bNodes
 		Iterator<Statement> iter1 = copy1.iterator();
@@ -176,7 +141,7 @@ public class RepositoryUtil {
 		// FIXME: this algorithm is broken: bNodeMapping is assumed to contain a
 		// bnode mapping while in reallity it is an empty map
 
-		HashMap<BNode, BNode> bNodeMapping = new HashMap<BNode, BNode>();
+		HashMap<BNode, BNode> bNodeMapping = new HashMap<>();
 		// mapBlankNodes(copy1, copy2, bNodeMapping, 0);
 
 		for (Statement st1 : copy1) {
@@ -217,8 +182,7 @@ public class RepositoryUtil {
 				// subjects are not bNodes and don't match
 				return false;
 			}
-		}
-		else { // subj1 instanceof BNode
+		} else { // subj1 instanceof BNode
 			BNode mappedBNode = bNodeMapping.get(subj1);
 
 			if (mappedBNode != null) {
@@ -227,8 +191,7 @@ public class RepositoryUtil {
 					// 'subj1' and 'subj2' do not match
 					return false;
 				}
-			}
-			else {
+			} else {
 				// 'subj1' was not yet mapped. we need to check if 'subj2' is a
 				// possible mapping candidate
 				if (bNodeMapping.containsValue(subj2)) {
@@ -246,8 +209,7 @@ public class RepositoryUtil {
 				// objects are not bNodes and don't match
 				return false;
 			}
-		}
-		else { // obj1 instanceof BNode
+		} else { // obj1 instanceof BNode
 			BNode mappedBNode = bNodeMapping.get(obj1);
 
 			if (mappedBNode != null) {
@@ -256,8 +218,7 @@ public class RepositoryUtil {
 					// 'obj1' and 'obj2' do not match
 					return false;
 				}
-			}
-			else {
+			} else {
 				// 'obj1' was not yet mapped. we need to check if 'obj2' is a
 				// possible mapping candidate
 				if (bNodeMapping.containsValue(obj2)) {

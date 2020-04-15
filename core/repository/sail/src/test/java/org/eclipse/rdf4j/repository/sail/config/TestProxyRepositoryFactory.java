@@ -7,16 +7,14 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.repository.sail.config;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
 import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.model.util.GraphUtil;
+import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
 import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
@@ -33,40 +31,37 @@ public class TestProxyRepositoryFactory {
 
 	@Test
 	public final void testGetRepositoryType() {
-		assertThat(factory.getRepositoryType(), is("openrdf:ProxyRepository"));
+		assertThat(factory.getRepositoryType()).isEqualTo("openrdf:ProxyRepository");
 	}
 
 	@Test(expected = RepositoryConfigException.class)
-	public final void testGetConfig()
-		throws RepositoryConfigException
-	{
+	public final void testGetConfig() throws RepositoryConfigException {
 		RepositoryImplConfig factoryConfig = factory.getConfig();
-		assertThat(factoryConfig, instanceOf(ProxyRepositoryConfig.class));
+		assertThat(factoryConfig).isInstanceOf(ProxyRepositoryConfig.class);
 		factoryConfig.validate();
 	}
 
 	@Test
-	public final void testGetRepository()
-		throws RDF4JException, IOException
-	{
-		Model graph = Rio.parse(this.getClass().getResourceAsStream("/proxy.ttl"),
-				RepositoryConfigSchema.NAMESPACE, RDFFormat.TURTLE);
+	public final void testGetRepository() throws RDF4JException, IOException {
+		Model graph = Rio.parse(this.getClass().getResourceAsStream("/proxy.ttl"), RepositoryConfigSchema.NAMESPACE,
+				RDFFormat.TURTLE);
 		RepositoryConfig config = RepositoryConfig.create(graph,
-				GraphUtil.getUniqueSubject(graph, RDF.TYPE, RepositoryConfigSchema.REPOSITORY));
+				Models.subject(graph.filter(null, RDF.TYPE, RepositoryConfigSchema.REPOSITORY))
+						.orElseThrow(() -> new RepositoryConfigException("missing Repository instance in config")));
 		config.validate();
-		assertThat(config.getID(), is("proxy"));
-		assertThat(config.getTitle(), is("Test Proxy for 'memory'"));
+		assertThat(config.getID()).isEqualTo("proxy");
+		assertThat(config.getTitle()).isEqualTo("Test Proxy for 'memory'");
 		RepositoryImplConfig implConfig = config.getRepositoryImplConfig();
-		assertThat(implConfig.getType(), is("openrdf:ProxyRepository"));
-		assertThat(implConfig, instanceOf(ProxyRepositoryConfig.class));
-		assertThat(((ProxyRepositoryConfig)implConfig).getProxiedRepositoryID(), is("memory"));
+		assertThat(implConfig.getType()).isEqualTo("openrdf:ProxyRepository");
+		assertThat(implConfig).isInstanceOf(ProxyRepositoryConfig.class);
+		assertThat(((ProxyRepositoryConfig) implConfig).getProxiedRepositoryID()).isEqualTo("memory");
 
 		// Factory just needs a resolver instance to proceed with construction.
 		// It doesn't actually invoke the resolver until the repository is
 		// accessed. Normally LocalRepositoryManager is the caller of
 		// getRepository(), and will have called this setter itself.
-		ProxyRepository repository = (ProxyRepository)factory.getRepository(implConfig);
+		ProxyRepository repository = (ProxyRepository) factory.getRepository(implConfig);
 		repository.setRepositoryResolver(mock(RepositoryResolver.class));
-		assertThat(repository, instanceOf(ProxyRepository.class));
+		assertThat(repository).isInstanceOf(ProxyRepository.class);
 	}
 }

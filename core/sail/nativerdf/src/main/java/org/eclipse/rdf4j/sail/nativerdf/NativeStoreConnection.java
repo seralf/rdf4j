@@ -9,6 +9,7 @@ package org.eclipse.rdf4j.sail.nativerdf;
 
 import java.io.IOException;
 
+import org.eclipse.rdf4j.IsolationLevels;
 import org.eclipse.rdf4j.common.concurrent.locks.Lock;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
@@ -40,13 +41,13 @@ public class NativeStoreConnection extends SailSourceConnection {
 	 */
 	private volatile Lock txnLock;
 
+	private int addedCount;
+
 	/*--------------*
 	 * Constructors *
 	 *--------------*/
 
-	protected NativeStoreConnection(NativeStore sail)
-		throws IOException
-	{
+	protected NativeStoreConnection(NativeStore sail) throws IOException {
 		super(sail, sail.getSailStore(), sail.getEvaluationStrategyFactory());
 		this.nativeStore = sail;
 		sailChangedEvent = new DefaultSailChangedEvent(sail);
@@ -57,9 +58,8 @@ public class NativeStoreConnection extends SailSourceConnection {
 	 *---------*/
 
 	@Override
-	protected void startTransactionInternal()
-		throws SailException
-	{
+	protected void startTransactionInternal() throws SailException {
+		addedCount = 0;
 		if (!nativeStore.isWritable()) {
 			throw new SailReadOnlyException("Unable to start transaction: data file is locked or read-only");
 		}
@@ -67,10 +67,13 @@ public class NativeStoreConnection extends SailSourceConnection {
 		try {
 			if (txnLock == null || !txnLock.isActive()) {
 				txnLock = nativeStore.getTransactionLock(getTransactionIsolation());
+				if (nativeStore.isIsolationDisabled()) {
+					// if the transaction isn't isolated then we need to keep holding our exclusive lock until commit
+					releaseLock = false;
+				}
 			}
 			super.startTransactionInternal();
-		}
-		finally {
+		} finally {
 			if (releaseLock && txnLock != null) {
 				txnLock.release();
 			}
@@ -78,13 +81,10 @@ public class NativeStoreConnection extends SailSourceConnection {
 	}
 
 	@Override
-	protected void commitInternal()
-		throws SailException
-	{
+	protected void commitInternal() throws SailException {
 		try {
 			super.commitInternal();
-		}
-		finally {
+		} finally {
 			if (txnLock != null) {
 				txnLock.release();
 			}
@@ -97,13 +97,10 @@ public class NativeStoreConnection extends SailSourceConnection {
 	}
 
 	@Override
-	protected void rollbackInternal()
-		throws SailException
-	{
+	protected void rollbackInternal() throws SailException {
 		try {
 			super.rollbackInternal();
-		}
-		finally {
+		} finally {
 			if (txnLock != null) {
 				txnLock.release();
 			}
@@ -113,16 +110,21 @@ public class NativeStoreConnection extends SailSourceConnection {
 	}
 
 	@Override
-	protected void addStatementInternal(Resource subj, IRI pred, Value obj, Resource... contexts)
-		throws SailException
-	{
+	protected void addStatementInternal(Resource subj, IRI pred, Value obj, Resource... contexts) throws SailException {
 		// assume the triple is not yet present in the triple store
 		sailChangedEvent.setStatementsAdded(true);
+
+		if (getTransactionIsolation() == IsolationLevels.NONE) {
+			addedCount++;
+			if (addedCount % 10000 == 0) {
+				flushUpdates();
+				addedCount = 0;
+			}
+		}
 	}
 
-	public boolean addInferredStatement(Resource subj, IRI pred, Value obj, Resource... contexts)
-		throws SailException
-	{
+	@Override
+	public boolean addInferredStatement(Resource subj, IRI pred, Value obj, Resource... contexts) throws SailException {
 		boolean ret = super.addInferredStatement(subj, pred, obj, contexts);
 		// assume the triple is not yet present in the triple store
 		sailChangedEvent.setStatementsAdded(true);
@@ -131,30 +133,26 @@ public class NativeStoreConnection extends SailSourceConnection {
 
 	@Override
 	protected void removeStatementsInternal(Resource subj, IRI pred, Value obj, Resource... contexts)
-		throws SailException
-	{
+			throws SailException {
 		sailChangedEvent.setStatementsRemoved(true);
 	}
 
+	@Override
 	public boolean removeInferredStatement(Resource subj, IRI pred, Value obj, Resource... contexts)
-		throws SailException
-	{
+			throws SailException {
 		boolean ret = super.removeInferredStatement(subj, pred, obj, contexts);
 		sailChangedEvent.setStatementsRemoved(true);
 		return ret;
 	}
 
 	@Override
-	protected void clearInternal(Resource... contexts)
-		throws SailException
-	{
+	protected void clearInternal(Resource... contexts) throws SailException {
 		super.clearInternal(contexts);
 		sailChangedEvent.setStatementsRemoved(true);
 	}
 
-	public void clearInferred(Resource... contexts)
-		throws SailException
-	{
+	@Override
+	public void clearInferred(Resource... contexts) throws SailException {
 		super.clearInferred(contexts);
 		sailChangedEvent.setStatementsRemoved(true);
 	}

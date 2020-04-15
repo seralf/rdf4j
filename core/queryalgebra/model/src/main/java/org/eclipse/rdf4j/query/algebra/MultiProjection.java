@@ -25,7 +25,7 @@ public class MultiProjection extends UnaryTupleOperator {
 	/**
 	 * The lists of projections.
 	 */
-	private List<ProjectionElemList> projections = new ArrayList<ProjectionElemList>();
+	private List<ProjectionElemList> projections = new ArrayList<>();
 
 	/*--------------*
 	 * Constructors *
@@ -70,7 +70,7 @@ public class MultiProjection extends UnaryTupleOperator {
 
 	@Override
 	public Set<String> getBindingNames() {
-		Set<String> bindingNames = new HashSet<String>();
+		Set<String> bindingNames = new HashSet<>();
 
 		for (ProjectionElemList projElemList : projections) {
 			bindingNames.addAll(projElemList.getTargetNames());
@@ -81,7 +81,7 @@ public class MultiProjection extends UnaryTupleOperator {
 
 	@Override
 	public Set<String> getAssuredBindingNames() {
-		Set<String> bindingNames = new HashSet<String>();
+		Set<String> bindingNames = new HashSet<>();
 
 		if (projections.size() >= 1) {
 			Set<String> assuredSourceNames = getArg().getAssuredBindingNames();
@@ -96,16 +96,13 @@ public class MultiProjection extends UnaryTupleOperator {
 		return bindingNames;
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
 	@Override
-	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor) throws X {
 		for (ProjectionElemList projElemList : projections) {
 			projElemList.visit(visitor);
 		}
@@ -124,7 +121,7 @@ public class MultiProjection extends UnaryTupleOperator {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof MultiProjection && super.equals(other)) {
-			MultiProjection o = (MultiProjection)other;
+			MultiProjection o = (MultiProjection) other;
 			return projections.equals(o.getProjections());
 		}
 		return false;
@@ -137,9 +134,9 @@ public class MultiProjection extends UnaryTupleOperator {
 
 	@Override
 	public MultiProjection clone() {
-		MultiProjection clone = (MultiProjection)super.clone();
+		MultiProjection clone = (MultiProjection) super.clone();
 
-		clone.projections = new ArrayList<ProjectionElemList>(getProjections().size());
+		clone.projections = new ArrayList<>(getProjections().size());
 		for (ProjectionElemList pe : getProjections()) {
 			clone.addProjection(pe.clone());
 		}

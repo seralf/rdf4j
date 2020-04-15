@@ -8,7 +8,6 @@
 package org.eclipse.rdf4j.sail.federation;
 
 import java.io.File;
-import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,13 +34,13 @@ import org.eclipse.rdf4j.query.algebra.evaluation.EvaluationStrategy;
 import org.eclipse.rdf4j.query.algebra.evaluation.TripleSource;
 import org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedServiceResolver;
 import org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedServiceResolverClient;
-import org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedServiceResolverImpl;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.RepositoryResolver;
+import org.eclipse.rdf4j.repository.RepositoryResolverClient;
 import org.eclipse.rdf4j.repository.filters.RepositoryBloomFilter;
-import org.eclipse.rdf4j.repository.sail.config.RepositoryResolver;
-import org.eclipse.rdf4j.repository.sail.config.RepositoryResolverClient;
+import org.eclipse.rdf4j.repository.sparql.federation.SPARQLServiceResolver;
 import org.eclipse.rdf4j.sail.Sail;
 import org.eclipse.rdf4j.sail.SailConnection;
 import org.eclipse.rdf4j.sail.SailException;
@@ -53,22 +52,23 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Union multiple (possibly remote) Repositories into a single RDF store.
- * 
+ *
  * @author James Leigh
  * @author Arjohn Kampman
+ * @deprecated since 3.1.0. This module will be replaced by the new FedX federation module.
  */
+@Deprecated
 public class Federation implements Sail, Executor, FederatedServiceResolverClient, RepositoryResolverClient,
-		HttpClientDependent, SessionManagerDependent
-{
+		HttpClientDependent, SessionManagerDependent {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Federation.class);
 
-	private final List<Repository> members = new ArrayList<Repository>();
+	private final List<Repository> members = new ArrayList<>();
 
 	private final Map<Repository, RepositoryBloomFilter> bloomFilters = new HashMap<>();
 
-	private final ExecutorService executor = Executors.newCachedThreadPool(
-			new ThreadFactoryBuilder().setNameFormat("rdf4j-federation-%d").build());
+	private final ExecutorService executor = Executors
+			.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("rdf4j-federation-%d").build());
 
 	private PrefixHashSet localPropertySpace; // NOPMD
 
@@ -82,7 +82,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	private volatile FederatedServiceResolver serviceResolver;
 
 	/** dependent life cycle */
-	private volatile FederatedServiceResolverImpl dependentServiceResolver;
+	private volatile SPARQLServiceResolver dependentServiceResolver;
 
 	@Override
 	public File getDataDir() {
@@ -100,9 +100,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	}
 
 	@Override
-	public boolean isWritable()
-		throws SailException
-	{
+	public boolean isWritable() throws SailException {
 		return !isReadOnly();
 	}
 
@@ -112,7 +110,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 
 	/**
 	 * Returns the members of this federation.
-	 * 
+	 *
 	 * @return unmodifiable list of federation members.
 	 */
 	protected List<Repository> getMembers() {
@@ -122,9 +120,8 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 
 	/**
 	 * Sets an optional {@link RepositoryBloomFilter} to use with the given {@link Repository}.
-	 * 
-	 * @param filter
-	 *        the filter to use or null to not use a filter.
+	 *
+	 * @param filter the filter to use or null to not use a filter.
 	 */
 	public void setBloomFilter(Repository member, RepositoryBloomFilter filter) {
 		bloomFilters.put(member, filter);
@@ -132,7 +129,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 
 	/**
 	 * Returns the configured {@link RepositoryBloomFilter}s (if any).
-	 * 
+	 *
 	 * @return unmodifiable map of repositories to bloom filters.
 	 */
 	protected Map<Repository, RepositoryBloomFilter> getBloomFilters() {
@@ -150,8 +147,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	public void setLocalPropertySpace(Collection<String> localPropertySpace) { // NOPMD
 		if (localPropertySpace.isEmpty()) {
 			this.localPropertySpace = null; // NOPMD
-		}
-		else {
+		} else {
 			this.localPropertySpace = new PrefixHashSet(localPropertySpace);
 		}
 	}
@@ -178,7 +174,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	public synchronized FederatedServiceResolver getFederatedServiceResolver() {
 		if (serviceResolver == null) {
 			if (dependentServiceResolver == null) {
-				dependentServiceResolver = new FederatedServiceResolverImpl();
+				dependentServiceResolver = new SPARQLServiceResolver();
 			}
 			return serviceResolver = dependentServiceResolver;
 		}
@@ -186,18 +182,17 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	}
 
 	/**
-	 * Overrides the {@link FederatedServiceResolver} used by this instance, but the given resolver is not
-	 * shutDown when this instance is.
-	 * 
-	 * @param reslover
-	 *        The SERVICE resolver to set.
+	 * Overrides the {@link FederatedServiceResolver} used by this instance, but the given resolver is not shutDown when
+	 * this instance is.
+	 *
+	 * @param resolver The SERVICE resolver to set.
 	 */
 	@Override
 	public synchronized void setFederatedServiceResolver(FederatedServiceResolver resolver) {
 		this.serviceResolver = resolver;
 		for (Repository member : members) {
 			if (member instanceof FederatedServiceResolverClient) {
-				((FederatedServiceResolverClient)member).setFederatedServiceResolver(resolver);
+				((FederatedServiceResolverClient) member).setFederatedServiceResolver(resolver);
 			}
 		}
 	}
@@ -206,7 +201,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	public void setRepositoryResolver(RepositoryResolver resolver) {
 		for (Repository member : members) {
 			if (member instanceof RepositoryResolverClient) {
-				((RepositoryResolverClient)member).setRepositoryResolver(resolver);
+				((RepositoryResolverClient) member).setRepositoryResolver(resolver);
 			}
 		}
 	}
@@ -215,7 +210,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	public HttpClientSessionManager getHttpClientSessionManager() {
 		for (Repository member : members) {
 			if (member instanceof SessionManagerDependent) {
-				HttpClientSessionManager client = ((SessionManagerDependent)member).getHttpClientSessionManager();
+				HttpClientSessionManager client = ((SessionManagerDependent) member).getHttpClientSessionManager();
 				if (client != null) {
 					return client;
 				}
@@ -228,7 +223,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	public void setHttpClientSessionManager(HttpClientSessionManager client) {
 		for (Repository member : members) {
 			if (member instanceof SessionManagerDependent) {
-				((SessionManagerDependent)member).setHttpClientSessionManager(client);
+				((SessionManagerDependent) member).setHttpClientSessionManager(client);
 			}
 		}
 	}
@@ -237,7 +232,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	public HttpClient getHttpClient() {
 		for (Repository member : members) {
 			if (member instanceof HttpClientDependent) {
-				HttpClient client = ((HttpClientDependent)member).getHttpClient();
+				HttpClient client = ((HttpClientDependent) member).getHttpClient();
 				if (client != null) {
 					return client;
 				}
@@ -250,60 +245,55 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	public void setHttpClient(HttpClient client) {
 		for (Repository member : members) {
 			if (member instanceof HttpClientDependent) {
-				((HttpClientDependent)member).setHttpClient(client);
+				((HttpClientDependent) member).setHttpClient(client);
 			}
 		}
 	}
 
+	@Deprecated
 	@Override
-	public void initialize()
-		throws SailException
-	{
+	public void initialize() throws SailException {
+		init();
+	}
+
+	@Override
+	public void init() throws SailException {
 		for (Repository member : members) {
 			try {
 				member.initialize();
-			}
-			catch (RepositoryException e) {
+			} catch (RepositoryException e) {
 				throw new SailException(e);
 			}
 		}
 	}
 
 	@Override
-	public void shutDown()
-		throws SailException
-	{
+	public void shutDown() throws SailException {
 		List<SailException> toThrowExceptions = new ArrayList<>();
 		try {
 			for (Repository member : members) {
 				try {
 					member.shutDown();
-				}
-				catch (SailException e) {
+				} catch (SailException e) {
 					toThrowExceptions.add(e);
-				}
-				catch (RDF4JException e) {
+				} catch (RDF4JException e) {
 					toThrowExceptions.add(new SailException(e));
 				}
 			}
-		}
-		finally {
+		} finally {
 			try {
-				FederatedServiceResolverImpl toCloseServiceResolver = dependentServiceResolver;
+				SPARQLServiceResolver toCloseServiceResolver = dependentServiceResolver;
 				dependentServiceResolver = null;
 				if (toCloseServiceResolver != null) {
 					toCloseServiceResolver.shutDown();
 				}
-			}
-			finally {
+			} finally {
 				try {
 					executor.shutdown();
 					executor.awaitTermination(10, TimeUnit.SECONDS);
-				}
-				catch (InterruptedException e) {
+				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
-				}
-				finally {
+				} finally {
 					if (!executor.isShutdown()) {
 						executor.shutdownNow();
 					}
@@ -324,10 +314,8 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	}
 
 	@Override
-	public SailConnection getConnection()
-		throws SailException
-	{
-		List<RepositoryConnection> connections = new ArrayList<RepositoryConnection>(members.size());
+	public SailConnection getConnection() throws SailException {
+		List<RepositoryConnection> connections = new ArrayList<>(members.size());
 		boolean allGood = false;
 		try {
 			for (Repository member : members) {
@@ -337,11 +325,9 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 					: new WritableConnection(this, connections);
 			allGood = true;
 			return result;
-		}
-		catch (RepositoryException e) {
+		} catch (RepositoryException e) {
 			throw new SailException(e);
-		}
-		finally {
+		} finally {
 			if (!allGood) {
 				closeAll(connections);
 			}
@@ -350,8 +336,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 	}
 
 	protected EvaluationStrategy createEvaluationStrategy(TripleSource tripleSource, Dataset dataset,
-			FederatedServiceResolver resolver)
-	{
+			FederatedServiceResolver resolver) {
 		return new FederationStrategy(this, tripleSource, dataset, getFederatedServiceResolver());
 	}
 
@@ -359,8 +344,7 @@ public class Federation implements Sail, Executor, FederatedServiceResolverClien
 		for (RepositoryConnection con : connections) {
 			try {
 				con.close();
-			}
-			catch (RepositoryException e) {
+			} catch (RepositoryException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
 		}

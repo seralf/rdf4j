@@ -1,34 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
 	<modelVersion>4.0.0</modelVersion>
-
 	<parent>
 		<groupId>org.eclipse.rdf4j</groupId>
 		<artifactId>rdf4j</artifactId>
-		<version>2.3-SNAPSHOT</version>
+		<version>3.1.4-SNAPSHOT</version>
 	</parent>
-
 	<artifactId>rdf4j-bom</artifactId>
 	<packaging>pom</packaging>
-
 	<name>RDF4J BOM</name>
 	<description>RDF4J Bill of Materials (BOM)</description>
-
 	<dependencyManagement>
 		<dependencies>
-
 			<!-- Core modules -->
-
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-config</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-console</artifactId>
-				<version>${project.version}</version>
-			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
 				<artifactId>rdf4j-http-client</artifactId>
@@ -38,23 +22,6 @@
 				<groupId>org.eclipse.rdf4j</groupId>
 				<artifactId>rdf4j-http-protocol</artifactId>
 				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-http-server</artifactId>
-				<version>${project.version}</version>
-				<type>war</type>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-http-server-spring</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-http-workbench</artifactId>
-				<version>${project.version}</version>
-				<type>war</type>
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
@@ -233,16 +200,6 @@
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-runtime</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-runtime-osgi</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
 				<artifactId>rdf4j-sail-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -258,17 +215,17 @@
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-sail-elasticsearch</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
 				<artifactId>rdf4j-sail-lucene</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
 				<artifactId>rdf4j-sail-lucene-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.rdf4j</groupId>
+				<artifactId>rdf4j-sail-elasticsearch</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -303,7 +260,22 @@
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
+				<artifactId>rdf4j-shacl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.rdf4j</groupId>
+				<artifactId>rdf4j-lucene-spin</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.rdf4j</groupId>
 				<artifactId>rdf4j-spin</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.rdf4j</groupId>
+				<artifactId>rdf4j-sparqlbuilder</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -311,55 +283,59 @@
 				<artifactId>rdf4j-util</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-
-			<!-- Compliance/integration test modules -->
-
+			<!-- tool modules -->
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-http-compliance</artifactId>
+				<artifactId>rdf4j-config</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.rdf4j</groupId>
+				<artifactId>rdf4j-console</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.rdf4j</groupId>
+				<artifactId>rdf4j-http-server</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-model-compliance</artifactId>
+				<artifactId>rdf4j-http-server-spring</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-queryresultio-compliance</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-rio-compliance</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-serql-compliance</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-sparql-compliance</artifactId>
+				<artifactId>rdf4j-http-workbench</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 			</dependency>
+			<!-- umbrella modules -->
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-geosparql-compliance</artifactId>
+				<artifactId>rdf4j-runtime-osgi</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-store-compliance</artifactId>
+				<artifactId>rdf4j-client</artifactId>
 				<version>${project.version}</version>
-				<type>war</type>
+				<type>pom</type>
 			</dependency>
-
+			<dependency>
+				<groupId>org.eclipse.rdf4j</groupId>
+				<artifactId>rdf4j-storage</artifactId>
+				<version>${project.version}</version>
+				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.eclipse.rdf4j</groupId>
+				<artifactId>rdf4j-runtime</artifactId>
+				<version>${project.version}</version>
+				<type>pom</type>
+			</dependency>
 			<!-- reusable test suites -->
-
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
 				<artifactId>rdf4j-geosparql-testsuite</artifactId>
@@ -393,11 +369,6 @@
 			<dependency>
 				<groupId>org.eclipse.rdf4j</groupId>
 				<artifactId>rdf4j-sparql-testsuite</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.rdf4j</groupId>
-				<artifactId>rdf4j-store-testsuite</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>

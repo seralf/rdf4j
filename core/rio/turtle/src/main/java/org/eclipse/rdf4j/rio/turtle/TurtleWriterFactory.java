@@ -9,7 +9,9 @@ package org.eclipse.rdf4j.rio.turtle;
 
 import java.io.OutputStream;
 import java.io.Writer;
+import java.net.URISyntaxException;
 
+import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.RDFWriterFactory;
@@ -24,6 +26,7 @@ public class TurtleWriterFactory implements RDFWriterFactory {
 	/**
 	 * Returns {@link RDFFormat#TURTLE}.
 	 */
+	@Override
 	public RDFFormat getRDFFormat() {
 		return RDFFormat.TURTLE;
 	}
@@ -31,14 +34,26 @@ public class TurtleWriterFactory implements RDFWriterFactory {
 	/**
 	 * Returns a new instance of {@link TurtleWriter}.
 	 */
+	@Override
 	public RDFWriter getWriter(OutputStream out) {
-		return new TurtleWriter(out);
+		return new ArrangedWriter(new TurtleWriter(out));
+	}
+
+	@Override
+	public RDFWriter getWriter(OutputStream out, String baseURI) throws URISyntaxException {
+		return new ArrangedWriter(new TurtleWriter(out, new ParsedIRI(baseURI)));
 	}
 
 	/**
 	 * Returns a new instance of {@link TurtleWriter}.
 	 */
+	@Override
 	public RDFWriter getWriter(Writer writer) {
-		return new TurtleWriter(writer);
+		return new ArrangedWriter(new TurtleWriter(writer));
+	}
+
+	@Override
+	public RDFWriter getWriter(Writer writer, String baseURI) throws URISyntaxException {
+		return new ArrangedWriter(new TurtleWriter(writer, new ParsedIRI(baseURI)));
 	}
 }

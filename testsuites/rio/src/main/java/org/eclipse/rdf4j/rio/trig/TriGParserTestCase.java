@@ -25,6 +25,8 @@ import org.eclipse.rdf4j.rio.PositiveParserTest;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParser;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JUnit test for the TriG parser that uses the tests that are available
@@ -52,13 +54,13 @@ public abstract class TriGParserTestCase {
 
 	private static String TEST_W3C_TEST_URI_BASE = "http://www.w3.org/2013/TriGTests/";
 
+	private static final Logger logger = LoggerFactory.getLogger(TriGParserTestCase.class);
+
 	/*--------------------*
 	 * Static initializer *
 	 *--------------------*/
 
-	public TestSuite createTestSuite()
-		throws Exception
-	{
+	public TestSuite createTestSuite() throws Exception {
 		// Create test suite
 		TestSuite suite = new TestSuite(TriGParserTestCase.class.getName());
 
@@ -70,14 +72,12 @@ public abstract class TriGParserTestCase {
 		InputStream inputStream = this.getClass().getResourceAsStream(TEST_W3C_MANIFEST_URL);
 		w3cCon.add(inputStream, TEST_W3C_MANIFEST_URI_BASE, RDFFormat.TURTLE);
 
-		parsePositiveTriGSyntaxTests(suite, TEST_W3C_FILE_BASE_PATH, TESTS_W3C_BASE_URL,
-				TEST_W3C_TEST_URI_BASE, w3cCon);
-		parseNegativeTriGSyntaxTests(suite, TEST_W3C_FILE_BASE_PATH, TESTS_W3C_BASE_URL,
-				TEST_W3C_TEST_URI_BASE, w3cCon);
-		parsePositiveTriGEvalTests(suite, TEST_W3C_FILE_BASE_PATH, TESTS_W3C_BASE_URL, TEST_W3C_TEST_URI_BASE,
+		parsePositiveTriGSyntaxTests(suite, TEST_W3C_FILE_BASE_PATH, TESTS_W3C_BASE_URL, TEST_W3C_TEST_URI_BASE,
 				w3cCon);
-		parseNegativeTriGEvalTests(suite, TEST_W3C_FILE_BASE_PATH, TESTS_W3C_BASE_URL, TEST_W3C_TEST_URI_BASE,
+		parseNegativeTriGSyntaxTests(suite, TEST_W3C_FILE_BASE_PATH, TESTS_W3C_BASE_URL, TEST_W3C_TEST_URI_BASE,
 				w3cCon);
+		parsePositiveTriGEvalTests(suite, TEST_W3C_FILE_BASE_PATH, TESTS_W3C_BASE_URL, TEST_W3C_TEST_URI_BASE, w3cCon);
+		parseNegativeTriGEvalTests(suite, TEST_W3C_FILE_BASE_PATH, TESTS_W3C_BASE_URL, TEST_W3C_TEST_URI_BASE, w3cCon);
 
 		w3cCon.close();
 		w3cRepository.shutDown();
@@ -86,9 +86,7 @@ public abstract class TriGParserTestCase {
 	}
 
 	private void parsePositiveTriGSyntaxTests(TestSuite suite, String fileBasePath, String testBaseUrl,
-			String testLocationBaseUri, RepositoryConnection con)
-		throws Exception
-	{
+			String testLocationBaseUri, RepositoryConnection con) throws Exception {
 		StringBuilder positiveQuery = new StringBuilder();
 		positiveQuery.append(" PREFIX mf:   <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#>\n");
 		positiveQuery.append(" PREFIX qt:   <http://www.w3.org/2001/sw/DataAccess/tests/test-query#>\n");
@@ -100,16 +98,14 @@ public abstract class TriGParserTestCase {
 		positiveQuery.append("     ?test mf:action ?inputURL . ");
 		positiveQuery.append(" }");
 
-		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL,
-				positiveQuery.toString()).evaluate();
+		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL, positiveQuery.toString()).evaluate();
 
 		// Add all positive parser tests to the test suite
 		while (queryResult.hasNext()) {
 			BindingSet bindingSet = queryResult.next();
-			IRI nextTestUri = (IRI)bindingSet.getValue("test");
-			String nextTestName = ((Literal)bindingSet.getValue("testName")).getLabel();
-			String nextTestFile = removeBase(((IRI)bindingSet.getValue("inputURL")).toString(),
-					testLocationBaseUri);
+			IRI nextTestUri = (IRI) bindingSet.getValue("test");
+			String nextTestName = ((Literal) bindingSet.getValue("testName")).getLabel();
+			String nextTestFile = removeBase(((IRI) bindingSet.getValue("inputURL")).toString(), testLocationBaseUri);
 			String nextInputURL = fileBasePath + nextTestFile;
 
 			String nextBaseUrl = testBaseUrl + nextTestFile;
@@ -123,9 +119,7 @@ public abstract class TriGParserTestCase {
 	}
 
 	private void parseNegativeTriGSyntaxTests(TestSuite suite, String fileBasePath, String testBaseUrl,
-			String manifestBaseUrl, RepositoryConnection con)
-		throws Exception
-	{
+			String manifestBaseUrl, RepositoryConnection con) throws Exception {
 		StringBuilder negativeQuery = new StringBuilder();
 		negativeQuery.append(" PREFIX mf:   <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#>\n");
 		negativeQuery.append(" PREFIX qt:   <http://www.w3.org/2001/sw/DataAccess/tests/test-query#>\n");
@@ -137,22 +131,20 @@ public abstract class TriGParserTestCase {
 		negativeQuery.append("     ?test mf:action ?inputURL . ");
 		negativeQuery.append(" }");
 
-		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL,
-				negativeQuery.toString()).evaluate();
+		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL, negativeQuery.toString()).evaluate();
 
 		// Add all negative parser tests to the test suite
 		while (queryResult.hasNext()) {
 			BindingSet bindingSet = queryResult.next();
-			IRI nextTestUri = (IRI)bindingSet.getValue("test");
-			String nextTestName = ((Literal)bindingSet.getValue("testName")).getLabel();
-			String nextTestFile = removeBase(((IRI)bindingSet.getValue("inputURL")).toString(),
-					manifestBaseUrl);
+			IRI nextTestUri = (IRI) bindingSet.getValue("test");
+			String nextTestName = ((Literal) bindingSet.getValue("testName")).getLabel();
+			String nextTestFile = removeBase(((IRI) bindingSet.getValue("inputURL")).toString(), manifestBaseUrl);
 			String nextInputURL = fileBasePath + nextTestFile;
 
 			String nextBaseUrl = testBaseUrl + nextTestFile;
 
 			suite.addTest(new NegativeParserTest(nextTestUri, nextTestName, nextInputURL, nextBaseUrl,
-					createTriGParser(), FailureMode.IGNORE_FAILURE));
+					createTriGParser(), FailureMode.DO_NOT_IGNORE_FAILURE));
 		}
 
 		queryResult.close();
@@ -160,12 +152,9 @@ public abstract class TriGParserTestCase {
 	}
 
 	private void parsePositiveTriGEvalTests(TestSuite suite, String fileBasePath, String testBaseUrl,
-			String manifestBaseUrl, RepositoryConnection con)
-		throws Exception
-	{
+			String manifestBaseUrl, RepositoryConnection con) throws Exception {
 		StringBuilder positiveEvalQuery = new StringBuilder();
-		positiveEvalQuery.append(
-				" PREFIX mf:   <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#>\n");
+		positiveEvalQuery.append(" PREFIX mf:   <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#>\n");
 		positiveEvalQuery.append(" PREFIX qt:   <http://www.w3.org/2001/sw/DataAccess/tests/test-query#>\n");
 		positiveEvalQuery.append(" PREFIX rdft: <http://www.w3.org/ns/rdftest#>\n");
 		positiveEvalQuery.append(" SELECT ?test ?testName ?inputURL ?outputURL \n");
@@ -176,50 +165,44 @@ public abstract class TriGParserTestCase {
 		positiveEvalQuery.append("     ?test mf:result ?outputURL . ");
 		positiveEvalQuery.append(" }");
 
-		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL,
-				positiveEvalQuery.toString()).evaluate();
+		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL, positiveEvalQuery.toString())
+				.evaluate();
 
 		// Add all positive eval tests to the test suite
 		while (queryResult.hasNext()) {
 			BindingSet bindingSet = queryResult.next();
-			IRI nextTestUri = (IRI)bindingSet.getValue("test");
-			String nextTestName = ((Literal)bindingSet.getValue("testName")).getLabel();
-			String nextTestFile = removeBase(((IRI)bindingSet.getValue("inputURL")).toString(),
-					manifestBaseUrl);
+			IRI nextTestUri = (IRI) bindingSet.getValue("test");
+			String nextTestName = ((Literal) bindingSet.getValue("testName")).getLabel();
+			String nextTestFile = removeBase(((IRI) bindingSet.getValue("inputURL")).toString(), manifestBaseUrl);
 			String nextInputURL = fileBasePath + nextTestFile;
 			String nextOutputURL = fileBasePath
-					+ removeBase(((IRI)bindingSet.getValue("outputURL")).toString(), manifestBaseUrl);
+					+ removeBase(((IRI) bindingSet.getValue("outputURL")).toString(), manifestBaseUrl);
 
 			String nextBaseUrl = testBaseUrl + nextTestFile;
 
 			if (nextTestName.contains("CARRIAGE_RETURN")) {
 				// FIXME: Sesame seems not to preserve the CARRIAGE_RETURN character
 				// right now
-				System.err.println("Ignoring TriG Positive Parser Eval Test: " + nextInputURL);
+				logger.warn("Ignoring TriG Positive Parser Eval Test: " + nextInputURL);
 				continue;
-			}
-			else if (nextTestName.contains("UTF8_boundaries")
-					|| nextTestName.contains("PN_CHARS_BASE_character_boundaries"))
-			{
+			} else if (nextTestName.contains("UTF8_boundaries")
+					|| nextTestName.contains("PN_CHARS_BASE_character_boundaries")) {
 				// FIXME: UTF8 support not implemented yet
-				System.err.println("Ignoring TriG Positive Parser Eval Test: " + nextInputURL);
+				logger.warn("Ignoring TriG Positive Parser Eval Test: " + nextInputURL);
 				continue;
 			}
 
-			suite.addTest(new PositiveParserTest(nextTestUri, nextTestName, nextInputURL, nextOutputURL,
-					nextBaseUrl, createTriGParser(), createNQuadsParser()));
+			suite.addTest(new PositiveParserTest(nextTestUri, nextTestName, nextInputURL, nextOutputURL, nextBaseUrl,
+					createTriGParser(), createNQuadsParser()));
 		}
 
 		queryResult.close();
 	}
 
 	private void parseNegativeTriGEvalTests(TestSuite suite, String fileBasePath, String testBaseUrl,
-			String manifestBaseUrl, RepositoryConnection con)
-		throws Exception
-	{
+			String manifestBaseUrl, RepositoryConnection con) throws Exception {
 		StringBuilder negativeEvalQuery = new StringBuilder();
-		negativeEvalQuery.append(
-				" PREFIX mf:   <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#>\n");
+		negativeEvalQuery.append(" PREFIX mf:   <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#>\n");
 		negativeEvalQuery.append(" PREFIX qt:   <http://www.w3.org/2001/sw/DataAccess/tests/test-query#>\n");
 		negativeEvalQuery.append(" PREFIX rdft: <http://www.w3.org/ns/rdftest#>\n");
 		negativeEvalQuery.append(" SELECT ?test ?testName ?inputURL ?outputURL \n");
@@ -229,22 +212,21 @@ public abstract class TriGParserTestCase {
 		negativeEvalQuery.append("     ?test mf:action ?inputURL . ");
 		negativeEvalQuery.append(" }");
 
-		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL,
-				negativeEvalQuery.toString()).evaluate();
+		TupleQueryResult queryResult = con.prepareTupleQuery(QueryLanguage.SPARQL, negativeEvalQuery.toString())
+				.evaluate();
 
 		// Add all negative eval tests to the test suite
 		while (queryResult.hasNext()) {
 			BindingSet bindingSet = queryResult.next();
-			IRI nextTestUri = (IRI)bindingSet.getValue("test");
-			String nextTestName = ((Literal)bindingSet.getValue("testName")).getLabel();
-			String nextTestFile = removeBase(((IRI)bindingSet.getValue("inputURL")).stringValue(),
-					manifestBaseUrl);
+			IRI nextTestUri = (IRI) bindingSet.getValue("test");
+			String nextTestName = ((Literal) bindingSet.getValue("testName")).getLabel();
+			String nextTestFile = removeBase(((IRI) bindingSet.getValue("inputURL")).stringValue(), manifestBaseUrl);
 			String nextInputURL = fileBasePath + nextTestFile;
 
 			String nextBaseUrl = testBaseUrl + nextTestFile;
 
 			suite.addTest(new NegativeParserTest(nextTestUri, nextTestName, nextInputURL, nextBaseUrl,
-					createTriGParser(), FailureMode.IGNORE_FAILURE));
+					createTriGParser(), FailureMode.DO_NOT_IGNORE_FAILURE));
 		}
 
 		queryResult.close();
@@ -256,8 +238,7 @@ public abstract class TriGParserTestCase {
 	protected abstract RDFParser createTriGParser();
 
 	/**
-	 * @return An implementation of an N-Quads parser to test compliance with the TriG Test Suite N-Quads
-	 *         tests.
+	 * @return An implementation of an N-Quads parser to test compliance with the TriG Test Suite N-Quads tests.
 	 */
 	protected abstract RDFParser createNQuadsParser();
 

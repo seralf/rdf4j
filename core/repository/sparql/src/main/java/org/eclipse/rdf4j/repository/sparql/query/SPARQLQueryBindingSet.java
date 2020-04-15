@@ -23,10 +23,10 @@ import org.eclipse.rdf4j.util.iterators.ConvertingIterator;
 
 /**
  * An implementation of the {@link BindingSet} interface that is used to evaluate query object models. This
- * implementations differs from {@link MapBindingSet} in that it maps variable names to Value objects and that
- * the Binding objects are created lazily. Note that this class is a fully equivalent copy of
- * {@link org.eclipse.rdf4j.query.algebra.evaluation.QueryBindingSet}, and is only included here to avoid a
- * circular dependency between the algebra-evaluation module and the sparql-repository module.
+ * implementations differs from {@link MapBindingSet} in that it maps variable names to Value objects and that the
+ * Binding objects are created lazily. Note that this class is a fully equivalent copy of
+ * {@link org.eclipse.rdf4j.query.algebra.evaluation.QueryBindingSet}, and is only included here to avoid a circular
+ * dependency between the algebra-evaluation module and the sparql-repository module.
  */
 public class SPARQLQueryBindingSet extends AbstractBindingSet {
 
@@ -41,7 +41,7 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 	public SPARQLQueryBindingSet(int capacity) {
 		// Create bindings map with some extra space for new bindings and
 		// compensating for HashMap's load factor
-		bindings = new HashMap<String, Value>(capacity * 2);
+		bindings = new HashMap<>(capacity * 2);
 	}
 
 	public SPARQLQueryBindingSet(BindingSet bindingSet) {
@@ -51,9 +51,8 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 
 	public void addAll(BindingSet bindingSet) {
 		if (bindingSet instanceof SPARQLQueryBindingSet) {
-			bindings.putAll(((SPARQLQueryBindingSet)bindingSet).bindings);
-		}
-		else {
+			bindings.putAll(((SPARQLQueryBindingSet) bindingSet).bindings);
+		} else {
 			for (Binding binding : bindingSet) {
 				this.addBinding(binding);
 			}
@@ -63,8 +62,7 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 	/**
 	 * Adds a new binding to the binding set. The binding's name must not already be part of this binding set.
 	 * 
-	 * @param binding
-	 *        The binding to add this this BindingSet.
+	 * @param binding The binding to add this this BindingSet.
 	 */
 	public void addBinding(Binding binding) {
 		addBinding(binding.getName(), binding.getValue());
@@ -73,10 +71,8 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 	/**
 	 * Adds a new binding to the binding set. The binding's name must not already be part of this binding set.
 	 * 
-	 * @param name
-	 *        The binding's name, must not be bound in this binding set already.
-	 * @param value
-	 *        The binding's value.
+	 * @param name  The binding's name, must not be bound in this binding set already.
+	 * @param value The binding's value.
 	 */
 	public void addBinding(String name, Value value) {
 		assert !bindings.containsKey(name) : "variable already bound: " + name;
@@ -88,7 +84,6 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 	}
 
 	public void setBinding(String name, Value value) {
-		assert value != null : "null value for variable " + name;
 		bindings.put(name, value);
 	}
 
@@ -104,14 +99,17 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 		bindings.keySet().retainAll(bindingNames);
 	}
 
+	@Override
 	public Set<String> getBindingNames() {
 		return bindings.keySet();
 	}
 
+	@Override
 	public Value getValue(String bindingName) {
 		return bindings.get(bindingName);
 	}
 
+	@Override
 	public Binding getBinding(String bindingName) {
 		Value value = getValue(bindingName);
 
@@ -122,10 +120,12 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 		return null;
 	}
 
+	@Override
 	public boolean hasBinding(String bindingName) {
 		return bindings.containsKey(bindingName);
 	}
 
+	@Override
 	public Iterator<Binding> iterator() {
 		Iterator<Map.Entry<String, Value>> entries = bindings.entrySet().iterator();
 
@@ -138,6 +138,7 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 		};
 	}
 
+	@Override
 	public int size() {
 		return bindings.size();
 	}
@@ -145,9 +146,8 @@ public class SPARQLQueryBindingSet extends AbstractBindingSet {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof SPARQLQueryBindingSet) {
-			return bindings.equals(((SPARQLQueryBindingSet)other).bindings);
-		}
-		else {
+			return bindings.equals(((SPARQLQueryBindingSet) other).bindings);
+		} else {
 			return super.equals(other);
 		}
 	}

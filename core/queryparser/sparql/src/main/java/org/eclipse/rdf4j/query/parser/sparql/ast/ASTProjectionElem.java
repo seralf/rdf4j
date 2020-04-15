@@ -20,9 +20,8 @@ public class ASTProjectionElem extends SimpleNode {
 	}
 
 	/** Accept the visitor. **/
-	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	@Override
+	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		return visitor.visit(this, data);
 	}
 
@@ -35,10 +34,9 @@ public class ASTProjectionElem extends SimpleNode {
 			Node aliasNode = children.get(1);
 
 			if (aliasNode instanceof ASTString) {
-				return ((ASTString)aliasNode).getValue();
-			}
-			else if (aliasNode instanceof ASTVar) {
-				return ((ASTVar)aliasNode).getName();
+				return ((ASTString) aliasNode).getValue();
+			} else if (aliasNode instanceof ASTVar) {
+				return ((ASTVar) aliasNode).getName();
 			}
 		}
 

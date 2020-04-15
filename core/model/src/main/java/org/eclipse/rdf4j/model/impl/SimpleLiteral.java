@@ -64,8 +64,7 @@ public class SimpleLiteral implements Literal {
 	/**
 	 * Creates a new plain literal with the supplied label.
 	 * 
-	 * @param label
-	 *        The label for the literal, must not be <tt>null</tt>.
+	 * @param label The label for the literal, must not be <tt>null</tt>.
 	 */
 	protected SimpleLiteral(String label) {
 		setLabel(label);
@@ -75,10 +74,8 @@ public class SimpleLiteral implements Literal {
 	/**
 	 * Creates a new plain literal with the supplied label and language tag.
 	 * 
-	 * @param label
-	 *        The label for the literal, must not be <tt>null</tt>.
-	 * @param language
-	 *        The language tag for the literal, must not be <tt>null</tt>.
+	 * @param label    The label for the literal, must not be <tt>null</tt>.
+	 * @param language The language tag for the literal, must not be <tt>null</tt> and not be empty.
 	 */
 	protected SimpleLiteral(String label, String language) {
 		setLabel(label);
@@ -86,19 +83,16 @@ public class SimpleLiteral implements Literal {
 	}
 
 	/**
-	 * Creates a new datyped literal with the supplied label and datatype.
+	 * Creates a new datatyped literal with the supplied label and datatype.
 	 * 
-	 * @param label
-	 *        The label for the literal, must not be <tt>null</tt>.
-	 * @param datatype
-	 *        The datatype for the literal.
+	 * @param label    The label for the literal, must not be <tt>null</tt>.
+	 * @param datatype The datatype for the literal.
 	 */
 	protected SimpleLiteral(String label, IRI datatype) {
 		setLabel(label);
 		if (RDF.LANGSTRING.equals(datatype)) {
 			throw new IllegalArgumentException("datatype rdf:langString requires a language tag");
-		}
-		else if (datatype == null) {
+		} else if (datatype == null) {
 			datatype = XMLSchema.STRING;
 		}
 		setDatatype(datatype);
@@ -113,16 +107,21 @@ public class SimpleLiteral implements Literal {
 		this.label = label;
 	}
 
+	@Override
 	public String getLabel() {
 		return label;
 	}
 
 	protected void setLanguage(String language) {
 		Objects.requireNonNull(language);
+		if (language.isEmpty()) {
+			throw new IllegalArgumentException("Language tag cannot be empty");
+		}
 		this.language = language;
 		setDatatype(RDF.LANGSTRING);
 	}
 
+	@Override
 	public Optional<String> getLanguage() {
 		return Optional.ofNullable(language);
 	}
@@ -131,6 +130,7 @@ public class SimpleLiteral implements Literal {
 		this.datatype = datatype;
 	}
 
+	@Override
 	public IRI getDatatype() {
 		return datatype;
 	}
@@ -143,7 +143,7 @@ public class SimpleLiteral implements Literal {
 		}
 
 		if (o instanceof Literal) {
-			Literal other = (Literal)o;
+			Literal other = (Literal) o;
 
 			// Compare labels
 			if (!label.equals(other.getLabel())) {
@@ -176,69 +176,81 @@ public class SimpleLiteral implements Literal {
 	}
 
 	/**
-	 * Returns the label of the literal.
+	 * Returns the label of the literal with its language or datatype. Note that this method does not escape the quoted
+	 * label.
+	 *
+	 * @see org.eclipse.rdf4j.rio.ntriples.NTriplesUtil#toNTriplesString(org.eclipse.rdf4j.model.Literal)
 	 */
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder(label.length() * 2);
-
-		sb.append('"');
-		sb.append(label);
-		sb.append('"');
-
 		if (Literals.isLanguageLiteral(this)) {
-			sb.append('@');
-			sb.append(language);
+			StringBuilder sb = new StringBuilder(label.length() + language.length() + 3);
+			sb.append('"').append(label).append('"');
+			sb.append('@').append(language);
+			return sb.toString();
+		} else if (XMLSchema.STRING.equals(datatype) || datatype == null) {
+			StringBuilder sb = new StringBuilder(label.length() + 2);
+			sb.append('"').append(label).append('"');
+			return sb.toString();
+		} else {
+			StringBuilder sb = new StringBuilder(label.length() + datatype.stringValue().length() + 6);
+			sb.append('"').append(label).append('"');
+			sb.append("^^<").append(datatype.toString()).append(">");
+			return sb.toString();
 		}
-		else {
-			sb.append("^^<");
-			sb.append(datatype.toString());
-			sb.append(">");
-		}
-
-		return sb.toString();
 	}
 
+	@Override
 	public String stringValue() {
 		return label;
 	}
 
+	@Override
 	public boolean booleanValue() {
 		return XMLDatatypeUtil.parseBoolean(getLabel());
 	}
 
+	@Override
 	public byte byteValue() {
 		return XMLDatatypeUtil.parseByte(getLabel());
 	}
 
+	@Override
 	public short shortValue() {
 		return XMLDatatypeUtil.parseShort(getLabel());
 	}
 
+	@Override
 	public int intValue() {
 		return XMLDatatypeUtil.parseInt(getLabel());
 	}
 
+	@Override
 	public long longValue() {
 		return XMLDatatypeUtil.parseLong(getLabel());
 	}
 
+	@Override
 	public float floatValue() {
 		return XMLDatatypeUtil.parseFloat(getLabel());
 	}
 
+	@Override
 	public double doubleValue() {
 		return XMLDatatypeUtil.parseDouble(getLabel());
 	}
 
+	@Override
 	public BigInteger integerValue() {
 		return XMLDatatypeUtil.parseInteger(getLabel());
 	}
 
+	@Override
 	public BigDecimal decimalValue() {
 		return XMLDatatypeUtil.parseDecimal(getLabel());
 	}
 
+	@Override
 	public XMLGregorianCalendar calendarValue() {
 		return XMLDatatypeUtil.parseCalendar(getLabel());
 	}

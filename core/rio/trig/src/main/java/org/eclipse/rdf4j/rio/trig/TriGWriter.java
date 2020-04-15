@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 
+import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
@@ -20,8 +21,8 @@ import org.eclipse.rdf4j.rio.turtle.TurtleWriter;
 
 /**
  * An extension of {@link TurtleWriter} that writes RDF documents in
- * <a href="http://www.wiwiss.fu-berlin.de/suhl/bizer/TriG/Spec/">TriG</a> format by adding graph scopes to
- * the Turtle document.
+ * <a href="http://www.wiwiss.fu-berlin.de/suhl/bizer/TriG/Spec/">TriG</a> format by adding graph scopes to the Turtle
+ * document.
  * 
  * @author Arjohn Kampman
  */
@@ -42,21 +43,37 @@ public class TriGWriter extends TurtleWriter {
 	/**
 	 * Creates a new TriGWriter that will write to the supplied OutputStream.
 	 * 
-	 * @param out
-	 *        The OutputStream to write the TriG document to.
+	 * @param out The OutputStream to write the TriG document to.
 	 */
 	public TriGWriter(OutputStream out) {
 		super(out);
 	}
 
 	/**
+	 * Creates a new TriGWriter that will write to the supplied OutputStream.
+	 *
+	 * @param out The OutputStream to write the TriG document to.
+	 */
+	public TriGWriter(OutputStream out, ParsedIRI baseIRI) {
+		super(out, baseIRI);
+	}
+
+	/**
 	 * Creates a new TriGWriter that will write to the supplied Writer.
 	 * 
-	 * @param writer
-	 *        The Writer to write the TriG document to.
+	 * @param writer The Writer to write the TriG document to.
 	 */
 	public TriGWriter(Writer writer) {
 		super(writer);
+	}
+
+	/**
+	 * Creates a new TriGWriter that will write to the supplied Writer.
+	 *
+	 * @param writer The Writer to write the TriG document to.
+	 */
+	public TriGWriter(Writer writer, ParsedIRI baseIRI) {
+		super(writer, baseIRI);
 	}
 
 	/*---------*
@@ -69,9 +86,7 @@ public class TriGWriter extends TurtleWriter {
 	}
 
 	@Override
-	public void startRDF()
-		throws RDFHandlerException
-	{
+	public void startRDF() throws RDFHandlerException {
 		super.startRDF();
 
 		inActiveContext = false;
@@ -79,24 +94,19 @@ public class TriGWriter extends TurtleWriter {
 	}
 
 	@Override
-	public void endRDF()
-		throws RDFHandlerException
-	{
+	public void endRDF() throws RDFHandlerException {
 		super.endRDF();
 
 		try {
 			closeActiveContext();
 			writer.flush();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RDFHandlerException(e);
 		}
 	}
 
 	@Override
-	public void handleStatement(Statement st)
-		throws RDFHandlerException
-	{
+	public void handleStatement(Statement st) throws RDFHandlerException {
 		if (!writingStarted) {
 			throw new RuntimeException("Document writing has not yet been started");
 		}
@@ -104,15 +114,14 @@ public class TriGWriter extends TurtleWriter {
 		// If we are pretty-printing, all writing is buffered until endRDF is called
 		if (prettyPrintModel != null) {
 			prettyPrintModel.add(st);
-		}
-		else {
+		} else {
 			handleStatementInternal(st, false, false, false);
 		}
 	}
 
+	@Override
 	protected void handleStatementInternal(Statement st, boolean endRDFCalled, boolean canShortenSubject,
-			boolean canShortenObject)
-	{
+			boolean canShortenObject) {
 		// Avoid accidentally writing statements early, but don't lose track of
 		// them if they are sent here
 		if (prettyPrintModel != null && !endRDFCalled) {
@@ -135,8 +144,7 @@ public class TriGWriter extends TurtleWriter {
 					boolean canShortenContext = false;
 					if (context instanceof BNode) {
 						if (prettyPrintModel != null && !prettyPrintModel.contains(context, null, null)
-								&& !prettyPrintModel.contains(null, null, context))
-						{
+								&& !prettyPrintModel.contains(null, null, context)) {
 							canShortenContext = true;
 						}
 					}
@@ -150,8 +158,7 @@ public class TriGWriter extends TurtleWriter {
 				currentContext = context;
 				inActiveContext = true;
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RDFHandlerException(e);
 		}
 
@@ -160,18 +167,14 @@ public class TriGWriter extends TurtleWriter {
 	}
 
 	@Override
-	protected void writeCommentLine(String line)
-		throws IOException
-	{
+	protected void writeCommentLine(String line) throws IOException {
 		// Comments can be written anywhere, so disabling this
-		//closeActiveContext();
+		// closeActiveContext();
 		super.writeCommentLine(line);
 	}
 
 	@Override
-	protected void writeNamespace(String prefix, String name)
-		throws IOException
-	{
+	protected void writeNamespace(String prefix, String name) throws IOException {
 		if (currentContext != null && currentContext instanceof BNode) {
 			// FIXME: No formal way to warn the user that things may break in this situation
 		}
@@ -180,9 +183,7 @@ public class TriGWriter extends TurtleWriter {
 		super.writeNamespace(prefix, name);
 	}
 
-	protected void closeActiveContext()
-		throws IOException
-	{
+	protected void closeActiveContext() throws IOException {
 		if (inActiveContext) {
 			writer.decreaseIndentation();
 			writer.write("}");
@@ -196,8 +197,7 @@ public class TriGWriter extends TurtleWriter {
 	private static final boolean contextsEquals(Resource context1, Resource context2) {
 		if (context1 == null) {
 			return context2 == null;
-		}
-		else {
+		} else {
 			return context1.equals(context2);
 		}
 	}

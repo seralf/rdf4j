@@ -36,37 +36,31 @@ public class SimpleLiteralTest {
 	 * @throws java.lang.Exception
 	 */
 	@Before
-	public void setUp()
-		throws Exception
-	{
+	public void setUp() throws Exception {
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@After
-	public void tearDown()
-		throws Exception
-	{
+	public void tearDown() throws Exception {
 	}
 
 	/**
 	 * Test method for {@link SimpleLiteral#hashCode()} and {@link SimpleLiteral#equals(Object)}.
 	 */
 	@Test
-	public final void testHashCodeEquals()
-		throws Exception
-	{
+	public final void testHashCodeEquals() throws Exception {
 		/*
-		 * The base contract for Object.hashCode is simply that it returns the same value for two objects for
-		 * which equals() returns true. Note that the inverse does not hold: there is no absolute guarantee
-		 * that hashCode will return different values for objects whose equals is _not_ true. Also note that
-		 * the Literal interface explicitly specifies that the hashCode method returns a value based on the
-		 * Literal's label only. Datatype and language tag are _not_ included in hashcode calculation. See
-		 * issue https://github.com/eclipse/rdf4j/issues/668.
+		 * The base contract for Object.hashCode is simply that it returns the same value for two objects for which
+		 * equals() returns true. Note that the inverse does not hold: there is no absolute guarantee that hashCode will
+		 * return different values for objects whose equals is _not_ true. Also note that the Literal interface
+		 * explicitly specifies that the hashCode method returns a value based on the Literal's label only. Datatype and
+		 * language tag are _not_ included in hashcode calculation. See issue
+		 * https://github.com/eclipse/rdf4j/issues/668.
 		 */
 
-		// plain literals 
+		// plain literals
 		SimpleLiteral lit1 = new SimpleLiteral("a");
 		SimpleLiteral lit2 = new SimpleLiteral("a");
 
@@ -117,9 +111,7 @@ public class SimpleLiteralTest {
 	 * Test method for {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String)}.
 	 */
 	@Test
-	public final void testStringNull()
-		throws Exception
-	{
+	public final void testStringNull() throws Exception {
 		thrown.expect(NullPointerException.class);
 		new SimpleLiteral(null);
 	}
@@ -128,9 +120,7 @@ public class SimpleLiteralTest {
 	 * Test method for {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String)}.
 	 */
 	@Test
-	public final void testStringEmpty()
-		throws Exception
-	{
+	public final void testStringEmpty() throws Exception {
 		Literal test = new SimpleLiteral("");
 		assertEquals("", test.getLabel());
 		assertFalse(test.getLanguage().isPresent());
@@ -141,9 +131,7 @@ public class SimpleLiteralTest {
 	 * Test method for {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String)}.
 	 */
 	@Test
-	public final void testStringLong()
-		throws Exception
-	{
+	public final void testStringLong() throws Exception {
 		StringBuilder testBuilder = new StringBuilder(1000000);
 		for (int i = 0; i < 1000000; i++) {
 			testBuilder.append(Integer.toHexString(i % 16));
@@ -160,9 +148,7 @@ public class SimpleLiteralTest {
 	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, java.lang.String)} .
 	 */
 	@Test
-	public final void testStringStringNullNull()
-		throws Exception
-	{
+	public final void testStringStringNullNull() throws Exception {
 		String label = null;
 		String language = null;
 
@@ -175,9 +161,7 @@ public class SimpleLiteralTest {
 	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, java.lang.String)} .
 	 */
 	@Test
-	public final void testStringStringEmptyNull()
-		throws Exception
-	{
+	public final void testStringStringEmptyNull() throws Exception {
 		String label = "";
 		String language = null;
 
@@ -190,9 +174,7 @@ public class SimpleLiteralTest {
 	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, java.lang.String)} .
 	 */
 	@Test
-	public final void testStringStringNullEmpty()
-		throws Exception
-	{
+	public final void testStringStringNullEmpty() throws Exception {
 		String label = null;
 		String language = "";
 
@@ -202,13 +184,23 @@ public class SimpleLiteralTest {
 
 	/**
 	 * Test method for
-	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)}
-	 * .
+	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, java.lang.String)} .
 	 */
 	@Test
-	public final void testStringIRINullNull()
-		throws Exception
-	{
+	public final void testStringStringEmptyEmpty() throws Exception {
+		String label = "";
+		String language = "";
+
+		thrown.expect(IllegalArgumentException.class);
+		new SimpleLiteral(label, language);
+	}
+
+	/**
+	 * Test method for
+	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)} .
+	 */
+	@Test
+	public final void testStringIRINullNull() throws Exception {
 		String label = null;
 		IRI datatype = null;
 
@@ -218,13 +210,10 @@ public class SimpleLiteralTest {
 
 	/**
 	 * Test method for
-	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)}
-	 * .
+	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)} .
 	 */
 	@Test
-	public final void testStringIRINullString()
-		throws Exception
-	{
+	public final void testStringIRINullString() throws Exception {
 		String label = null;
 		IRI datatype = XMLSchema.STRING;
 
@@ -234,13 +223,10 @@ public class SimpleLiteralTest {
 
 	/**
 	 * Test method for
-	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)}
-	 * .
+	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)} .
 	 */
 	@Test
-	public final void testStringIRINullLangString()
-		throws Exception
-	{
+	public final void testStringIRINullLangString() throws Exception {
 		String label = null;
 		IRI datatype = RDF.LANGSTRING;
 
@@ -250,13 +236,10 @@ public class SimpleLiteralTest {
 
 	/**
 	 * Test method for
-	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)}
-	 * .
+	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)} .
 	 */
 	@Test
-	public final void testStringIRIEmptyNull()
-		throws Exception
-	{
+	public final void testStringIRIEmptyNull() throws Exception {
 		String label = "";
 		IRI datatype = null;
 
@@ -268,13 +251,10 @@ public class SimpleLiteralTest {
 
 	/**
 	 * Test method for
-	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)}
-	 * .
+	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#SimpleLiteral(java.lang.String, org.eclipse.rdf4j.model.IRI)} .
 	 */
 	@Test
-	public final void testStringIRIEmptyLangString()
-		throws Exception
-	{
+	public final void testStringIRIEmptyLangString() throws Exception {
 		String label = "";
 		IRI datatype = RDF.LANGSTRING;
 
@@ -287,9 +267,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testSetLabel()
-		throws Exception
-	{
+	public final void testSetLabel() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -298,9 +276,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testGetLabel()
-		throws Exception
-	{
+	public final void testGetLabel() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -309,9 +285,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testSetLanguage()
-		throws Exception
-	{
+	public final void testSetLanguage() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -320,21 +294,16 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testGetLanguage()
-		throws Exception
-	{
+	public final void testGetLanguage() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
 	/**
-	 * Test method for
-	 * {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#setDatatype(org.eclipse.rdf4j.model.IRI)} .
+	 * Test method for {@link org.eclipse.rdf4j.model.impl.SimpleLiteral#setDatatype(org.eclipse.rdf4j.model.IRI)} .
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testSetDatatype()
-		throws Exception
-	{
+	public final void testSetDatatype() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -343,9 +312,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testGetDatatype()
-		throws Exception
-	{
+	public final void testGetDatatype() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -354,9 +321,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testToString()
-		throws Exception
-	{
+	public final void testToString() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -365,9 +330,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testStringValue()
-		throws Exception
-	{
+	public final void testStringValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -376,9 +339,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testBooleanValue()
-		throws Exception
-	{
+	public final void testBooleanValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -387,9 +348,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testByteValue()
-		throws Exception
-	{
+	public final void testByteValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -398,9 +357,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testShortValue()
-		throws Exception
-	{
+	public final void testShortValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -409,9 +366,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testIntValue()
-		throws Exception
-	{
+	public final void testIntValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -420,9 +375,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testLongValue()
-		throws Exception
-	{
+	public final void testLongValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -431,9 +384,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testFloatValue()
-		throws Exception
-	{
+	public final void testFloatValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -442,9 +393,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testDoubleValue()
-		throws Exception
-	{
+	public final void testDoubleValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -453,9 +402,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testIntegerValue()
-		throws Exception
-	{
+	public final void testIntegerValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -464,9 +411,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testDecimalValue()
-		throws Exception
-	{
+	public final void testDecimalValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 
@@ -475,9 +420,7 @@ public class SimpleLiteralTest {
 	 */
 	@Ignore("TODO: Implement me!")
 	@Test
-	public final void testCalendarValue()
-		throws Exception
-	{
+	public final void testCalendarValue() throws Exception {
 		fail("Not yet implemented"); // TODO
 	}
 

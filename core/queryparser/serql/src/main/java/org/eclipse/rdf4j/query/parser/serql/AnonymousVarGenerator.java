@@ -7,6 +7,7 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.query.parser.serql;
 
+import org.eclipse.rdf4j.common.annotation.InternalUseOnly;
 import org.eclipse.rdf4j.query.parser.serql.ast.ASTEdge;
 import org.eclipse.rdf4j.query.parser.serql.ast.ASTNode;
 import org.eclipse.rdf4j.query.parser.serql.ast.ASTNodeElem;
@@ -16,17 +17,20 @@ import org.eclipse.rdf4j.query.parser.serql.ast.SyntaxTreeBuilderTreeConstants;
 import org.eclipse.rdf4j.query.parser.serql.ast.VisitorException;
 
 /**
- * Inserts anonymous variables into the abstract syntax tree at places where such variables are already
- * implicitly present.
+ * Inserts anonymous variables into the abstract syntax tree at places where such variables are already implicitly
+ * present.
+ * 
+ * @deprecated since 3.0. This feature is for internal use only: its existence, signature or behavior may change without
+ *             warning from one release to the next.
  */
+@Deprecated
+@InternalUseOnly
 public class AnonymousVarGenerator extends AbstractASTVisitor {
 
 	private int anonymousVarNo = 1;
 
 	@Override
-	public Object visit(ASTNode node, Object data)
-		throws VisitorException
-	{
+	public Object visit(ASTNode node, Object data) throws VisitorException {
 		if (node.jjtGetNumChildren() == 0) {
 			ASTNodeElem nodeElem = createNodeElem();
 			nodeElem.jjtSetParent(node);
@@ -37,9 +41,7 @@ public class AnonymousVarGenerator extends AbstractASTVisitor {
 	}
 
 	@Override
-	public Object visit(ASTReifiedStat node, Object data)
-		throws VisitorException
-	{
+	public Object visit(ASTReifiedStat node, Object data) throws VisitorException {
 		if (node.jjtGetChild(0) instanceof ASTEdge) {
 			// subject node is missing
 			ASTNodeElem nodeElem = createNodeElem();

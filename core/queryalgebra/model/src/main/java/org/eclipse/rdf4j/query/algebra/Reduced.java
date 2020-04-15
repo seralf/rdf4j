@@ -24,9 +24,8 @@ public class Reduced extends UnaryTupleOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -42,6 +41,6 @@ public class Reduced extends UnaryTupleOperator {
 
 	@Override
 	public Reduced clone() {
-		return (Reduced)super.clone();
+		return (Reduced) super.clone();
 	}
 }

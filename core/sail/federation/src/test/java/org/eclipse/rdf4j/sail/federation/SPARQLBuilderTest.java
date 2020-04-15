@@ -19,6 +19,7 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,32 +31,23 @@ public class SPARQLBuilderTest {
 
 	@Parameters(name = "{index}({0})-{2}:{3}")
 	public static Iterable<Object[]> data() {
-		return Arrays.asList(new Object[][] {
-				{ "StatementPattern", "SELECT * WHERE {?s ?p ?o}", "", "" },
+		return Arrays.asList(new Object[][] { { "StatementPattern", "SELECT * WHERE {?s ?p ?o}", "", "" },
 				{ "Join", "SELECT * WHERE {?s ?p ?o; <urn:test:pred> ?obj}", "", "" },
 				{ "Distinct", "SELECT DISTINCT ?s WHERE {?s ?p ?o; <urn:test:pred> ?obj}", "", "" },
-				{
-						"Optional",
-						"SELECT * WHERE {?s ?p ?o . OPTIONAL { ?s <urn:test:pred> ?obj}}",
-						"",
-						"" },
-				{
-						"Filter",
-						"SELECT ?s WHERE {?s ?p ?o; <urn:test:pred> ?obj FILTER (str(?obj) = \"urn:test:obj\")}",
-						"",
-						"" },
-				{
-						"Bindings",
-						"SELECT * WHERE {?s ?p ?o . OPTIONAL { ?s <urn:test:pred> ?obj}}",
-						"s",
+				{ "Optional", "SELECT * WHERE {?s ?p ?o . OPTIONAL { ?s <urn:test:pred> ?obj}}", "", "" },
+				{ "Filter", "SELECT ?s WHERE {?s ?p ?o; <urn:test:pred> ?obj FILTER (str(?obj) = \"urn:test:obj\")}",
+						"", "" },
+				{ "Bindings", "SELECT * WHERE {?s ?p ?o . OPTIONAL { ?s <urn:test:pred> ?obj}}", "s",
 						"urn:test:subj" } });
 	}
 
-	private RepositoryConnection con;
+	private static RepositoryConnection con;
 
-	private ValueFactory valueFactory;
+	private static ValueFactory valueFactory;
 
 	private final String pattern, prefix, namespace;
+
+	Repository repository;
 
 	public SPARQLBuilderTest(String name, String pattern, String prefix, String namespace) {
 		super();
@@ -66,13 +58,10 @@ public class SPARQLBuilderTest {
 	}
 
 	@Before
-	public void setUp()
-		throws Exception
-	{
+	public void setUp() throws Exception {
 		Federation federation = new Federation();
 		federation.addMember(new SailRepository(new MemoryStore()));
-		Repository repository = new SailRepository(federation);
-		repository.initialize();
+		repository = new SailRepository(federation);
 		con = repository.getConnection();
 		valueFactory = con.getValueFactory();
 		IRI subj = valueFactory.createIRI("urn:test:subj");
@@ -81,15 +70,23 @@ public class SPARQLBuilderTest {
 		con.add(subj, pred, obj);
 	}
 
+	@After
+	public void tearDown() {
+		con.close();
+		repository.shutDown();
+
+	}
+
 	@Test
-	public void test()
-		throws RDF4JException
-	{ // NOPMD
-													// Thrown exceptions are the only failure path.
-		TupleQuery tupleQuery = con.prepareTupleQuery(SPARQL, pattern);
-		if (!(prefix.isEmpty() || namespace.isEmpty())) {
-			tupleQuery.setBinding(prefix, valueFactory.createIRI(namespace));
+	public void test() throws RDF4JException { // NOPMD
+		// Thrown exceptions are the only failure path.
+
+		for (int i = 0; i < 100; i++) {
+			TupleQuery tupleQuery = con.prepareTupleQuery(SPARQL, pattern);
+			if (!(prefix.isEmpty() || namespace.isEmpty())) {
+				tupleQuery.setBinding(prefix, valueFactory.createIRI(namespace));
+			}
+			tupleQuery.evaluate().close();
 		}
-		tupleQuery.evaluate().close();
 	}
 }

@@ -7,13 +7,16 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.rio.helpers;
 
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.ModelFactory;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.impl.LinkedHashModelFactory;
 import org.eclipse.rdf4j.rio.RDFHandler;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 
 /**
- * Convenience base class for RDF handlers that wrap one or more other RDF handler. This class provides
- * default methods that forward method calls to the wrapped RDF handler(s).
+ * Convenience base class for RDF handlers that wrap one or more other RDF handler. This class provides default methods
+ * that forward method calls to the wrapped RDF handler(s).
  * 
  * @author Arjohn Kampman
  * @author Jeen Broekstra
@@ -29,64 +32,79 @@ public class RDFHandlerWrapper implements RDFHandler {
 	 */
 	private final RDFHandler[] rdfHandlers;
 
+	private final ModelFactory modelFactory;
+
 	/*--------------*
 	 * Constructors *
 	 *--------------*/
 
 	/**
-	 * Creates a new RDFHandlerWrapper that wraps the supplied RDF handler(s). If more than one RDFHandler is
-	 * supplied for wrapping, the RDFHandlerWrapper forwards every method call to each of the supplied
-	 * handler, in the order in which the handlers are supplied.
+	 * Creates a new RDFHandlerWrapper that wraps the supplied RDF handler(s). If more than one RDFHandler is supplied
+	 * for wrapping, the RDFHandlerWrapper forwards every method call to each of the supplied handler, in the order in
+	 * which the handlers are supplied.
 	 * 
-	 * @param rdfHandlers
-	 *        One or more wrapped RDF handlers for this <tt>RDFHandlerWrapper</tt>, must not be <tt>null</tt>.
+	 * @param rdfHandlers One or more wrapped RDF handlers for this <tt>RDFHandlerWrapper</tt>, must not be
+	 *                    <tt>null</tt>.
 	 */
 	public RDFHandlerWrapper(RDFHandler... rdfHandlers) {
+		this(new LinkedHashModelFactory(), rdfHandlers);
+	}
+
+	/**
+	 * Creates a new RDFHandlerWrapper that wraps the supplied RDF handler(s). If more than one RDFHandler is supplied
+	 * for wrapping, the RDFHandlerWrapper forwards every method call to each of the supplied handlers, in the order in
+	 * which the handlers are supplied.
+	 * 
+	 * @param modelFactory a {@link ModelFactory} that can be used for creating new empty {@link Model}s by the handler.
+	 * @param rdfHandlers  One or more wrapped RDF handlers for this <tt>RDFHandlerWrapper</tt>, must not be
+	 *                     <tt>null</tt>.
+	 */
+	public RDFHandlerWrapper(ModelFactory modelFactory, RDFHandler... rdfHandlers) {
 		assert rdfHandlers != null;
 		this.rdfHandlers = rdfHandlers;
+		this.modelFactory = modelFactory;
 	}
 
 	/*---------*
 	 * Methods *
 	 *---------*/
 
-	public void startRDF()
-		throws RDFHandlerException
-	{
+	@Override
+	public void startRDF() throws RDFHandlerException {
 		for (RDFHandler rdfHandler : rdfHandlers) {
 			rdfHandler.startRDF();
 		}
 	}
 
-	public void endRDF()
-		throws RDFHandlerException
-	{
+	@Override
+	public void endRDF() throws RDFHandlerException {
 		for (RDFHandler rdfHandler : rdfHandlers) {
 			rdfHandler.endRDF();
 		}
 	}
 
-	public void handleNamespace(String prefix, String uri)
-		throws RDFHandlerException
-	{
+	@Override
+	public void handleNamespace(String prefix, String uri) throws RDFHandlerException {
 		for (RDFHandler rdfHandler : rdfHandlers) {
 			rdfHandler.handleNamespace(prefix, uri);
 		}
 	}
 
-	public void handleStatement(Statement st)
-		throws RDFHandlerException
-	{
+	@Override
+	public void handleStatement(Statement st) throws RDFHandlerException {
 		for (RDFHandler rdfHandler : rdfHandlers) {
 			rdfHandler.handleStatement(st);
 		}
 	}
 
-	public void handleComment(String comment)
-		throws RDFHandlerException
-	{
+	@Override
+	public void handleComment(String comment) throws RDFHandlerException {
 		for (RDFHandler rdfHandler : rdfHandlers) {
 			rdfHandler.handleComment(comment);
 		}
+	}
+
+	public ModelFactory getModelFactory() {
+		return modelFactory;
 	}
 }

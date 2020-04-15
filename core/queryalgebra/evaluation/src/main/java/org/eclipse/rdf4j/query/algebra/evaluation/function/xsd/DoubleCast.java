@@ -14,21 +14,20 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.query.algebra.evaluation.ValueExprEvaluationException;
-import org.eclipse.rdf4j.query.algebra.evaluation.util.QueryEvaluationUtil;
 
 /**
- * A {@link Function} that tries to cast its argument to an <tt>xsd:double</tt>.
+ * A {@link org.eclipse.rdf4j.query.algebra.evaluation.function.Function} that tries to cast its argument to an
+ * <tt>xsd:double</tt>.
  * 
  * @author Arjohn Kampman
  * @author Jeen Broekstra
  */
 public class DoubleCast extends CastFunction {
 
-	protected Literal convert(ValueFactory valueFactory, Value value)
-		throws ValueExprEvaluationException
-	{
+	@Override
+	protected Literal convert(ValueFactory valueFactory, Value value) throws ValueExprEvaluationException {
 		if (value instanceof Literal) {
-			Literal literal = (Literal)value;
+			Literal literal = (Literal) value;
 			IRI datatype = literal.getDatatype();
 
 			if (XMLDatatypeUtil.isNumericDatatype(datatype)) {
@@ -37,16 +36,13 @@ public class DoubleCast extends CastFunction {
 				try {
 					double doubleValue = literal.doubleValue();
 					return valueFactory.createLiteral(doubleValue);
-				}
-				catch (NumberFormatException e) {
+				} catch (NumberFormatException e) {
 					throw new ValueExprEvaluationException(e.getMessage(), e);
 				}
-			}
-			else if (datatype.equals(XMLSchema.BOOLEAN)) {
+			} else if (datatype.equals(XMLSchema.BOOLEAN)) {
 				try {
 					return valueFactory.createLiteral(literal.booleanValue() ? 1.0 : 0.0);
-				}
-				catch (IllegalArgumentException e) {
+				} catch (IllegalArgumentException e) {
 					throw typeError(literal, e);
 				}
 			}

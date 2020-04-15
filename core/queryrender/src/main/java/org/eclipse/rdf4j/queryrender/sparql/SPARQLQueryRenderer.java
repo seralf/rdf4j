@@ -35,6 +35,7 @@ public class SPARQLQueryRenderer implements QueryRenderer {
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryLanguage getLanguage() {
 		return QueryLanguage.SPARQL;
 	}
@@ -42,24 +43,21 @@ public class SPARQLQueryRenderer implements QueryRenderer {
 	/**
 	 * @inheritDoc
 	 */
-	public String render(final ParsedQuery theQuery)
-		throws Exception
-	{
+	@Override
+	public String render(final ParsedQuery theQuery) throws Exception {
 		mRenderer.reset();
 
 		StringBuffer aBody = new StringBuffer(mRenderer.render(theQuery.getTupleExpr()));
 
 		boolean aFirst = true;
 
-		StringBuffer aQuery = new StringBuffer();
+		StringBuilder aQuery = new StringBuilder();
 
 		if (theQuery instanceof ParsedTupleQuery) {
 			aQuery.append("select ");
-		}
-		else if (theQuery instanceof ParsedBooleanQuery) {
+		} else if (theQuery instanceof ParsedBooleanQuery) {
 			aQuery.append("ask\n");
-		}
-		else {
+		} else {
 			aQuery.append("construct ");
 		}
 
@@ -83,19 +81,16 @@ public class SPARQLQueryRenderer implements QueryRenderer {
 				if (SparqlTupleExprRenderer.isSPOElemList(aList)) {
 					if (!aFirst) {
 						aQuery.append("\n");
-					}
-					else {
+					} else {
 						aFirst = false;
 					}
 
 					aQuery.append("  ").append(mRenderer.renderPattern(mRenderer.toStatementPattern(aList)));
-				}
-				else {
+				} else {
 					for (ProjectionElem aElem : aList.getElements()) {
 						if (!aFirst) {
 							aQuery.append(" ");
-						}
-						else {
+						} else {
 							aFirst = false;
 						}
 
@@ -127,12 +122,10 @@ public class SPARQLQueryRenderer implements QueryRenderer {
 			}
 
 			aQuery.append("\n");
-		}
-		else if (mRenderer.getProjection().isEmpty()) {
+		} else if (mRenderer.getProjection().isEmpty()) {
 			if (theQuery instanceof ParsedGraphQuery) {
 				aQuery.append("{ }\n");
-			}
-			else if (theQuery instanceof ParsedTupleQuery) {
+			} else if (theQuery instanceof ParsedTupleQuery) {
 				aQuery.append("*\n");
 			}
 		}
@@ -154,7 +147,7 @@ public class SPARQLQueryRenderer implements QueryRenderer {
 			// from initially being a serql renderer. i'll leave it for now, but i
 			// think this is to be removed.
 			// test cases to prove these things work would be lovely.
-			if (aBody.toString().trim().lastIndexOf(",") == aBody.length() - 1) {
+			if (aBody.toString().trim().lastIndexOf(',') == aBody.length() - 1) {
 				aBody.setCharAt(aBody.lastIndexOf(","), ' ');
 			}
 
@@ -174,15 +167,13 @@ public class SPARQLQueryRenderer implements QueryRenderer {
 			for (OrderElem aOrder : mRenderer.getOrdering()) {
 				if (!aFirst) {
 					aQuery.append(" ");
-				}
-				else {
+				} else {
 					aFirst = false;
 				}
 
 				if (aOrder.isAscending()) {
 					aQuery.append(mRenderer.renderValueExpr(aOrder.getExpr()));
-				}
-				else {
+				} else {
 					aQuery.append("desc(");
 					aQuery.append(mRenderer.renderValueExpr(aOrder.getExpr()));
 					aQuery.append(")");

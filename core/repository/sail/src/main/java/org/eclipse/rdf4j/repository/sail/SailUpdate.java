@@ -24,10 +24,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author Jeen Broekstra
+ * @author James Leigh
  */
 public class SailUpdate extends AbstractParserUpdate {
 
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static final Logger logger = LoggerFactory.getLogger(SailUpdate.class);
 
 	private final SailRepositoryConnection con;
 
@@ -41,9 +42,7 @@ public class SailUpdate extends AbstractParserUpdate {
 	}
 
 	@Override
-	public void execute()
-		throws UpdateExecutionException
-	{
+	public void execute() throws UpdateExecutionException {
 		ParsedUpdate parsedUpdate = getParsedUpdate();
 		List<UpdateExpr> updateExprs = parsedUpdate.getUpdateExprs();
 		Map<UpdateExpr, Dataset> datasetMapping = parsedUpdate.getDatasetMapping();
@@ -51,54 +50,49 @@ public class SailUpdate extends AbstractParserUpdate {
 		SailUpdateExecutor executor = new SailUpdateExecutor(con.getSailConnection(), con.getValueFactory(),
 				con.getParserConfig());
 
-		for (UpdateExpr updateExpr : updateExprs) {
+		boolean localTransaction = false;
+		try {
+			if (!getConnection().isActive()) {
+				localTransaction = true;
+				beginLocalTransaction();
+			}
+			for (UpdateExpr updateExpr : updateExprs) {
 
-			Dataset activeDataset = getMergedDataset(datasetMapping.get(updateExpr));
+				Dataset activeDataset = getMergedDataset(datasetMapping.get(updateExpr));
 
-			try {
-				boolean localTransaction = isLocalTransaction();
-				if (localTransaction) {
-					beginLocalTransaction();
-				}
-
-				executor.executeUpdate(updateExpr, activeDataset, getBindings(), getIncludeInferred(),
-						getMaxExecutionTime());
-
-				if (localTransaction) {
-					commitLocalTransaction();
+				try {
+					executor.executeUpdate(updateExpr, activeDataset, getBindings(), getIncludeInferred(),
+							getMaxExecutionTime());
+				} catch (RDF4JException | IOException e) {
+					logger.warn("exception during update execution: ", e);
+					if (!updateExpr.isSilent()) {
+						throw new UpdateExecutionException(e);
+					}
 				}
 			}
-			catch (RDF4JException e) {
-				logger.warn("exception during update execution: ", e);
-				if (!updateExpr.isSilent()) {
-					throw new UpdateExecutionException(e);
-				}
+
+			if (localTransaction) {
+				commitLocalTransaction();
+				localTransaction = false;
 			}
-			catch (IOException e) {
-				logger.warn("exception during update execution: ", e);
-				if (!updateExpr.isSilent()) {
-					throw new UpdateExecutionException(e);
-				}
+		} finally {
+			if (localTransaction) {
+				rollbackLocalTransaction();
 			}
 		}
 	}
 
-	private boolean isLocalTransaction()
-		throws RepositoryException
-	{
-		return !getConnection().isActive();
-	}
-
-	private void beginLocalTransaction()
-		throws RepositoryException
-	{
+	private void beginLocalTransaction() throws RepositoryException {
 		getConnection().begin();
 	}
 
-	private void commitLocalTransaction()
-		throws RepositoryException
-	{
+	private void commitLocalTransaction() throws RepositoryException {
 		getConnection().commit();
+
+	}
+
+	private void rollbackLocalTransaction() throws RepositoryException {
+		getConnection().rollback();
 
 	}
 }

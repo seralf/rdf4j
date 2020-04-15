@@ -3,7 +3,7 @@
 SELECT ?x
 WHERE {
   BIND ("(抗真菌薬;イミダゾール系) ケトコナゾール"@ja AS ?sf)
-  SERVICE <http://localhost:18080/openrdf/repositories/endpoint1> {
+  SERVICE <http://localhost:18080/rdf4j-server/repositories/endpoint1> {
     ?x rdfs:label ?sf .
   } 
 }

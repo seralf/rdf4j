@@ -11,11 +11,11 @@ public abstract class ASTPathExprTail extends SimpleNode {
 
 	private boolean isBranch = false;
 
-	public ASTPathExprTail(int id) {
+	protected ASTPathExprTail(int id) {
 		super(id);
 	}
 
-	public ASTPathExprTail(SyntaxTreeBuilder p, int id) {
+	protected ASTPathExprTail(SyntaxTreeBuilder p, int id) {
 		super(p, id);
 	}
 
@@ -34,8 +34,7 @@ public abstract class ASTPathExprTail extends SimpleNode {
 	/**
 	 * Gets the path epxression tail following this part of the path expression, if any.
 	 * 
-	 * @return The next part of the path expression, or <tt>null</tt> if this is the last part of the path
-	 *         expression.
+	 * @return The next part of the path expression, or <tt>null</tt> if this is the last part of the path expression.
 	 */
 	public abstract ASTPathExprTail getNextTail();
 

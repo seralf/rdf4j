@@ -41,12 +41,14 @@ public class PatternIterator<S extends Statement> implements Iterator<S> {
 		this.contexts = notNull(contexts);
 	}
 
+	@Override
 	public boolean hasNext() {
 		findNextElement();
 
 		return nextElement != null;
 	}
 
+	@Override
 	public S next() {
 		findNextElement();
 
@@ -56,8 +58,7 @@ public class PatternIterator<S extends Statement> implements Iterator<S> {
 			nextElement = null;
 			nextCalled = true;
 			return result;
-		}
-		else {
+		} else {
 			throw new NoSuchElementException();
 		}
 	}
@@ -72,6 +73,7 @@ public class PatternIterator<S extends Statement> implements Iterator<S> {
 		}
 	}
 
+	@Override
 	public void remove() {
 		if (!nextCalled)
 			throw new IllegalStateException();
@@ -79,14 +81,11 @@ public class PatternIterator<S extends Statement> implements Iterator<S> {
 	}
 
 	/**
-	 * Tests whether or not the specified statement should be returned by this iterator. All objects from the
-	 * wrapped iterator pass through this method in the same order as they are coming from the wrapped
-	 * iterator.
+	 * Tests whether or not the specified statement should be returned by this iterator. All objects from the wrapped
+	 * iterator pass through this method in the same order as they are coming from the wrapped iterator.
 	 * 
-	 * @param st
-	 *        The statement to be tested.
+	 * @param st The statement to be tested.
 	 * @return <tt>true</tt> if the object should be returned, <tt>false</tt> otherwise.
-	 * @throws X
 	 */
 	protected boolean accept(S st) {
 		if (subj != null && !subj.equals(st.getSubject())) {
@@ -102,8 +101,7 @@ public class PatternIterator<S extends Statement> implements Iterator<S> {
 		if (contexts != null && contexts.length == 0) {
 			// Any context matches
 			return true;
-		}
-		else {
+		} else {
 			// Accept if one of the contexts from the pattern matches
 			for (Value context : notNull(contexts)) {
 				if (context == null && stContext == null) {

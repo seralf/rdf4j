@@ -8,8 +8,6 @@
 package org.eclipse.rdf4j.rio.ntriples;
 
 import org.eclipse.rdf4j.rio.RDFParser;
-import org.eclipse.rdf4j.rio.ntriples.AbstractNTriplesParserTest;
-import org.eclipse.rdf4j.rio.ntriples.NTriplesParser;
 
 import junit.framework.Test;
 
@@ -20,9 +18,7 @@ import junit.framework.Test;
  */
 public class NTriplesParserTest extends AbstractNTriplesParserTest {
 
-	public static Test suite()
-		throws Exception
-	{
+	public static Test suite() throws Exception {
 		return new NTriplesParserTest().createTestSuite();
 	}
 

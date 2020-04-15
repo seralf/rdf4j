@@ -15,7 +15,7 @@ import org.eclipse.rdf4j.query.algebra.helpers.QueryModelTreePrinter;
 /**
  * Base implementation of {@link QueryModelNode}.
  */
-public abstract class AbstractQueryModelNode implements QueryModelNode {
+public abstract class AbstractQueryModelNode implements QueryModelNode, GraphPatternGroupable {
 
 	/*-----------*
 	 * Variables *
@@ -25,32 +25,55 @@ public abstract class AbstractQueryModelNode implements QueryModelNode {
 
 	private QueryModelNode parent;
 
+	private boolean isGraphPatternGroup;
+
 	/*---------*
 	 * Methods *
 	 *---------*/
 
+	@Override
 	public QueryModelNode getParentNode() {
 		return parent;
 	}
 
+	@Override
 	public void setParentNode(QueryModelNode parent) {
 		this.parent = parent;
 	}
 
-	/**
-	 * Dummy implementation of {@link QueryModelNode#visitChildren} that does nothing. Subclasses should
-	 * override this method when they have child nodes.
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.rdf4j.query.algebra.GraphPatternGroupable#isGraphPatternGroup()
 	 */
-	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public boolean isGraphPatternGroup() {
+		return isGraphPatternGroup;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.rdf4j.query.algebra.GraphPatternGroupable#setGraphPatternGroup(boolean)
+	 */
+	@Override
+	public void setGraphPatternGroup(boolean isGraphPatternGroup) {
+		this.isGraphPatternGroup = isGraphPatternGroup;
 	}
 
 	/**
-	 * Default implementation of {@link QueryModelNode#replaceChildNode(QueryModelNode, QueryModelNode)} that
-	 * throws an {@link IllegalArgumentException} indicating that <tt>current</tt> is not a child node of this
-	 * node.
+	 * Dummy implementation of {@link QueryModelNode#visitChildren} that does nothing. Subclasses should override this
+	 * method when they have child nodes.
 	 */
+	@Override
+	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor) throws X {
+	}
+
+	/**
+	 * Default implementation of {@link QueryModelNode#replaceChildNode(QueryModelNode, QueryModelNode)} that throws an
+	 * {@link IllegalArgumentException} indicating that <tt>current</tt> is not a child node of this node.
+	 */
+	@Override
 	public void replaceChildNode(QueryModelNode current, QueryModelNode replacement) {
 		throw new IllegalArgumentException("Node is not a child node: " + current);
 	}
@@ -59,6 +82,7 @@ public abstract class AbstractQueryModelNode implements QueryModelNode {
 	 * Default implementation of {@link QueryModelNode#replaceWith(QueryModelNode)} that throws an
 	 * {@link IllegalArgumentException} indicating that <tt>current</tt> is not a child node of this node.
 	 */
+	@Override
 	public void replaceWith(QueryModelNode replacement) {
 		if (parent == null) {
 			throw new IllegalStateException("Node has no parent");
@@ -68,9 +92,9 @@ public abstract class AbstractQueryModelNode implements QueryModelNode {
 	}
 
 	/**
-	 * Default implementation of {@link QueryModelNode#getSignature()} that prints the name of the node's
-	 * class.
+	 * Default implementation of {@link QueryModelNode#getSignature()} that prints the name of the node's class.
 	 */
+	@Override
 	public String getSignature() {
 		return this.getClass().getSimpleName();
 	}
@@ -85,20 +109,18 @@ public abstract class AbstractQueryModelNode implements QueryModelNode {
 	@Override
 	public AbstractQueryModelNode clone() {
 		try {
-			return (AbstractQueryModelNode)super.clone();
-		}
-		catch (CloneNotSupportedException e) {
+			return (AbstractQueryModelNode) super.clone();
+		} catch (CloneNotSupportedException e) {
 			throw new RuntimeException("Query model nodes are required to be cloneable", e);
 		}
 	}
 
 	protected <T extends QueryModelNode> boolean replaceNodeInList(List<T> list, QueryModelNode current,
-			QueryModelNode replacement)
-	{
+			QueryModelNode replacement) {
 		ListIterator<T> iter = list.listIterator();
 		while (iter.hasNext()) {
 			if (iter.next() == current) {
-				iter.set((T)replacement);
+				iter.set((T) replacement);
 				replacement.setParentNode(this);
 				return true;
 			}

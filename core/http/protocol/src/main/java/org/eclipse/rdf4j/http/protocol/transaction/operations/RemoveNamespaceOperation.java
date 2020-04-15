@@ -43,16 +43,15 @@ public class RemoveNamespaceOperation implements TransactionOperation, Serializa
 		this.prefix = prefix;
 	}
 
-	public void execute(RepositoryConnection con)
-		throws RepositoryException
-	{
+	@Override
+	public void execute(RepositoryConnection con) throws RepositoryException {
 		con.removeNamespace(prefix);
 	}
 
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof RemoveNamespaceOperation) {
-			RemoveNamespaceOperation o = (RemoveNamespaceOperation)other;
+			RemoveNamespaceOperation o = (RemoveNamespaceOperation) other;
 			return ObjectUtil.nullEquals(getPrefix(), o.getPrefix());
 		}
 

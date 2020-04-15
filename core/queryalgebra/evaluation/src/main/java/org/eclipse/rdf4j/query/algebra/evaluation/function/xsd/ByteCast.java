@@ -18,7 +18,8 @@ import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.eclipse.rdf4j.query.algebra.evaluation.function.Function;
 
 /**
- * A {@link Function} that tries to cast its argument to an <tt>xsd:byte</tt> .
+ * A {@link org.eclipse.rdf4j.query.algebra.evaluation.function.Function} that tries to cast its argument to an
+ * <tt>xsd:byte</tt> .
  * 
  * @author Jeen Broekstra
  * @see XMLSchema#BYTE
@@ -37,8 +38,7 @@ public class ByteCast extends IntegerCastFunction {
 
 	@Override
 	protected Optional<Literal> createTypedLiteral(ValueFactory vf, BigInteger integerValue)
-		throws ArithmeticException
-	{
+			throws ArithmeticException {
 		return Optional.of(vf.createLiteral(integerValue.byteValueExact()));
 	}
 

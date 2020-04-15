@@ -7,9 +7,7 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.query.resultio.helpers;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,9 +27,7 @@ import org.eclipse.rdf4j.query.resultio.TupleQueryResultParser;
  * 
  * @author James Leigh
  */
-public class BackgroundTupleResult extends IteratingTupleQueryResult
-		implements Runnable, TupleQueryResultHandler
-{
+public class BackgroundTupleResult extends IteratingTupleQueryResult implements Runnable, TupleQueryResultHandler {
 
 	private final TupleQueryResultParser parser;
 
@@ -43,46 +39,32 @@ public class BackgroundTupleResult extends IteratingTupleQueryResult
 
 	private final CountDownLatch bindingNamesReady = new CountDownLatch(1);
 
+	private final CountDownLatch finishedParsing = new CountDownLatch(1);
+
 	public BackgroundTupleResult(TupleQueryResultParser parser, InputStream in) {
 		this(new QueueCursor<BindingSet>(10), parser, in);
 	}
 
-	public BackgroundTupleResult(QueueCursor<BindingSet> queue, TupleQueryResultParser parser,
-			InputStream in)
-	{
-		super(Collections.<String> emptyList(), queue);
+	public BackgroundTupleResult(QueueCursor<BindingSet> queue, TupleQueryResultParser parser, InputStream in) {
+		super(Collections.<String>emptyList(), queue);
 		this.queue = queue;
 		this.parser = parser;
 		this.in = in;
 	}
 
 	@Override
-	protected void handleClose()
-		throws QueryEvaluationException
-	{
+	protected void handleClose() throws QueryEvaluationException {
 		try {
-			try {
-				super.handleClose();
-			}
-			finally {
-				try {
-					// After checking that we ourselves cannot possibly be generating an NPE ourselves, 
-					// attempt to close the input stream we were given
-					InputStream toClose = in;
-					if (toClose != null) {
-						toClose.close();
-					}
-				}
-				catch (NullPointerException e) {
-					// Swallow NullPointerException that Apache HTTPClient is hiding behind a NotThreadSafe annotation
-				}
-			}
+			super.handleClose();
+		} finally {
+			queue.done();
 		}
-		catch (IOException e) {
-			throw new QueryEvaluationException(e);
-		}
-		finally {
-			queue.close();
+		try {
+			finishedParsing.await();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		} finally {
+			queue.checkException();
 		}
 	}
 
@@ -90,83 +72,62 @@ public class BackgroundTupleResult extends IteratingTupleQueryResult
 	public List<String> getBindingNames() {
 		try {
 			bindingNamesReady.await();
-			queue.checkException();
 			return bindingNames;
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			close();
-			throw new UndeclaredThrowableException(e);
-		}
-		catch (QueryEvaluationException e) {
-			close();
-			throw new UndeclaredThrowableException(e);
+			return Collections.emptyList();
+		} finally {
+			queue.checkException();
 		}
 	}
 
 	@Override
 	public void run() {
 		try {
-			parser.setQueryResultHandler(this);
-			parser.parseQueryResult(in);
-		}
-		catch (QueryResultHandlerException e) {
-			// parsing cancelled or interrupted
-			close();
-		}
-		catch (Exception e) {
+			try {
+				parser.setQueryResultHandler(this);
+				parser.parseQueryResult(in);
+			} finally {
+				in.close();
+			}
+		} catch (Exception e) {
 			queue.toss(e);
-			close();
-		}
-		finally {
+		} finally {
 			queue.done();
 			bindingNamesReady.countDown();
+			finishedParsing.countDown();
 		}
 	}
 
 	@Override
-	public void startQueryResult(List<String> bindingNames)
-		throws TupleQueryResultHandlerException
-	{
+	public void startQueryResult(List<String> bindingNames) throws TupleQueryResultHandlerException {
 		this.bindingNames.addAll(bindingNames);
 		bindingNamesReady.countDown();
 	}
 
 	@Override
-	public void handleSolution(BindingSet bindingSet)
-		throws TupleQueryResultHandlerException
-	{
+	public void handleSolution(BindingSet bindingSet) throws TupleQueryResultHandlerException {
 		try {
 			queue.put(bindingSet);
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			close();
-			throw new TupleQueryResultHandlerException(e);
-		}
-		if (isClosed()) {
-			throw new TupleQueryResultHandlerException("Result closed");
+			queue.toss(e);
+			queue.done();
 		}
 	}
 
 	@Override
-	public void endQueryResult()
-		throws TupleQueryResultHandlerException
-	{
+	public void endQueryResult() throws TupleQueryResultHandlerException {
 		// no-op
 	}
 
 	@Override
-	public void handleBoolean(boolean value)
-		throws QueryResultHandlerException
-	{
+	public void handleBoolean(boolean value) throws QueryResultHandlerException {
 		throw new UnsupportedOperationException("Cannot handle boolean results");
 	}
 
 	@Override
-	public void handleLinks(List<String> linkUrls)
-		throws QueryResultHandlerException
-	{
+	public void handleLinks(List<String> linkUrls) throws QueryResultHandlerException {
 		// ignore
 	}
 }

@@ -11,7 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -35,16 +35,12 @@ public class BackgroundGraphResultHangTest {
 		}
 
 		@Override
-		public void parse(InputStream in, String baseURI)
-			throws IOException, RDFParseException, RDFHandlerException
-		{
+		public void parse(InputStream in, String baseURI) throws IOException, RDFParseException, RDFHandlerException {
 			throw new RDFParseException("invalid RDF ");
 		}
 
 		@Override
-		public void parse(Reader reader, String baseURI)
-			throws IOException, RDFParseException, RDFHandlerException
-		{
+		public void parse(Reader reader, String baseURI) throws IOException, RDFParseException, RDFHandlerException {
 			throw new RDFParseException("invalid RDF ");
 		}
 
@@ -54,13 +50,11 @@ public class BackgroundGraphResultHangTest {
 	public ExpectedException thrown = ExpectedException.none();
 
 	@Test(timeout = 1000)
-	public void testBGRHang()
-		throws Exception
-	{
+	public void testBGRHang() throws Exception {
 		String data = "@not-rdf";
 
 		BackgroundGraphResult gRes = new BackgroundGraphResult(new DummyParser(),
-				new ByteArrayInputStream(data.getBytes(Charset.forName("UTF-8"))), Charset.forName("UTF-8"),
+				new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8,
 				"http://base.org");
 
 		thrown.expect(QueryEvaluationException.class);

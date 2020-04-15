@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.eclipse.rdf4j.common.io.IOUtil;
 import org.eclipse.rdf4j.query.QueryResultHandlerException;
@@ -47,10 +47,8 @@ public class BooleanTextParser extends AbstractQueryResultParser implements Bool
 	}
 
 	@Override
-	public synchronized boolean parse(InputStream in)
-		throws IOException, QueryResultParseException
-	{
-		Reader reader = new InputStreamReader(in, Charset.forName("US-ASCII"));
+	public synchronized boolean parse(InputStream in) throws IOException, QueryResultParseException {
+		Reader reader = new InputStreamReader(in, StandardCharsets.US_ASCII);
 		String value = IOUtil.readString(reader, 16);
 		value = value.trim();
 
@@ -58,23 +56,19 @@ public class BooleanTextParser extends AbstractQueryResultParser implements Bool
 
 		if (value.equalsIgnoreCase("true")) {
 			result = true;
-		}
-		else if (value.equalsIgnoreCase("false")) {
+		} else if (value.equalsIgnoreCase("false")) {
 			result = false;
-		}
-		else {
+		} else {
 			throw new QueryResultParseException("Invalid value: " + value);
 		}
 
 		if (this.handler != null) {
 			try {
 				this.handler.handleBoolean(result);
-			}
-			catch (QueryResultHandlerException e) {
+			} catch (QueryResultHandlerException e) {
 				if (e.getCause() != null && e.getCause() instanceof IOException) {
-					throw (IOException)e.getCause();
-				}
-				else {
+					throw (IOException) e.getCause();
+				} else {
 					throw new QueryResultParseException("Found an issue with the query result handler", e);
 				}
 			}
@@ -90,8 +84,7 @@ public class BooleanTextParser extends AbstractQueryResultParser implements Bool
 
 	@Override
 	public void parseQueryResult(InputStream in)
-		throws IOException, QueryResultParseException, QueryResultHandlerException
-	{
+			throws IOException, QueryResultParseException, QueryResultHandlerException {
 		parse(in);
 	}
 }

@@ -32,30 +32,24 @@ public class ListBindingSet extends AbstractBindingSet {
 	private final List<? extends Value> values;
 
 	/**
-	 * Creates a new List-based BindingSet containing the supplied bindings.
-	 * <em>The supplied list of binding names is assumed to be constant</em>; care should be taken that the
-	 * contents of this list doesn't change after supplying it to this solution. The number of supplied values
-	 * must be equal to the number of the binding names.
+	 * Creates a new List-based BindingSet containing the supplied bindings. <em>The supplied list of binding names is
+	 * assumed to be constant</em>; care should be taken that the contents of this list doesn't change after supplying
+	 * it to this solution. The number of supplied values must be equal to the number of the binding names.
 	 * 
-	 * @param names
-	 *        The binding names.
-	 * @param values
-	 *        The binding values.
+	 * @param names  The binding names.
+	 * @param values The binding values.
 	 */
 	public ListBindingSet(List<String> names, Value... values) {
 		this(names, Arrays.asList(values));
 	}
 
 	/**
-	 * Creates a new List-based BindingSet containing the supplied bindings.
-	 * <em>The supplied lists are assumed to be constant</em>; care should be taken that the contents of these
-	 * lists don't change after supplying them to this solution. The number of supplied values must be equal
-	 * to the number of the binding names.
+	 * Creates a new List-based BindingSet containing the supplied bindings. <em>The supplied lists are assumed to be
+	 * constant</em>; care should be taken that the contents of these lists don't change after supplying them to this
+	 * solution. The number of supplied values must be equal to the number of the binding names.
 	 * 
-	 * @param bindingNames
-	 *        The binding names.
-	 * @param values
-	 *        The binding values.
+	 * @param bindingNames The binding names.
+	 * @param values       The binding values.
 	 */
 	public ListBindingSet(List<String> bindingNames, List<? extends Value> values) {
 		assert bindingNames.size() == values.size() : "number of binding names and values not equal";
@@ -64,10 +58,12 @@ public class ListBindingSet extends AbstractBindingSet {
 		this.values = values;
 	}
 
+	@Override
 	public Set<String> getBindingNames() {
-		return new LinkedHashSet<String>(bindingNames);
+		return new LinkedHashSet<>(bindingNames);
 	}
 
+	@Override
 	public Value getValue(String bindingName) {
 		int idx = bindingNames.indexOf(bindingName);
 
@@ -78,6 +74,7 @@ public class ListBindingSet extends AbstractBindingSet {
 		return null;
 	}
 
+	@Override
 	public Binding getBinding(String bindingName) {
 		Value value = getValue(bindingName);
 
@@ -88,14 +85,17 @@ public class ListBindingSet extends AbstractBindingSet {
 		return null;
 	}
 
+	@Override
 	public boolean hasBinding(String bindingName) {
 		return getValue(bindingName) != null;
 	}
 
+	@Override
 	public Iterator<Binding> iterator() {
 		return new ListBindingSetIterator();
 	}
 
+	@Override
 	public int size() {
 		int size = 0;
 
@@ -128,16 +128,19 @@ public class ListBindingSet extends AbstractBindingSet {
 			}
 		}
 
+		@Override
 		public boolean hasNext() {
 			return index < values.size();
 		}
 
+		@Override
 		public Binding next() {
 			Binding result = new SimpleBinding(bindingNames.get(index), values.get(index));
 			findNextElement();
 			return result;
 		}
 
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}

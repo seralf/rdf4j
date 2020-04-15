@@ -12,7 +12,7 @@ import org.eclipse.rdf4j.query.parser.ParsedQuery;
 
 /**
  * <p>
- * Interface for Sesame-based query renderers
+ * Interface for RDF4J-based query renderers
  * </p>
  * 
  * @author Michael Grove
@@ -29,12 +29,9 @@ public interface QueryRenderer {
 	/**
 	 * Render the query object to a string in the language supported by this renderer
 	 * 
-	 * @param theQuery
-	 *        the query to render
+	 * @param theQuery the query to render
 	 * @return the rendered query
-	 * @throws Exception
-	 *         if there is an error while rendering
+	 * @throws Exception if there is an error while rendering
 	 */
-	public String render(ParsedQuery theQuery)
-		throws Exception;
+	public String render(ParsedQuery theQuery) throws Exception;
 }

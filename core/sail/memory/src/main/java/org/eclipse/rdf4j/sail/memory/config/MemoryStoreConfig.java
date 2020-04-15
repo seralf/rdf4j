@@ -7,6 +7,7 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.memory.config;
 
+import static org.eclipse.rdf4j.sail.memory.config.MemoryStoreSchema.NAMESPACE;
 import static org.eclipse.rdf4j.sail.memory.config.MemoryStoreSchema.PERSIST;
 import static org.eclipse.rdf4j.sail.memory.config.MemoryStoreSchema.SYNC_DELAY;
 
@@ -62,6 +63,7 @@ public class MemoryStoreConfig extends BaseSailConfig {
 	public Resource export(Model graph) {
 		Resource implNode = super.export(graph);
 
+		graph.setNamespace("ms", NAMESPACE);
 		if (persist) {
 			graph.add(implNode, PERSIST, BooleanLiteral.TRUE);
 		}
@@ -74,9 +76,7 @@ public class MemoryStoreConfig extends BaseSailConfig {
 	}
 
 	@Override
-	public void parse(Model graph, Resource implNode)
-		throws SailConfigException
-	{
+	public void parse(Model graph, Resource implNode) throws SailConfigException {
 		super.parse(graph, implNode);
 
 		try {
@@ -84,8 +84,7 @@ public class MemoryStoreConfig extends BaseSailConfig {
 			Models.objectLiteral(graph.filter(implNode, PERSIST, null)).ifPresent(persistValue -> {
 				try {
 					setPersist((persistValue).booleanValue());
-				}
-				catch (IllegalArgumentException e) {
+				} catch (IllegalArgumentException e) {
 					throw new SailConfigException(
 							"Boolean value required for " + PERSIST + " property, found " + persistValue);
 				}
@@ -94,14 +93,12 @@ public class MemoryStoreConfig extends BaseSailConfig {
 			Models.objectLiteral(graph.filter(implNode, SYNC_DELAY, null)).ifPresent(syncDelayValue -> {
 				try {
 					setSyncDelay((syncDelayValue).longValue());
-				}
-				catch (NumberFormatException e) {
-					throw new SailConfigException("Long integer value required for " + SYNC_DELAY
-							+ " property, found " + syncDelayValue);
+				} catch (NumberFormatException e) {
+					throw new SailConfigException(
+							"Long integer value required for " + SYNC_DELAY + " property, found " + syncDelayValue);
 				}
 			});
-		}
-		catch (ModelException e) {
+		} catch (ModelException e) {
 			throw new SailConfigException(e.getMessage(), e);
 		}
 	}

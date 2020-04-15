@@ -22,9 +22,8 @@ public class Sum extends AbstractAggregateOperator {
 		super(arg, distinct);
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -40,6 +39,6 @@ public class Sum extends AbstractAggregateOperator {
 
 	@Override
 	public Sum clone() {
-		return (Sum)super.clone();
+		return (Sum) super.clone();
 	}
 }

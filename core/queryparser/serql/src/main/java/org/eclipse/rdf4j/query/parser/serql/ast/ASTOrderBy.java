@@ -20,13 +20,11 @@ public class ASTOrderBy extends SimpleNode {
 	}
 
 	@Override
-	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data)
-		throws VisitorException
-	{
+	public Object jjtAccept(SyntaxTreeBuilderVisitor visitor, Object data) throws VisitorException {
 		return visitor.visit(this, data);
 	}
 
 	public List<ASTOrderExpr> getOrderExprList() {
-		return new CastingList<ASTOrderExpr>(children);
+		return new CastingList<>(children);
 	}
 }

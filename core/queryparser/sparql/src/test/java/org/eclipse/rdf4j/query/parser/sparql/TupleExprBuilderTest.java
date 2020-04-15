@@ -14,10 +14,12 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.impl.ValueFactoryImpl;
 import org.eclipse.rdf4j.query.algebra.Order;
 import org.eclipse.rdf4j.query.algebra.Service;
 import org.eclipse.rdf4j.query.algebra.SingletonSet;
+import org.eclipse.rdf4j.query.algebra.Slice;
 import org.eclipse.rdf4j.query.algebra.TupleExpr;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ASTQueryContainer;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ASTServiceGraphPattern;
@@ -39,18 +41,14 @@ public class TupleExprBuilderTest {
 	 * @throws java.lang.Exception
 	 */
 	@Before
-	public void setUp()
-		throws Exception
-	{
+	public void setUp() throws Exception {
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@After
-	public void tearDown()
-		throws Exception
-	{
+	public void tearDown() throws Exception {
 	}
 
 	@Test
@@ -62,17 +60,32 @@ public class TupleExprBuilderTest {
 			ASTQueryContainer qc = SyntaxTreeBuilder.parseQuery(query);
 			TupleExpr result = builder.visit(qc, null);
 			assertTrue(result instanceof Order);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			fail("should parse ask query with solution modifiers");
 		}
 
 	}
 
+	@Test
+	public void testNegatedPathWithFixedObject() {
+		String query = "ASK WHERE { ?s !<http://example.org/p> <http://example.org/o> . }";
+
+		try {
+			TupleExprBuilder builder = new TupleExprBuilder(SimpleValueFactory.getInstance());
+			ASTQueryContainer qc = SyntaxTreeBuilder.parseQuery(query);
+			TupleExpr result = builder.visit(qc, null);
+
+			assertTrue(result instanceof Slice);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("should parse ask query with negated property path");
+		}
+	}
+
 	/**
-	 * Verifies that a missing close brace does not cause an endless loop. Timeout is set to avoid test itself
-	 * endlessly looping. See SES-2389.
+	 * Verifies that a missing close brace does not cause an endless loop. Timeout is set to avoid test itself endlessly
+	 * looping. See SES-2389.
 	 */
 	@Test(timeout = 1000)
 	public void testMissingCloseBrace() {
@@ -80,16 +93,13 @@ public class TupleExprBuilderTest {
 		try {
 			final ASTUpdateSequence us = SyntaxTreeBuilder.parseUpdateSequence(query);
 			fail("should result in parse error");
-		}
-		catch (ParseException e) {
+		} catch (ParseException e) {
 			// fall through, expected
 		}
 	}
 
 	@Test
-	public void testServiceGraphPatternStringDetection1()
-		throws TokenMgrError, ParseException, VisitorException
-	{
+	public void testServiceGraphPatternStringDetection1() throws TokenMgrError, ParseException, VisitorException {
 
 		String servicePattern = "SERVICE <foo:bar> { ?x <foo:baz> ?y }";
 
@@ -114,9 +124,7 @@ public class TupleExprBuilderTest {
 	}
 
 	@Test
-	public void testServiceGraphPatternStringDetection2()
-		throws TokenMgrError, ParseException, VisitorException
-	{
+	public void testServiceGraphPatternStringDetection2() throws TokenMgrError, ParseException, VisitorException {
 
 		String servicePattern = "SERVICE <foo:bar> \r\n { ?x <foo:baz> ?y. \r\n \r\n }";
 
@@ -141,9 +149,7 @@ public class TupleExprBuilderTest {
 	}
 
 	@Test
-	public void testServiceGraphPatternStringDetection3()
-		throws TokenMgrError, ParseException, VisitorException
-	{
+	public void testServiceGraphPatternStringDetection3() throws TokenMgrError, ParseException, VisitorException {
 
 		String servicePattern1 = "SERVICE <foo:bar> \n { ?x <foo:baz> ?y. }";
 		String servicePattern2 = "SERVICE <foo:bar2> \n { ?x <foo:baz> ?y. }";
@@ -168,9 +174,7 @@ public class TupleExprBuilderTest {
 	}
 
 	@Test
-	public void testServiceGraphPatternStringDetection4()
-		throws TokenMgrError, ParseException, VisitorException
-	{
+	public void testServiceGraphPatternStringDetection4() throws TokenMgrError, ParseException, VisitorException {
 
 		String servicePattern1 = "SERVICE <http://localhost:18080/openrdf/repositories/endpoint1> {  ?s ?p ?o1 . "
 				+ "OPTIONAL {	SERVICE SILENT <http://invalid.endpoint.org/sparql> { ?s ?p2 ?o2 } } }";
@@ -194,9 +198,7 @@ public class TupleExprBuilderTest {
 	}
 
 	@Test
-	public void testServiceGraphPatternChopping()
-		throws Exception
-	{
+	public void testServiceGraphPatternChopping() throws Exception {
 
 		// just for construction
 		Service service = new Service(null, new SingletonSet(), "", null, null, false);
@@ -211,12 +213,10 @@ public class TupleExprBuilderTest {
 
 	private class ServiceNodeFinder extends AbstractASTVisitor {
 
-		private List<String> graphPatterns = new ArrayList<String>();
+		private List<String> graphPatterns = new ArrayList<>();
 
 		@Override
-		public Object visit(ASTServiceGraphPattern node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTServiceGraphPattern node, Object data) throws VisitorException {
 			graphPatterns.add(node.getPatternString());
 			return super.visit(node, data);
 		}

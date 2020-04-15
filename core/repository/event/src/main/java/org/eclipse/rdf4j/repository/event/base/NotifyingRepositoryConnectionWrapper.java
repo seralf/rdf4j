@@ -11,7 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Namespace;
 import org.eclipse.rdf4j.model.Resource;
@@ -32,15 +35,14 @@ import org.eclipse.rdf4j.repository.event.NotifyingRepositoryConnection;
 import org.eclipse.rdf4j.repository.event.RepositoryConnectionListener;
 
 /**
- * This broadcaster is used by the RepositoryBroadcaster to wrap the delegate repository connection. Listeners
- * are notified of changes after they have occurred.
- * 
+ * This broadcaster is used by the RepositoryBroadcaster to wrap the delegate repository connection. Listeners are
+ * notified of changes after they have occurred.
+ *
  * @author James Leigh
  * @author Herko ter Horst
  */
 public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWrapper
-		implements NotifyingRepositoryConnection
-{
+		implements NotifyingRepositoryConnection {
 
 	/*-----------*
 	 * Variables *
@@ -50,7 +52,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 
 	private boolean reportDeltas = false;
 
-	private Set<RepositoryConnectionListener> listeners = new CopyOnWriteArraySet<RepositoryConnectionListener>();
+	private Set<RepositoryConnectionListener> listeners = new CopyOnWriteArraySet<>();
 
 	/*--------------*
 	 * Constructors *
@@ -61,8 +63,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	}
 
 	public NotifyingRepositoryConnectionWrapper(Repository repository, RepositoryConnection connection,
-			boolean reportDeltas)
-	{
+			boolean reportDeltas) {
 		this(repository, connection);
 		setReportDeltas(reportDeltas);
 	}
@@ -80,9 +81,10 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	}
 
 	/**
-	 * Registers a <tt>RepositoryConnectionListener</tt> that will receive notifications of operations that
-	 * are performed on this connection.
+	 * Registers a <tt>RepositoryConnectionListener</tt> that will receive notifications of operations that are
+	 * performed on this connection.
 	 */
+	@Override
 	public void addRepositoryConnectionListener(RepositoryConnectionListener listener) {
 		listeners.add(listener);
 		activated = true;
@@ -91,6 +93,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	/**
 	 * Removes a registered <tt>RepositoryConnectionListener</tt> from this connection.
 	 */
+	@Override
 	public void removeRepositoryConnectionListener(RepositoryConnectionListener listener) {
 		listeners.remove(listener);
 		activated = !listeners.isEmpty();
@@ -108,8 +111,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 
 	@Override
 	public void addWithoutCommit(Resource subject, IRI predicate, Value object, Resource... contexts)
-		throws RepositoryException
-	{
+			throws RepositoryException {
 		boolean reportEvent = activated;
 
 		if (reportEvent && reportDeltas()) {
@@ -127,27 +129,21 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	}
 
 	@Override
-	public void clear(Resource... contexts)
-		throws RepositoryException
-	{
+	public void clear(Resource... contexts) throws RepositoryException {
 		if (activated && reportDeltas()) {
 			removeWithoutCommit(null, null, null, contexts);
-		}
-		else if (activated) {
+		} else if (activated) {
 			getDelegate().clear(contexts);
 			for (RepositoryConnectionListener listener : listeners) {
 				listener.clear(getDelegate(), contexts);
 			}
-		}
-		else {
+		} else {
 			getDelegate().clear(contexts);
 		}
 	}
 
 	@Override
-	public void close()
-		throws RepositoryException
-	{
+	public void close() throws RepositoryException {
 		getDelegate().close();
 
 		if (activated) {
@@ -158,9 +154,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	}
 
 	@Override
-	public void commit()
-		throws RepositoryException
-	{
+	public void commit() throws RepositoryException {
 		getDelegate().commit();
 
 		if (activated) {
@@ -171,21 +165,14 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	}
 
 	@Override
-	public void removeWithoutCommit(Resource subj, IRI pred, Value obj, Resource... ctx)
-		throws RepositoryException
-	{
+	public void removeWithoutCommit(Resource subj, IRI pred, Value obj, Resource... ctx) throws RepositoryException {
 		if (activated && reportDeltas()) {
-			RepositoryResult<Statement> stmts;
-			stmts = getDelegate().getStatements(subj, pred, obj, false, ctx);
-			List<Statement> list = new ArrayList<Statement>();
-			try {
-				while (stmts.hasNext()) {
-					list.add(stmts.next());
-				}
+
+			List<Statement> list;
+			try (Stream<Statement> stream = getDelegate().getStatements(subj, pred, obj, false, ctx).stream()) {
+				list = stream.collect(Collectors.toList());
 			}
-			finally {
-				stmts.close();
-			}
+
 			getDelegate().remove(subj, pred, obj, ctx);
 			for (RepositoryConnectionListener listener : listeners) {
 				for (Statement stmt : list) {
@@ -196,22 +183,18 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 					listener.remove(getDelegate(), s, p, o, c);
 				}
 			}
-		}
-		else if (activated) {
+		} else if (activated) {
 			getDelegate().remove(subj, pred, obj, ctx);
 			for (RepositoryConnectionListener listener : listeners) {
 				listener.remove(getDelegate(), subj, pred, obj, ctx);
 			}
-		}
-		else {
+		} else {
 			getDelegate().remove(subj, pred, obj, ctx);
 		}
 	}
 
 	@Override
-	public void removeNamespace(String prefix)
-		throws RepositoryException
-	{
+	public void removeNamespace(String prefix) throws RepositoryException {
 		getDelegate().removeNamespace(prefix);
 
 		if (activated) {
@@ -222,42 +205,30 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	}
 
 	@Override
-	public void clearNamespaces()
-		throws RepositoryException
-	{
+	public void clearNamespaces() throws RepositoryException {
 		if (activated && reportDeltas()) {
-			RepositoryResult<Namespace> namespaces;
-			namespaces = getDelegate().getNamespaces();
-			List<String> prefix = new ArrayList<String>();
-			try {
-				while (namespaces.hasNext()) {
-					Namespace ns = namespaces.next();
-					prefix.add(ns.getPrefix());
-				}
+
+			List<String> prefix;
+			try (Stream<Namespace> stream = getDelegate().getNamespaces().stream()) {
+				prefix = stream.map(Namespace::getPrefix).collect(Collectors.toList());
 			}
-			finally {
-				namespaces.close();
-			}
+
 			getDelegate().clearNamespaces();
 			for (String p : prefix) {
 				removeNamespace(p);
 			}
-		}
-		else if (activated) {
+		} else if (activated) {
 			getDelegate().clearNamespaces();
 			for (RepositoryConnectionListener listener : listeners) {
 				listener.clearNamespaces(getDelegate());
 			}
-		}
-		else {
+		} else {
 			getDelegate().clearNamespaces();
 		}
 	}
 
 	@Override
-	public void begin()
-		throws RepositoryException
-	{
+	public void begin() throws RepositoryException {
 		getDelegate().begin();
 
 		if (activated) {
@@ -268,9 +239,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	}
 
 	@Override
-	public void rollback()
-		throws RepositoryException
-	{
+	public void rollback() throws RepositoryException {
 		getDelegate().rollback();
 
 		if (activated) {
@@ -282,9 +251,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 
 	@Override
 	@Deprecated
-	public void setAutoCommit(boolean autoCommit)
-		throws RepositoryException
-	{
+	public void setAutoCommit(boolean autoCommit) throws RepositoryException {
 		boolean wasAutoCommit = isAutoCommit();
 		getDelegate().setAutoCommit(autoCommit);
 
@@ -301,9 +268,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 	}
 
 	@Override
-	public void setNamespace(String prefix, String name)
-		throws RepositoryException
-	{
+	public void setNamespace(String prefix, String name) throws RepositoryException {
 		getDelegate().setNamespace(prefix, name);
 
 		if (activated) {
@@ -315,8 +280,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 
 	@Override
 	public Update prepareUpdate(final QueryLanguage ql, final String update, final String baseURI)
-		throws MalformedQueryException, RepositoryException
-	{
+			throws MalformedQueryException, RepositoryException {
 		if (activated) {
 			return new Update() {
 
@@ -324,9 +288,8 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 
 				private final Update delegate = conn.prepareUpdate(ql, update, baseURI);
 
-				public void execute()
-					throws UpdateExecutionException
-				{
+				@Override
+				public void execute() throws UpdateExecutionException {
 					delegate.execute();
 					if (activated) {
 						for (RepositoryConnectionListener listener : listeners) {
@@ -335,34 +298,42 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 					}
 				}
 
+				@Override
 				public void setBinding(String name, Value value) {
 					delegate.setBinding(name, value);
 				}
 
+				@Override
 				public void removeBinding(String name) {
 					delegate.removeBinding(name);
 				}
 
+				@Override
 				public void clearBindings() {
 					delegate.clearBindings();
 				}
 
+				@Override
 				public BindingSet getBindings() {
 					return delegate.getBindings();
 				}
 
+				@Override
 				public void setDataset(Dataset dataset) {
 					delegate.setDataset(dataset);
 				}
 
+				@Override
 				public Dataset getDataset() {
 					return delegate.getDataset();
 				}
 
+				@Override
 				public void setIncludeInferred(boolean includeInferred) {
 					delegate.setIncludeInferred(includeInferred);
 				}
 
+				@Override
 				public boolean getIncludeInferred() {
 					return delegate.getIncludeInferred();
 				}
@@ -377,8 +348,7 @@ public class NotifyingRepositoryConnectionWrapper extends RepositoryConnectionWr
 					return delegate.getMaxExecutionTime();
 				}
 			};
-		}
-		else {
+		} else {
 			return getDelegate().prepareUpdate(ql, update, baseURI);
 		}
 	}

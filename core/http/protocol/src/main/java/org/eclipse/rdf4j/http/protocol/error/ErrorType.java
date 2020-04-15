@@ -25,6 +25,8 @@ public class ErrorType {
 
 	public static final ErrorType UNSUPPORTED_FILE_FORMAT = register("UNSUPPORTED FILE FORMAT");
 
+	public static final ErrorType REPOSITORY_EXISTS = register("REPOSITORY EXISTS");
+
 	protected static ErrorType register(String label) {
 		synchronized (registry) {
 			ErrorType errorType = registry.get(label);
@@ -60,7 +62,7 @@ public class ErrorType {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof ErrorType) {
-			return ((ErrorType)other).getLabel().equals(this.getLabel());
+			return ((ErrorType) other).getLabel().equals(this.getLabel());
 		}
 
 		return false;

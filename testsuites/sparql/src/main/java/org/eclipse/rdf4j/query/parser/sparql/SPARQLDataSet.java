@@ -12,7 +12,7 @@ import java.util.Set;
 
 public class SPARQLDataSet {
 
-	private HashMap<String, String> namedGraphs = new HashMap<String, String>();
+	private HashMap<String, String> namedGraphs = new HashMap<>();
 
 	private String defaultGraph;
 

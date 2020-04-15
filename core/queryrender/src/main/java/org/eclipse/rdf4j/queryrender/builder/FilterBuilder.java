@@ -27,7 +27,9 @@ import org.eclipse.rdf4j.query.parser.ParsedQuery;
  * </p>
  * 
  * @author Michael Grove
+ * @deprecated use {@link org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder} instead.
  */
+@Deprecated
 public class FilterBuilder<T extends ParsedQuery, E extends SupportsGroups> {
 
 	// TODO: merge this somehow with ValueExprFactory
@@ -39,7 +41,7 @@ public class FilterBuilder<T extends ParsedQuery, E extends SupportsGroups> {
 	}
 
 	public GroupBuilder<T, E> filter(ValueExpr theExpr) {
-		((BasicGroup)mGroup.getGroup()).addFilter(theExpr);
+		((BasicGroup) mGroup.getGroup()).addFilter(theExpr);
 
 		return mGroup;
 	}

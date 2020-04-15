@@ -42,8 +42,7 @@ public class TestConfigTemplate {
 		String value = "' '' ''' ''''";
 		assertEquals(ConfigTemplate.escapeMultilineQuotes("'''", value), "' '' \\'\\'\\' \\'\\'\\''");
 		value = "\" \"\" \"\"\" \"\"\"\"";
-		assertEquals(ConfigTemplate.escapeMultilineQuotes("\"\"\"", value),
-				"\" \"\" \\\"\\\"\\\" \\\"\\\"\\\"\"");
+		assertEquals(ConfigTemplate.escapeMultilineQuotes("\"\"\"", value), "\" \"\" \\\"\\\"\\\" \\\"\\\"\\\"\"");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -54,7 +53,7 @@ public class TestConfigTemplate {
 	@Test
 	public final void testSimpleCharacters() {
 		ConfigTemplate temp = new ConfigTemplate("{%value%}");
-		Map<String, String> map = new LinkedHashMap<String, String>();
+		Map<String, String> map = new LinkedHashMap<>();
 		map.put("value", "sob");
 		assertEquals("sob", temp.render(map));
 	}
@@ -62,7 +61,7 @@ public class TestConfigTemplate {
 	@Test
 	public final void testSpecialCharacters() {
 		ConfigTemplate temp = new ConfigTemplate("{%value%}");
-		Map<String, String> map = new LinkedHashMap<String, String>();
+		Map<String, String> map = new LinkedHashMap<>();
 		map.put("value", "$0b");
 		assertEquals("$0b", temp.render(map));
 	}

@@ -23,7 +23,6 @@ import java.util.Properties;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleLiteral;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.BindingSet;
@@ -49,8 +48,6 @@ public abstract class AbstractLuceneSailIndexedPropertiesTest {
 	protected LuceneSail sail;
 
 	protected Repository repository;
-
-	protected RepositoryConnection connection;
 
 	public static final IRI SUBJECT_1 = vf.createIRI("urn:subject1");
 
@@ -79,9 +76,7 @@ public abstract class AbstractLuceneSailIndexedPropertiesTest {
 	protected abstract void configure(LuceneSail sail);
 
 	@Before
-	public void setUp()
-		throws Exception
-	{
+	public void setUp() throws Exception {
 		// setup a LuceneSail
 		MemoryStore memoryStore = new MemoryStore();
 		// enable lock tracking
@@ -102,124 +97,112 @@ public abstract class AbstractLuceneSailIndexedPropertiesTest {
 		repository.initialize();
 
 		// add some statements to it
-		connection = repository.getConnection();
-		connection.begin();
-		connection.add(SUBJECT_1, RDFSLABEL, vf.createLiteral("the first resource"));
-		connection.add(SUBJECT_1, RDFSCOMMENT, vf.createLiteral(
-				"Groucho Marx is going to cut away the first part of the first party of the contract."));
-		connection.add(SUBJECT_1, FOAFNAME, vf.createLiteral("groucho and harpo"));
+		try (RepositoryConnection connection = repository.getConnection()) {
+			connection.begin();
+			connection.add(SUBJECT_1, RDFSLABEL, vf.createLiteral("the first resource"));
+			connection.add(SUBJECT_1, RDFSCOMMENT, vf.createLiteral(
+					"Groucho Marx is going to cut away the first part of the first party of the contract."));
+			connection.add(SUBJECT_1, FOAFNAME, vf.createLiteral("groucho and harpo"));
 
-		connection.add(SUBJECT_2, FOAFNAME, vf.createLiteral("the second resource"));
-		connection.add(SUBJECT_2, RDFSCOMMENT,
-				vf.createLiteral("in the night at the opera, groucho is in a cabin on a ship."));
+			connection.add(SUBJECT_2, FOAFNAME, vf.createLiteral("the second resource"));
+			connection.add(SUBJECT_2, RDFSCOMMENT,
+					vf.createLiteral("in the night at the opera, groucho is in a cabin on a ship."));
 
-		connection.add(SUBJECT_3, RDFSLABEL, vf.createLiteral("the third resource"));
-		connection.add(SUBJECT_3, RDFSCOMMENT,
-				vf.createLiteral("a not well known fact, groucho marx was not a smoker"));
-		// this should not be indexed
-		connection.add(SUBJECT_3, FOAFPLAN, vf.createLiteral("groucho did not smoke cigars nor cigarillos"));
-		connection.commit();
+			connection.add(SUBJECT_3, RDFSLABEL, vf.createLiteral("the third resource"));
+			connection.add(SUBJECT_3, RDFSCOMMENT,
+					vf.createLiteral("a not well known fact, groucho marx was not a smoker"));
+			// this should not be indexed
+			connection.add(SUBJECT_3, FOAFPLAN, vf.createLiteral("groucho did not smoke cigars nor cigarillos"));
+			connection.commit();
+		}
 	}
 
 	@After
-	public void tearDown()
-		throws IOException, RepositoryException
-	{
-		try {
-			if (connection != null) {
-				connection.close();
-			}
-		}
-		finally {
-			if (repository != null) {
-				repository.shutDown();
-			}
+	public void tearDown() throws IOException, RepositoryException {
+		if (repository != null) {
+			repository.shutDown();
 		}
 	}
 
 	@Test
-	public void testTriplesStored()
-		throws Exception
-	{
+	public void testTriplesStored() throws Exception {
 		// are the triples stored in the underlying sail?
+		try (RepositoryConnection connection = repository.getConnection()) {
+			assertTrue(connection.hasStatement(SUBJECT_1, RDFSLABEL, vf.createLiteral("the first resource"), false));
+			assertTrue(connection.hasStatement(SUBJECT_1, RDFSCOMMENT,
+					vf.createLiteral(
+							"Groucho Marx is going to cut away the first part of the first party of the contract."),
+					false));
+			assertTrue(connection.hasStatement(SUBJECT_1, FOAFNAME, vf.createLiteral("groucho and harpo"), false));
 
-		assertTrue(
-				connection.hasStatement(SUBJECT_1, RDFSLABEL, vf.createLiteral("the first resource"), false));
-		assertTrue(connection.hasStatement(SUBJECT_1, RDFSCOMMENT,
-				vf.createLiteral(
-						"Groucho Marx is going to cut away the first part of the first party of the contract."),
-				false));
-		assertTrue(
-				connection.hasStatement(SUBJECT_1, FOAFNAME, vf.createLiteral("groucho and harpo"), false));
+			assertTrue(connection.hasStatement(SUBJECT_2, FOAFNAME, vf.createLiteral("the second resource"), false));
+			assertTrue(connection.hasStatement(SUBJECT_2, RDFSCOMMENT,
+					vf.createLiteral("in the night at the opera, groucho is in a cabin on a ship."), false));
 
-		assertTrue(
-				connection.hasStatement(SUBJECT_2, FOAFNAME, vf.createLiteral("the second resource"), false));
-		assertTrue(connection.hasStatement(SUBJECT_2, RDFSCOMMENT,
-				vf.createLiteral("in the night at the opera, groucho is in a cabin on a ship."), false));
-
-		assertTrue(
-				connection.hasStatement(SUBJECT_3, RDFSLABEL, vf.createLiteral("the third resource"), false));
-		assertTrue(connection.hasStatement(SUBJECT_3, RDFSCOMMENT,
-				vf.createLiteral("a not well known fact, groucho marx was not a smoker"), false));
-		// this should not be indexed
-		assertTrue(connection.hasStatement(SUBJECT_3, FOAFPLAN,
-				vf.createLiteral("groucho did not smoke cigars nor cigarillos"), false));
+			assertTrue(connection.hasStatement(SUBJECT_3, RDFSLABEL, vf.createLiteral("the third resource"), false));
+			assertTrue(connection.hasStatement(SUBJECT_3, RDFSCOMMENT,
+					vf.createLiteral("a not well known fact, groucho marx was not a smoker"), false));
+			// this should not be indexed
+			assertTrue(connection.hasStatement(SUBJECT_3, FOAFPLAN,
+					vf.createLiteral("groucho did not smoke cigars nor cigarillos"), false));
+		}
 	}
 
 	@Test
-	public void testRegularQuery()
-		throws RepositoryException, MalformedQueryException, QueryEvaluationException
-	{
-		// fire a query for all subjects with a given term
-		String queryString = "SELECT Subject, Score " + "FROM {Subject} <" + MATCHES + "> {} " + " <" + QUERY
-				+ "> {Query}; " + " <" + PROPERTY + "> {Property}; " + " <" + SCORE + "> {Score} ";
-		{
-			TupleQuery query = connection.prepareTupleQuery(QueryLanguage.SERQL, queryString);
-			query.setBinding("Query", vf.createLiteral("resource"));
-			query.setBinding("Property", RDFSLABEL);
-			TupleQueryResult result = query.evaluate();
-			// check the results
-			ArrayList<IRI> uris = new ArrayList<IRI>();
+	public void testRegularQuery() throws RepositoryException, MalformedQueryException, QueryEvaluationException {
+		try (RepositoryConnection connection = repository.getConnection()) {
+			// fire a query for all subjects with a given term
+			String queryString = "SELECT Subject, Score " + "FROM {Subject} <" + MATCHES + "> {} " + " <" + QUERY
+					+ "> {Query}; " + " <" + PROPERTY + "> {Property}; " + " <" + SCORE + "> {Score} ";
+			{
+				TupleQuery query = connection.prepareTupleQuery(QueryLanguage.SERQL, queryString);
+				query.setBinding("Query", vf.createLiteral("resource"));
+				query.setBinding("Property", RDFSLABEL);
+				try (TupleQueryResult result = query.evaluate()) {
+					// check the results
+					ArrayList<IRI> uris = new ArrayList<>();
 
-			BindingSet bindings = null;
-			while (result.hasNext()) {
-				bindings = result.next();
-				uris.add((IRI)bindings.getValue("Subject"));
-				assertNotNull(bindings.getValue("Score"));
+					BindingSet bindings = null;
+					while (result.hasNext()) {
+						bindings = result.next();
+						uris.add((IRI) bindings.getValue("Subject"));
+						assertNotNull(bindings.getValue("Score"));
+					}
+					assertEquals(3, uris.size());
+					assertTrue(uris.contains(SUBJECT_1));
+					assertTrue(uris.contains(SUBJECT_2));
+					assertTrue(uris.contains(SUBJECT_3));
+				}
 			}
-			result.close();
-			assertEquals(3, uris.size());
-			assertTrue(uris.contains(SUBJECT_1));
-			assertTrue(uris.contains(SUBJECT_2));
-			assertTrue(uris.contains(SUBJECT_3));
-		}
-		{
-			TupleQuery query = connection.prepareTupleQuery(QueryLanguage.SERQL, queryString);
-			query.setBinding("Query", vf.createLiteral("groucho"));
-			query.setBinding("Property", RDFSLABEL);
-			TupleQueryResult result = query.evaluate();
-			// check the results
-			ArrayList<IRI> uris = new ArrayList<IRI>();
 
-			BindingSet bindings = null;
-			while (result.hasNext()) {
-				bindings = result.next();
-				uris.add((IRI)bindings.getValue("Subject"));
-				assertNotNull(bindings.getValue("Score"));
+			{
+				TupleQuery query = connection.prepareTupleQuery(QueryLanguage.SERQL, queryString);
+				query.setBinding("Query", vf.createLiteral("groucho"));
+				query.setBinding("Property", RDFSLABEL);
+				try (TupleQueryResult result = query.evaluate()) {
+					// check the results
+					ArrayList<IRI> uris = new ArrayList<>();
+
+					BindingSet bindings = null;
+					while (result.hasNext()) {
+						bindings = result.next();
+						uris.add((IRI) bindings.getValue("Subject"));
+						assertNotNull(bindings.getValue("Score"));
+					}
+					assertEquals(1, uris.size());
+					assertTrue(uris.contains(SUBJECT_1));
+				}
 			}
-			result.close();
-			assertEquals(1, uris.size());
-			assertTrue(uris.contains(SUBJECT_1));
-		}
-		{
-			TupleQuery query = connection.prepareTupleQuery(QueryLanguage.SERQL, queryString);
-			query.setBinding("Query", vf.createLiteral("cigarillos"));
-			query.setBinding("Property", FOAFPLAN);
-			TupleQueryResult result = query.evaluate();
-			// check the results
-			assertFalse(result.hasNext());
-			result.close();
+
+			{
+				TupleQuery query = connection.prepareTupleQuery(QueryLanguage.SERQL, queryString);
+				query.setBinding("Query", vf.createLiteral("cigarillos"));
+				query.setBinding("Property", FOAFPLAN);
+				try (TupleQueryResult result = query.evaluate()) {
+					// check the results
+					assertFalse(result.hasNext());
+				}
+			}
 		}
 	}
-
 }

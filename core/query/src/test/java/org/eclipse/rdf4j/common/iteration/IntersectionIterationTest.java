@@ -14,13 +14,12 @@ public class IntersectionIterationTest extends CloseableIterationTest {
 
 	@Override
 	protected CloseableIteration<String, Exception> createTestIteration() {
-		return new IntersectIteration<String, Exception>(createStringList1Iteration(),
-				createStringList2Iteration());
+		return new IntersectIteration<>(createStringList1Iteration(), createStringList2Iteration());
 	}
 
 	@Override
 	protected int getTestIterationSize() {
-		List<String> intersection = new ArrayList<String>(stringList1);
+		List<String> intersection = new ArrayList<>(stringList1);
 		intersection.retainAll(stringList2);
 		return intersection.size();
 	}

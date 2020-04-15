@@ -31,6 +31,7 @@ public class SeRQLQueryRenderer implements QueryRenderer {
 	/**
 	 * @inheritDoc
 	 */
+	@Override
 	public QueryLanguage getLanguage() {
 		return QueryLanguage.SERQL;
 	}
@@ -38,9 +39,8 @@ public class SeRQLQueryRenderer implements QueryRenderer {
 	/**
 	 * @inheritDoc
 	 */
-	public String render(final ParsedQuery theQuery)
-		throws Exception
-	{
+	@Override
+	public String render(final ParsedQuery theQuery) throws Exception {
 		mRenderer.reset();
 
 		return mRenderer.render(theQuery.getTupleExpr());

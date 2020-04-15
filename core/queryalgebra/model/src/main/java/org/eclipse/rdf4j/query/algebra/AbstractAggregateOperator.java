@@ -18,11 +18,11 @@ public abstract class AbstractAggregateOperator extends UnaryValueOperator imple
 
 	private boolean distinct = false;
 
-	public AbstractAggregateOperator(ValueExpr arg) {
+	protected AbstractAggregateOperator(ValueExpr arg) {
 		this(arg, false);
 	}
 
-	public AbstractAggregateOperator(ValueExpr arg, boolean distinct) {
+	protected AbstractAggregateOperator(ValueExpr arg, boolean distinct) {
 		super();
 		if (arg != null) {
 			setArg(arg);
@@ -30,10 +30,12 @@ public abstract class AbstractAggregateOperator extends UnaryValueOperator imple
 		setDistinct(distinct);
 	}
 
+	@Override
 	public void setDistinct(boolean distinct) {
 		this.distinct = distinct;
 	}
 
+	@Override
 	public boolean isDistinct() {
 		return this.distinct;
 	}
@@ -43,15 +45,14 @@ public abstract class AbstractAggregateOperator extends UnaryValueOperator imple
 		int distHash = (isDistinct() ? 1 : 0);
 		if (arg == null) {
 			return 73 + distHash;
-		}
-		else {
+		} else {
 			return arg.hashCode() + distHash;
 		}
 	}
 
 	@Override
 	public AbstractAggregateOperator clone() {
-		return (AbstractAggregateOperator)super.clone();
+		return (AbstractAggregateOperator) super.clone();
 	}
 
 }

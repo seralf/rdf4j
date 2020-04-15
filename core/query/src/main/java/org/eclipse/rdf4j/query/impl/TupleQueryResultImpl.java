@@ -14,15 +14,14 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 
 /**
- * @deprecated since 4.0. Use {@link IteratingTupleQueryResult} instead.
+ * @deprecated since 2.0. Use {@link IteratingTupleQueryResult} instead.
  * @author Jeen Broekstra
  */
 @Deprecated
 public class TupleQueryResultImpl extends IteratingTupleQueryResult {
 
 	public TupleQueryResultImpl(List<String> bindingNames,
-			CloseableIteration<? extends BindingSet, QueryEvaluationException> bindingSetIter)
-	{
+			CloseableIteration<? extends BindingSet, QueryEvaluationException> bindingSetIter) {
 		super(bindingNames, bindingSetIter);
 	}
 

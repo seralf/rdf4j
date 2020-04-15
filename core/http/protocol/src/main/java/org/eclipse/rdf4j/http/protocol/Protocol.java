@@ -35,6 +35,8 @@ public abstract class Protocol {
 		QUERY,
 		/** SPARQL Update */
 		UPDATE,
+		/** Keep alive ping @since 2.3 */
+		PING,
 		/** commit */
 		COMMIT,
 		/** rollback */
@@ -42,9 +44,45 @@ public abstract class Protocol {
 	}
 
 	/**
-	 * Protocol version.
+	 * Use an enum to allow ActiveTransactionRegistry enum to access the static values. This is necessary because enum
+	 * are initialize before static fields.
 	 */
-	public static final String VERSION = "8";
+	@Deprecated
+	public static enum TIMEOUT {
+		CACHE;
+
+		/**
+		 * Configurable system property {@code rdf4j.server.txn.registry.timeout} for specifying the transaction cache
+		 * timeout (in seconds).
+		 */
+		public static final String CACHE_PROPERTY = "rdf4j.server.txn.registry.timeout";
+
+		/**
+		 * Default timeout setting for transaction cache entries (in seconds).
+		 */
+		public final static int DEFAULT = 60;
+	}
+
+	/**
+	 * Configurable system property {@code rdf4j.server.txn.registry.timeout} for specifying the transaction cache
+	 * timeout (in seconds).
+	 */
+	public static final String CACHE_TIMEOUT_PROPERTY = Protocol.TIMEOUT.CACHE_PROPERTY;
+
+	/**
+	 * Default timeout setting for transaction cache entries (in seconds).
+	 */
+	public final static int DEFAULT_TIMEOUT = Protocol.TIMEOUT.DEFAULT;
+
+	/**
+	 * Protocol version.
+	 * 
+	 * <ul>
+	 * <li>10: since RDF4J 3.1.0</li>
+	 * <li>9: since RDF4J 3.0.0</li>
+	 * </ul>
+	 */
+	public static final String VERSION = "10";
 
 	/**
 	 * Parameter name for the 'subject' parameter of a statement query.
@@ -97,9 +135,9 @@ public abstract class Protocol {
 	public static final String QUERY_PARAM_NAME = "query";
 
 	public static final String LIMIT_PARAM_NAME = "limit";
-	
+
 	public static final String OFFSET_PARAM_NAME = "offset";
-	
+
 	/**
 	 * Parameter name for the query language parameter.
 	 */
@@ -230,8 +268,7 @@ public abstract class Protocol {
 	private static String getServerDir(String serverLocation) {
 		if (serverLocation.endsWith("/")) {
 			return serverLocation;
-		}
-		else {
+		} else {
 			return serverLocation + "/";
 		}
 	}
@@ -239,8 +276,7 @@ public abstract class Protocol {
 	/**
 	 * Get the location of the protocol resource on the specified server.
 	 * 
-	 * @param serverLocation
-	 *        the base location of a server implementing this REST protocol.
+	 * @param serverLocation the base location of a server implementing this REST protocol.
 	 * @return the location of the protocol resource on the specified server
 	 */
 	public static final String getProtocolLocation(String serverLocation) {
@@ -250,8 +286,7 @@ public abstract class Protocol {
 	/**
 	 * Get the location of the server configuration resource on the specified server.
 	 * 
-	 * @param serverLocation
-	 *        the base location of a server implementing this REST protocol.
+	 * @param serverLocation the base location of a server implementing this REST protocol.
 	 * @return the location of the server configuration resource on the specified server
 	 */
 	public static final String getConfigLocation(String serverLocation) {
@@ -261,8 +296,7 @@ public abstract class Protocol {
 	/**
 	 * Get the location of the repository list resource on the specified server.
 	 * 
-	 * @param serverLocation
-	 *        the base location of a server implementing this REST protocol.
+	 * @param serverLocation the base location of a server implementing this REST protocol.
 	 * @return the location of the repository list resource on the specified server
 	 */
 	public static final String getRepositoriesLocation(String serverLocation) {
@@ -272,10 +306,8 @@ public abstract class Protocol {
 	/**
 	 * Get the location of a specific repository resource on the specified server.
 	 * 
-	 * @param serverLocation
-	 *        the base location of a server implementing this REST protocol.
-	 * @param repositoryID
-	 *        the ID of the repository
+	 * @param serverLocation the base location of a server implementing this REST protocol.
+	 * @param repositoryID   the ID of the repository
 	 * @return the location of a specific repository resource on the specified server
 	 */
 	public static final String getRepositoryLocation(String serverLocation, String repositoryID) {
@@ -283,10 +315,20 @@ public abstract class Protocol {
 	}
 
 	/**
+	 * Get the location of the config of a specific repository resource.
+	 * 
+	 * @param repositoryLocation the location of a repository implementing this REST protocol.
+	 * @return the location of the configuration resource for the specified repository
+	 * 
+	 */
+	public static final String getRepositoryConfigLocation(String repositoryLocation) {
+		return repositoryLocation + "/" + CONFIG;
+	}
+
+	/**
 	 * Get the location of the statements resource for a specific repository.
 	 * 
-	 * @param repositoryLocation
-	 *        the location of a repository implementing this REST protocol.
+	 * @param repositoryLocation the location of a repository implementing this REST protocol.
 	 * @return the location of the statements resource for the specified repository
 	 */
 	public static final String getStatementsLocation(String repositoryLocation) {
@@ -296,8 +338,7 @@ public abstract class Protocol {
 	/**
 	 * Get the location of the transaction resources for a specific repository.
 	 * 
-	 * @param repositoryLocation
-	 *        the location of a repository implementing this REST protocol.
+	 * @param repositoryLocation the location of a repository implementing this REST protocol.
 	 * @return the location of the transaction resources for the specified repository
 	 */
 	public static final String getTransactionsLocation(String repositoryLocation) {
@@ -307,8 +348,7 @@ public abstract class Protocol {
 	/**
 	 * Extracts the server location from the repository location.
 	 * 
-	 * @param repositoryLocation
-	 *        the location of a repository implementing this REST protocol.
+	 * @param repositoryLocation the location of a repository implementing this REST protocol.
 	 * @return the location of the server resource for the specified repository.
 	 */
 	public static final String getServerLocation(String repositoryLocation) {
@@ -320,8 +360,7 @@ public abstract class Protocol {
 	/**
 	 * Extracts the repository ID from the repository location.
 	 * 
-	 * @param repositoryLocation
-	 *        the location of a repository implementing this REST protocol.
+	 * @param repositoryLocation the location of a repository implementing this REST protocol.
 	 * @return the ID of the repository.
 	 */
 	public static final String getRepositoryID(String repositoryLocation) {
@@ -332,8 +371,7 @@ public abstract class Protocol {
 	/**
 	 * Get the location of the contexts lists resource for a specific repository.
 	 * 
-	 * @param repositoryLocation
-	 *        the location of a repository implementing this REST protocol.
+	 * @param repositoryLocation the location of a repository implementing this REST protocol.
 	 * @return the location of the contexts lists resource for the specified repository
 	 */
 	public static final String getContextsLocation(String repositoryLocation) {
@@ -343,8 +381,7 @@ public abstract class Protocol {
 	/**
 	 * Get the location of the namespaces lists resource for a specific repository on the specified server.
 	 * 
-	 * @param repositoryLocation
-	 *        the base location of a server implementing this REST protocol.
+	 * @param repositoryLocation the base location of a server implementing this REST protocol.
 	 * @return the location of the namespaces lists resource for a specific repository on the specified server
 	 */
 	public static final String getNamespacesLocation(String repositoryLocation) {
@@ -352,15 +389,12 @@ public abstract class Protocol {
 	}
 
 	/**
-	 * Get the location of the namespace with the specified prefix for a specific repository on the specified
-	 * server.
+	 * Get the location of the namespace with the specified prefix for a specific repository on the specified server.
 	 * 
-	 * @param repositoryLocation
-	 *        the location of a repository implementing this REST protocol.
-	 * @param prefix
-	 *        the namespace prefix
-	 * @return the location of the the namespace with the specified prefix for a specific repository on the
-	 *         specified server
+	 * @param repositoryLocation the location of a repository implementing this REST protocol.
+	 * @param prefix             the namespace prefix
+	 * @return the location of the the namespace with the specified prefix for a specific repository on the specified
+	 *         server
 	 */
 	public static final String getNamespacePrefixLocation(String repositoryLocation, String prefix) {
 		return getNamespacesLocation(repositoryLocation) + "/" + prefix;
@@ -369,8 +403,7 @@ public abstract class Protocol {
 	/**
 	 * Get the location of the 'size' resource for a specific repository on the specified server.
 	 * 
-	 * @param repositoryLocation
-	 *        the location of a repository implementing this REST protocol.
+	 * @param repositoryLocation the location of a repository implementing this REST protocol.
 	 * @return the location of the 'size' resource for a specific repository on the specified server
 	 */
 	public static final String getSizeLocation(String repositoryLocation) {
@@ -380,15 +413,14 @@ public abstract class Protocol {
 	/**
 	 * Encodes a value in a canonical serialized string format, for use in a URL query parameter.
 	 * 
-	 * @param value
-	 *        The value to encode, possibly <tt>null</tt>.
-	 * @return The protocol-serialized representation of the supplied value, or {@link #NULL_PARAM_VALUE} if
-	 *         the supplied value was <tt>null</tt>.
+	 * @param value The value to encode, possibly <tt>null</tt>.
+	 * @return The protocol-serialized representation of the supplied value, or {@link #NULL_PARAM_VALUE} if the
+	 *         supplied value was <tt>null</tt>.
 	 */
 	public static String encodeValue(Value value) {
 		if (value instanceof BNode) {
 			// SES-2129 special treatment of blank node names to avoid problems with round-tripping.
-			return "_:" + ((BNode)value).getID();
+			return "_:" + ((BNode) value).getID();
 		}
 
 		// for everything else we just use N-Triples serialization.
@@ -398,10 +430,8 @@ public abstract class Protocol {
 	/**
 	 * Decode a previously encoded value.
 	 * 
-	 * @param encodedValue
-	 *        the encoded value
-	 * @param valueFactory
-	 *        the factory to use for constructing the Value
+	 * @param encodedValue the encoded value
+	 * @param valueFactory the factory to use for constructing the Value
 	 * @return the decoded Value
 	 * @see #encodeValue(Value)
 	 */
@@ -416,10 +446,8 @@ public abstract class Protocol {
 	/**
 	 * Decode a previously encoded Resource.
 	 * 
-	 * @param encodedValue
-	 *        the encoded value
-	 * @param valueFactory
-	 *        the factory to use for constructing the Resource
+	 * @param encodedValue the encoded value
+	 * @param valueFactory the factory to use for constructing the Resource
 	 * @return the decoded Resource
 	 * @see #encodeValue(Value)
 	 */
@@ -434,10 +462,8 @@ public abstract class Protocol {
 	/**
 	 * Decode a previously encoded URI.
 	 * 
-	 * @param encodedValue
-	 *        the encoded value
-	 * @param valueFactory
-	 *        the factory to use for constructing the URI
+	 * @param encodedValue the encoded value
+	 * @param valueFactory the factory to use for constructing the URI
 	 * @return the decoded URI
 	 * @see #encodeValue(Value)
 	 */
@@ -452,16 +478,14 @@ public abstract class Protocol {
 	/**
 	 * Encodes a context resource for use in a URL.
 	 * 
-	 * @param context
-	 *        The context to encode, possibly <tt>null</tt>.
-	 * @return The protocol-serialized representation of the supplied context, or {@link #NULL_PARAM_VALUE} if
-	 *         the supplied value was <tt>null</tt>.
+	 * @param context The context to encode, possibly <tt>null</tt>.
+	 * @return The protocol-serialized representation of the supplied context, or {@link #NULL_PARAM_VALUE} if the
+	 *         supplied value was <tt>null</tt>.
 	 */
 	public static String encodeContext(Resource context) {
 		if (context == null) {
 			return Protocol.NULL_PARAM_VALUE;
-		}
-		else {
+		} else {
 			return encodeValue(context);
 		}
 	}
@@ -469,21 +493,16 @@ public abstract class Protocol {
 	/**
 	 * Decode a previously encoded context Resource.
 	 * 
-	 * @param encodedValue
-	 *        the encoded value
-	 * @param valueFactory
-	 *        the factory to use for constructing the Resource
-	 * @return the decoded Resource, or null if the encoded values was null or equal to
-	 *         {@link #NULL_PARAM_VALUE}
+	 * @param encodedValue the encoded value
+	 * @param valueFactory the factory to use for constructing the Resource
+	 * @return the decoded Resource, or null if the encoded values was null or equal to {@link #NULL_PARAM_VALUE}
 	 */
 	public static Resource decodeContext(String encodedValue, ValueFactory valueFactory) {
 		if (encodedValue == null) {
 			return null;
-		}
-		else if (NULL_PARAM_VALUE.equals(encodedValue)) {
+		} else if (NULL_PARAM_VALUE.equals(encodedValue)) {
 			return null;
-		}
-		else {
+		} else {
 			return decodeResource(encodedValue, valueFactory);
 		}
 	}
@@ -491,11 +510,9 @@ public abstract class Protocol {
 	/**
 	 * Encode context resources for use in a URL.
 	 * 
-	 * @param contexts
-	 *        the contexts to encode, must not be <tt>null</tt>.
+	 * @param contexts the contexts to encode, must not be <tt>null</tt>.
 	 * @return the encoded contexts
-	 * @throws IllegalArgumentException
-	 *         If the <tt>contexts</tt> is <tt>null</tt>.
+	 * @throws IllegalArgumentException If the <tt>contexts</tt> is <tt>null</tt>.
 	 */
 	public static String[] encodeContexts(Resource... contexts) {
 		OpenRDFUtil.verifyContextNotNull(contexts);
@@ -511,20 +528,16 @@ public abstract class Protocol {
 	/**
 	 * Decode previously encoded contexts.
 	 * 
-	 * @param encodedValues
-	 *        the encoded values
-	 * @param valueFactory
-	 *        the factory to use for constructing the Resources
-	 * @return the decoded Resources, or an empty array if the supplied <tt>encodedValues</tt> was
-	 *         <tt>null</tt>.
+	 * @param encodedValues the encoded values
+	 * @param valueFactory  the factory to use for constructing the Resources
+	 * @return the decoded Resources, or an empty array if the supplied <tt>encodedValues</tt> was <tt>null</tt>.
 	 */
 	public static Resource[] decodeContexts(String[] encodedValues, ValueFactory valueFactory) {
 		Resource[] result;
 
 		if (encodedValues == null) {
 			result = new Resource[0];
-		}
-		else {
+		} else {
 			result = new Resource[encodedValues.length];
 			for (int index = 0; index < encodedValues.length; index++) {
 				result[index] = decodeContext(encodedValues[index], valueFactory);

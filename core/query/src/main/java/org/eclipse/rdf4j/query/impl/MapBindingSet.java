@@ -31,24 +31,21 @@ public class MapBindingSet extends AbstractBindingSet {
 	}
 
 	/**
-	 * Creates a new Map-based BindingSet with the specified initial capacity. Bindings can be added to this
-	 * binding set using the {@link #addBinding} methods.
+	 * Creates a new Map-based BindingSet with the specified initial capacity. Bindings can be added to this binding set
+	 * using the {@link #addBinding} methods.
 	 * 
-	 * @param capacity
-	 *        The initial capacity of the created BindingSet object.
+	 * @param capacity The initial capacity of the created BindingSet object.
 	 */
 	public MapBindingSet(int capacity) {
 		// Create bindings map, compensating for HashMap's load factor
-		bindings = new LinkedHashMap<String, Binding>(capacity * 2);
+		bindings = new LinkedHashMap<>(capacity * 2);
 	}
 
 	/**
 	 * Adds a binding to the binding set.
 	 * 
-	 * @param name
-	 *        The binding's name.
-	 * @param value
-	 *        The binding's value.
+	 * @param name  The binding's name.
+	 * @param value The binding's value.
 	 */
 	public void addBinding(String name, Value value) {
 		addBinding(new SimpleBinding(name, value));
@@ -57,8 +54,7 @@ public class MapBindingSet extends AbstractBindingSet {
 	/**
 	 * Adds a binding to the binding set.
 	 * 
-	 * @param binding
-	 *        The binding to add to the binding set.
+	 * @param binding The binding to add to the binding set.
 	 */
 	public void addBinding(Binding binding) {
 		bindings.put(binding.getName(), binding);
@@ -67,8 +63,7 @@ public class MapBindingSet extends AbstractBindingSet {
 	/**
 	 * Removes a binding from the binding set.
 	 * 
-	 * @param name
-	 *        The binding's name.
+	 * @param name The binding's name.
 	 */
 	public void removeBinding(String name) {
 		bindings.remove(name);
@@ -81,22 +76,27 @@ public class MapBindingSet extends AbstractBindingSet {
 		bindings.clear();
 	}
 
+	@Override
 	public Iterator<Binding> iterator() {
 		return bindings.values().iterator();
 	}
 
+	@Override
 	public Set<String> getBindingNames() {
 		return bindings.keySet();
 	}
 
+	@Override
 	public Binding getBinding(String bindingName) {
 		return bindings.get(bindingName);
 	}
 
+	@Override
 	public boolean hasBinding(String bindingName) {
 		return bindings.containsKey(bindingName);
 	}
 
+	@Override
 	public Value getValue(String bindingName) {
 		Binding binding = getBinding(bindingName);
 
@@ -107,6 +107,7 @@ public class MapBindingSet extends AbstractBindingSet {
 		return null;
 	}
 
+	@Override
 	public int size() {
 		return bindings.size();
 	}

@@ -15,17 +15,18 @@ import java.util.Set;
  */
 public class EmptySet extends AbstractQueryModelNode implements TupleExpr {
 
+	@Override
 	public Set<String> getBindingNames() {
 		return getAssuredBindingNames();
 	}
 
+	@Override
 	public Set<String> getAssuredBindingNames() {
 		return Collections.emptySet();
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -41,6 +42,6 @@ public class EmptySet extends AbstractQueryModelNode implements TupleExpr {
 
 	@Override
 	public EmptySet clone() {
-		return (EmptySet)super.clone();
+		return (EmptySet) super.clone();
 	}
 }

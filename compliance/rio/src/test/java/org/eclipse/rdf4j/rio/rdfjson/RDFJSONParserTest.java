@@ -8,8 +8,6 @@
 package org.eclipse.rdf4j.rio.rdfjson;
 
 import org.eclipse.rdf4j.rio.RDFParser;
-import org.eclipse.rdf4j.rio.rdfjson.RDFJSONParser;
-import org.eclipse.rdf4j.rio.rdfjson.RDFJSONParserTestCase;
 
 /**
  * JUnit test for the RDF/JSON parser.
@@ -18,9 +16,7 @@ import org.eclipse.rdf4j.rio.rdfjson.RDFJSONParserTestCase;
  */
 public class RDFJSONParserTest extends RDFJSONParserTestCase {
 
-	public static junit.framework.Test suite()
-		throws Exception
-	{
+	public static junit.framework.Test suite() throws Exception {
 		return new RDFJSONParserTest().createTestSuite();
 	}
 

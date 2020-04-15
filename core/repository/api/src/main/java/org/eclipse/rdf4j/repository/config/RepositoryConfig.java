@@ -7,12 +7,11 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.repository.config;
 
+import static org.eclipse.rdf4j.repository.config.RepositoryConfigSchema.NAMESPACE;
 import static org.eclipse.rdf4j.repository.config.RepositoryConfigSchema.REPOSITORY;
 import static org.eclipse.rdf4j.repository.config.RepositoryConfigSchema.REPOSITORYID;
 import static org.eclipse.rdf4j.repository.config.RepositoryConfigSchema.REPOSITORYIMPL;
 
-import org.eclipse.rdf4j.model.BNode;
-import org.eclipse.rdf4j.model.Graph;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -21,6 +20,7 @@ import org.eclipse.rdf4j.model.util.ModelException;
 import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
 /**
  * @author Arjohn Kampman
@@ -96,15 +96,12 @@ public class RepositoryConfig {
 	}
 
 	/**
-	 * Validates this configuration. A {@link RepositoryConfigException} is thrown when the configuration is
-	 * invalid. The exception should contain an error message that indicates why the configuration is invalid.
+	 * Validates this configuration. A {@link RepositoryConfigException} is thrown when the configuration is invalid.
+	 * The exception should contain an error message that indicates why the configuration is invalid.
 	 * 
-	 * @throws RepositoryConfigException
-	 *         If the configuration is invalid.
+	 * @throws RepositoryConfigException If the configuration is invalid.
 	 */
-	public void validate()
-		throws RepositoryConfigException
-	{
+	public void validate() throws RepositoryConfigException {
 		if (id == null) {
 			throw new RepositoryConfigException("Repository ID missing");
 		}
@@ -114,11 +111,27 @@ public class RepositoryConfig {
 		implConfig.validate();
 	}
 
+	/**
+	 * @deprecated use {@link #export(Model, Resource)}
+	 */
+	@Deprecated
 	public void export(Model model) {
 		ValueFactory vf = SimpleValueFactory.getInstance();
+		export(model, vf.createBNode());
+	}
 
-		BNode repositoryNode = vf.createBNode();
-
+	/**
+	 * Exports the configuration into RDF using the given repositoryNode
+	 *
+	 * @param model          target RDF collection
+	 * @param repositoryNode
+	 * @since 2.3
+	 */
+	public void export(Model model, Resource repositoryNode) {
+		ValueFactory vf = SimpleValueFactory.getInstance();
+		model.setNamespace(RDFS.NS);
+		model.setNamespace(XMLSchema.NS);
+		model.setNamespace("rep", NAMESPACE);
 		model.add(repositoryNode, RDF.TYPE, REPOSITORY);
 
 		if (id != null) {
@@ -133,35 +146,29 @@ public class RepositoryConfig {
 		}
 	}
 
-	public void parse(Model model, Resource repositoryNode)
-		throws RepositoryConfigException
-	{
+	public void parse(Model model, Resource repositoryNode) throws RepositoryConfigException {
 		try {
 
-			Models.objectLiteral(model.filter(repositoryNode, REPOSITORYID, null)).ifPresent(
-					lit -> setID(lit.getLabel()));
-			Models.objectLiteral(model.filter(repositoryNode, RDFS.LABEL, null)).ifPresent(
-					lit -> setTitle(lit.getLabel()));
-			Models.objectResource(model.filter(repositoryNode, REPOSITORYIMPL, null)).ifPresent(
-					res -> setRepositoryImplConfig(AbstractRepositoryImplConfig.create(model, res)));
-		}
-		catch (ModelException e) {
+			Models.objectLiteral(model.filter(repositoryNode, REPOSITORYID, null))
+					.ifPresent(lit -> setID(lit.getLabel()));
+			Models.objectLiteral(model.filter(repositoryNode, RDFS.LABEL, null))
+					.ifPresent(lit -> setTitle(lit.getLabel()));
+			Models.objectResource(model.filter(repositoryNode, REPOSITORYIMPL, null))
+					.ifPresent(res -> setRepositoryImplConfig(AbstractRepositoryImplConfig.create(model, res)));
+		} catch (ModelException e) {
 			throw new RepositoryConfigException(e.getMessage(), e);
 		}
 	}
 
 	/**
 	 * Creates a new {@link RepositoryConfig} object and initializes it by supplying the {@code model} and
-	 * {@code repositoryNode} to its {@link #parse(Graph, Resource) parse} method.
+	 * {@code repositoryNode} to its {@link #parse(Model, Resource) parse} method.
 	 * 
-	 * @param model
-	 *        the {@link Model} to read initialization data from.
-	 * @param repositoryNode
-	 *        the subject {@link Resource} that identifies the {@link RepositoryConfig} in the supplied Model.
+	 * @param model          the {@link Model} to read initialization data from.
+	 * @param repositoryNode the subject {@link Resource} that identifies the {@link RepositoryConfig} in the supplied
+	 *                       Model.
 	 */
-	public static RepositoryConfig create(Model model, Resource repositoryNode)
-		throws RepositoryConfigException
-	{
+	public static RepositoryConfig create(Model model, Resource repositoryNode) throws RepositoryConfigException {
 		RepositoryConfig config = new RepositoryConfig();
 		config.parse(model, repositoryNode);
 		return config;

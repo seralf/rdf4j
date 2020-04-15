@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.rdf4j.common.annotation.InternalUseOnly;
 import org.eclipse.rdf4j.query.algebra.And;
 import org.eclipse.rdf4j.query.algebra.Filter;
 import org.eclipse.rdf4j.query.algebra.Join;
@@ -25,11 +26,15 @@ import org.eclipse.rdf4j.query.algebra.ValueExpr;
 import org.eclipse.rdf4j.query.algebra.Var;
 
 /**
- * A graph pattern consisting of (required and optional) tuple expressions, binding assignments and boolean
- * constraints.
+ * A graph pattern consisting of (required and optional) tuple expressions, binding assignments and boolean constraints.
  * 
  * @author Arjohn Kampman
+ * 
+ * @deprecated since 3.0. This feature is for internal use only: its existence, signature or behavior may change without
+ *             warning from one release to the next.
  */
+@Deprecated
+@InternalUseOnly
 public class GraphPattern {
 
 	/**
@@ -45,18 +50,18 @@ public class GraphPattern {
 	/**
 	 * The required tuple expressions in this graph pattern.
 	 */
-	private List<TupleExpr> requiredTEs = new ArrayList<TupleExpr>();
+	private List<TupleExpr> requiredTEs = new ArrayList<>();
 
 	/**
-	 * The optional tuple expressions in this graph pattern, as a list of Key-Value pairs with the tuple
-	 * expression as the key and a list of constraints applicable to the tuple expression as the value.
+	 * The optional tuple expressions in this graph pattern, as a list of Key-Value pairs with the tuple expression as
+	 * the key and a list of constraints applicable to the tuple expression as the value.
 	 */
-	private List<Map.Entry<TupleExpr, List<ValueExpr>>> optionalTEs = new ArrayList<Map.Entry<TupleExpr, List<ValueExpr>>>();
+	private List<Map.Entry<TupleExpr, List<ValueExpr>>> optionalTEs = new ArrayList<>();
 
 	/**
 	 * The boolean constraints in this graph pattern.
 	 */
-	private List<ValueExpr> constraints = new ArrayList<ValueExpr>();
+	private List<ValueExpr> constraints = new ArrayList<>();
 
 	/**
 	 * Creates a new graph pattern.
@@ -101,24 +106,21 @@ public class GraphPattern {
 	}
 
 	/**
-	 * add the supplied tuple expression as an optional expression, with a list of constraints that hold as
-	 * conditions.
+	 * add the supplied tuple expression as an optional expression, with a list of constraints that hold as conditions.
 	 * 
-	 * @param te
-	 *        a tuple expression
-	 * @param constraints
-	 *        a list of constraints that form a condition for the LeftJoin to be formed from the optional TE.
+	 * @param te          a tuple expression
+	 * @param constraints a list of constraints that form a condition for the LeftJoin to be formed from the optional
+	 *                    TE.
 	 */
 	public void addOptionalTE(TupleExpr te, List<ValueExpr> constraints) {
 
-		Map.Entry<TupleExpr, List<ValueExpr>> entry = new AbstractMap.SimpleImmutableEntry<TupleExpr, List<ValueExpr>>(
-				te, constraints);
+		Map.Entry<TupleExpr, List<ValueExpr>> entry = new AbstractMap.SimpleImmutableEntry<>(te, constraints);
 		optionalTEs.add(entry);
 	}
 
 	/**
-	 * Retrieves the optional tuple expressions as a list of tuples with the tuple expression as the key and
-	 * the list of value expressions as the value.
+	 * Retrieves the optional tuple expressions as a list of tuples with the tuple expression as the key and the list of
+	 * value expressions as the value.
 	 * 
 	 * @return a list of Map entries.
 	 */
@@ -140,7 +142,7 @@ public class GraphPattern {
 
 	public List<ValueExpr> removeAllConstraints() {
 		List<ValueExpr> constraints = this.constraints;
-		this.constraints = new ArrayList<ValueExpr>();
+		this.constraints = new ArrayList<>();
 		return constraints;
 	}
 
@@ -163,19 +165,12 @@ public class GraphPattern {
 
 		if (requiredTEs.isEmpty()) {
 			result = new SingletonSet();
-		}
-		else {
+		} else {
 			result = requiredTEs.get(0);
 
 			for (int i = 1; i < requiredTEs.size(); i++) {
 				TupleExpr te = requiredTEs.get(i);
-				// if (containsProjection(te) || containsProjection(result))
-				// {
-				// result = new BottomUpJoin(result, te);
-				// }
-				// else {
 				result = new Join(result, te);
-				// }
 			}
 		}
 
@@ -188,8 +183,7 @@ public class GraphPattern {
 				}
 
 				result = new LeftJoin(result, entry.getKey(), condition);
-			}
-			else {
+			} else {
 				result = new LeftJoin(result, entry.getKey());
 			}
 		}

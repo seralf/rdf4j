@@ -8,8 +8,8 @@
 package org.eclipse.rdf4j.query.algebra;
 
 /**
- * The DATATYPE function, as defined in <a href="http://www.w3.org/TR/rdf-sparql-query/#func-datatype">SPARQL
- * Query Language for RDF</a>.
+ * The DATATYPE function, as defined in <a href="http://www.w3.org/TR/rdf-sparql-query/#func-datatype">SPARQL Query
+ * Language for RDF</a>.
  * 
  * @author Arjohn Kampman
  */
@@ -30,9 +30,8 @@ public class Datatype extends UnaryValueOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -48,6 +47,6 @@ public class Datatype extends UnaryValueOperator {
 
 	@Override
 	public Datatype clone() {
-		return (Datatype)super.clone();
+		return (Datatype) super.clone();
 	}
 }

@@ -20,58 +20,66 @@ import org.eclipse.rdf4j.repository.event.RepositoryConnectionInterceptor;
  */
 public class RepositoryConnectionInterceptorAdapter implements RepositoryConnectionInterceptor {
 
-	public boolean add(RepositoryConnection conn, Resource subject, IRI predicate, Value object,
-			Resource... contexts)
-	{
+	@Override
+	public boolean add(RepositoryConnection conn, Resource subject, IRI predicate, Value object, Resource... contexts) {
 		return false;
 	}
 
+	@Override
 	public boolean begin(RepositoryConnection conn) {
 		return false;
 	}
 
+	@Override
 	public boolean clear(RepositoryConnection conn, Resource... contexts) {
 		return false;
 	}
 
+	@Override
 	public boolean clearNamespaces(RepositoryConnection conn) {
 		return false;
 	}
 
+	@Override
 	public boolean close(RepositoryConnection conn) {
 		return false;
 	}
 
+	@Override
 	public boolean commit(RepositoryConnection conn) {
 		return false;
 	}
 
+	@Override
 	public boolean remove(RepositoryConnection conn, Resource subject, IRI predicate, Value object,
-			Resource... contexts)
-	{
+			Resource... contexts) {
 		return false;
 	}
 
+	@Override
 	public boolean removeNamespace(RepositoryConnection conn, String prefix) {
 		return false;
 	}
 
+	@Override
 	public boolean rollback(RepositoryConnection conn) {
 		return false;
 	}
 
 	@Deprecated
+	@Override
 	public boolean setAutoCommit(RepositoryConnection conn, boolean autoCommit) {
 		return false;
 	}
 
+	@Override
 	public boolean setNamespace(RepositoryConnection conn, String prefix, String name) {
 		return false;
 	}
 
+	@Override
 	public boolean execute(RepositoryConnection conn, QueryLanguage ql, String update, String baseURI,
-			Update operation)
-	{
+			Update operation) {
 		return false;
 	}
 

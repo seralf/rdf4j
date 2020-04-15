@@ -1,41 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
 	<modelVersion>4.0.0</modelVersion>
-
 	<parent>
 		<groupId>org.eclipse.rdf4j</groupId>
 		<artifactId>rdf4j</artifactId>
-		<version>2.3-SNAPSHOT</version>
+		<version>3.1.4-SNAPSHOT</version>
 	</parent>
-
 	<artifactId>rdf4j-testsuites</artifactId>
 	<packaging>pom</packaging>
-
+	<name>RDF4J : Test Suites</name>
+	<description>Test suites for Eclipse RDF4J modules</description>
 	<modules>
 		<module>model</module>
-		<module>queryresultio</module>
 		<module>rio</module>
-		<module>serql</module>
+		<module>queryresultio</module>
 		<module>sparql</module>
-		<module>geosparql</module>
-		<module>store</module>
+		<module>serql</module>
+		<module>repository</module>
+		<module>sail</module>
+		<module>shacl</module>
 		<module>lucene</module>
+		<module>geosparql</module>
+		<module>benchmark</module>
 	</modules>
-
-	<name>RDF4J test suites</name>
-	<description>RDF4J test suites</description>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<!-- compile, but don't run tests -->
-					<skipTests>true</skipTests>
-				</configuration>
-			</plugin>			
-		</plugins>
-	</build>
-
 </project>

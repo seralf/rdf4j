@@ -30,25 +30,25 @@ public class HTTPRepositoryFactory implements RepositoryFactory {
 	/**
 	 * Returns the repository's type: <tt>openrdf:HTTPRepository</tt>.
 	 */
+	@Override
 	public String getRepositoryType() {
 		return REPOSITORY_TYPE;
 	}
 
+	@Override
 	public RepositoryImplConfig getConfig() {
 		return new HTTPRepositoryConfig();
 	}
 
-	public Repository getRepository(RepositoryImplConfig config)
-		throws RepositoryConfigException
-	{
+	@Override
+	public Repository getRepository(RepositoryImplConfig config) throws RepositoryConfigException {
 		HTTPRepository result = null;
 
 		if (config instanceof HTTPRepositoryConfig) {
-			HTTPRepositoryConfig httpConfig = (HTTPRepositoryConfig)config;
+			HTTPRepositoryConfig httpConfig = (HTTPRepositoryConfig) config;
 			result = new HTTPRepository(httpConfig.getURL());
-			//			result.setUsernameAndPassword(httpConfig.getUsername(), httpConfig.getPassword());
-		}
-		else {
+			// result.setUsernameAndPassword(httpConfig.getUsername(), httpConfig.getPassword());
+		} else {
 			throw new RepositoryConfigException("Invalid configuration class: " + config.getClass());
 		}
 		return result;

@@ -65,8 +65,7 @@ public class If extends AbstractQueryModelNode implements ValueExpr {
 	/**
 	 * Sets the condition argument of this unary value operator.
 	 * 
-	 * @param condition
-	 *        The (new) condition argument for this operator, must not be <tt>null</tt>.
+	 * @param condition The (new) condition argument for this operator, must not be <tt>null</tt>.
 	 */
 	public void setCondition(ValueExpr condition) {
 		assert condition != null : "arg must not be null";
@@ -74,16 +73,13 @@ public class If extends AbstractQueryModelNode implements ValueExpr {
 		this.condition = condition;
 	}
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
 	@Override
-	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	public <X extends Exception> void visitChildren(QueryModelVisitor<X> visitor) throws X {
 		condition.visit(visitor);
 		if (result != null) {
 			result.visit(visitor);
@@ -96,15 +92,12 @@ public class If extends AbstractQueryModelNode implements ValueExpr {
 	@Override
 	public void replaceChildNode(QueryModelNode current, QueryModelNode replacement) {
 		if (condition == current) {
-			setCondition((ValueExpr)replacement);
-		}
-		else if (result == current) {
-			setResult((ValueExpr)replacement);
-		}
-		else if (alternative == current) {
-			setAlternative((ValueExpr)replacement);
-		}
-		else {
+			setCondition((ValueExpr) replacement);
+		} else if (result == current) {
+			setResult((ValueExpr) replacement);
+		} else if (alternative == current) {
+			setAlternative((ValueExpr) replacement);
+		} else {
 			super.replaceChildNode(current, replacement);
 		}
 	}
@@ -112,7 +105,7 @@ public class If extends AbstractQueryModelNode implements ValueExpr {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof If) {
-			If o = (If)other;
+			If o = (If) other;
 
 			boolean equal = condition.equals(o.getCondition());
 			if (!equal) {
@@ -124,8 +117,7 @@ public class If extends AbstractQueryModelNode implements ValueExpr {
 				return equal;
 			}
 
-			equal = (alternative == null) ? o.getAlternative() == null
-					: alternative.equals(o.getAlternative());
+			equal = (alternative == null) ? o.getAlternative() == null : alternative.equals(o.getAlternative());
 
 			return equal;
 		}
@@ -150,7 +142,7 @@ public class If extends AbstractQueryModelNode implements ValueExpr {
 
 	@Override
 	public If clone() {
-		If clone = (If)super.clone();
+		If clone = (If) super.clone();
 		clone.setCondition(condition.clone());
 		if (result != null) {
 			clone.setResult(result.clone());
@@ -162,8 +154,7 @@ public class If extends AbstractQueryModelNode implements ValueExpr {
 	}
 
 	/**
-	 * @param result
-	 *        The result to set.
+	 * @param result The result to set.
 	 */
 	public void setResult(ValueExpr result) {
 		result.setParentNode(this);
@@ -179,8 +170,7 @@ public class If extends AbstractQueryModelNode implements ValueExpr {
 	}
 
 	/**
-	 * @param alternative
-	 *        The alternative to set.
+	 * @param alternative The alternative to set.
 	 */
 	public void setAlternative(ValueExpr alternative) {
 		alternative.setParentNode(this);

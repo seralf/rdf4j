@@ -8,6 +8,7 @@
 
 package org.eclipse.rdf4j.http.protocol;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.rdf4j.http.protocol.Protocol.CONFIG;
 import static org.eclipse.rdf4j.http.protocol.Protocol.CONTEXTS;
 import static org.eclipse.rdf4j.http.protocol.Protocol.NAMESPACES;
@@ -18,6 +19,7 @@ import static org.eclipse.rdf4j.http.protocol.Protocol.getContextsLocation;
 import static org.eclipse.rdf4j.http.protocol.Protocol.getNamespacesLocation;
 import static org.eclipse.rdf4j.http.protocol.Protocol.getProtocolLocation;
 import static org.eclipse.rdf4j.http.protocol.Protocol.getRepositoriesLocation;
+import static org.eclipse.rdf4j.http.protocol.Protocol.getRepositoryConfigLocation;
 import static org.eclipse.rdf4j.http.protocol.Protocol.getRepositoryID;
 import static org.eclipse.rdf4j.http.protocol.Protocol.getRepositoryLocation;
 import static org.eclipse.rdf4j.http.protocol.Protocol.getServerLocation;
@@ -40,19 +42,19 @@ public class ProtocolTest {
 	@Test
 	public void testGetProtocolLocation() {
 		String result = getProtocolLocation(serverLocation);
-		assertEquals(result, serverLocation + "/" + PROTOCOL);
+		assertThat(result).isEqualTo(serverLocation + "/" + PROTOCOL);
 	}
 
 	@Test
 	public void testGetConfigLocation() {
 		String result = getConfigLocation(serverLocation);
-		assertEquals(result, serverLocation + "/" + CONFIG);
+		assertThat(result).isEqualTo(serverLocation + "/" + CONFIG);
 	}
 
 	@Test
 	public void testGetRepositoriesLocation() {
 		String result = getRepositoriesLocation(serverLocation);
-		assertEquals(result, serverLocation + "/" + REPOSITORIES);
+		assertThat(result).isEqualTo(serverLocation + "/" + REPOSITORIES);
 	}
 
 	@Test
@@ -74,19 +76,25 @@ public class ProtocolTest {
 	@Test
 	public void testGetRepositoryLocation() {
 		String result = getRepositoryLocation(serverLocation, repositoryID);
-		assertEquals(result, repositoryLocation);
+		assertThat(result).isEqualTo(repositoryLocation);
+	}
+
+	@Test
+	public void testGetRepositoryConfigLocation() {
+		String result = getRepositoryConfigLocation(repositoryLocation);
+		assertThat(result).isEqualTo(repositoryLocation + "/" + CONFIG);
 	}
 
 	@Test
 	public void testGetContextsLocation() {
 		String result = getContextsLocation(repositoryLocation);
-		assertEquals(result, repositoryLocation + "/" + CONTEXTS);
+		assertThat(result).isEqualTo(repositoryLocation + "/" + CONTEXTS);
 	}
 
 	@Test
 	public void testGetNamespacesLocation() {
 		String result = getNamespacesLocation(repositoryLocation);
-		assertEquals(result, repositoryLocation + "/" + NAMESPACES);
+		assertThat(result).isEqualTo(repositoryLocation + "/" + NAMESPACES);
 	}
 
 	@Test
@@ -95,14 +103,14 @@ public class ProtocolTest {
 		IRI uri = vf.createIRI("http://example.org/foo-bar");
 
 		String encodedUri = Protocol.encodeValue(uri);
-		IRI decodedUri = (IRI)Protocol.decodeValue(encodedUri, vf);
+		IRI decodedUri = (IRI) Protocol.decodeValue(encodedUri, vf);
 
 		assertEquals(uri, decodedUri);
 
 		BNode bnode = vf.createBNode("foo-bar-1");
 		String encodedBnode = Protocol.encodeValue(bnode);
 
-		BNode decodedNode = (BNode)Protocol.decodeValue(encodedBnode, vf);
+		BNode decodedNode = (BNode) Protocol.decodeValue(encodedBnode, vf);
 		assertEquals(bnode, decodedNode);
 
 	}

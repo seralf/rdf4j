@@ -1,0 +1,34 @@
+name: pull request verify
+
+on: pull_request
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        jdk: [1.8, 11]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.jdk }}  
+    - uses: actions/cache@v1
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+    - name: Verify formatting
+      run: mvn -B formatter:validate
+    - name: Build
+      run: mvn -B clean install -DskipTests  
+    - name: Run tests
+      run: mvn -B verify -Pcompliance --file pom.xml
+    - name: Print test failures
+      if: failure()
+      run: ./printTestResults.sh
+    

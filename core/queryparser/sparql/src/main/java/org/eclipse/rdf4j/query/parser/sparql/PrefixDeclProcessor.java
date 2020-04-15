@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.eclipse.rdf4j.common.annotation.InternalUseOnly;
 import org.eclipse.rdf4j.model.vocabulary.FN;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
@@ -36,28 +37,28 @@ import org.eclipse.rdf4j.query.parser.sparql.ast.VisitorException;
  * Processes the prefix declarations in a SPARQL query model.
  * 
  * @author Arjohn Kampman
+ * 
+ * @deprecated since 3.0. This feature is for internal use only: its existence, signature or behavior may change without
+ *             warning from one release to the next.
  */
+@Deprecated
+@InternalUseOnly
 public class PrefixDeclProcessor {
 
 	/**
-	 * Processes prefix declarations in queries. This method collects all prefixes that are declared in the
-	 * supplied query, verifies that prefixes are not redefined and replaces any {@link ASTQName} nodes in the
-	 * query with equivalent {@link ASTIRI} nodes.
+	 * Processes prefix declarations in queries. This method collects all prefixes that are declared in the supplied
+	 * query, verifies that prefixes are not redefined and replaces any {@link ASTQName} nodes in the query with
+	 * equivalent {@link ASTIRI} nodes.
 	 * 
-	 * @param qc
-	 *        The query that needs to be processed.
-	 * @return A map containing the prefixes that are declared in the query (key) and the namespace they map
-	 *         to (value).
-	 * @throws MalformedQueryException
-	 *         If the query contains redefined prefixes or qnames that use undefined prefixes.
+	 * @param qc The query that needs to be processed.
+	 * @return A map containing the prefixes that are declared in the query (key) and the namespace they map to (value).
+	 * @throws MalformedQueryException If the query contains redefined prefixes or qnames that use undefined prefixes.
 	 */
-	public static Map<String, String> process(ASTOperationContainer qc)
-		throws MalformedQueryException
-	{
+	public static Map<String, String> process(ASTOperationContainer qc) throws MalformedQueryException {
 		List<ASTPrefixDecl> prefixDeclList = qc.getPrefixDeclList();
 
 		// Build a prefix --> IRI map
-		Map<String, String> prefixMap = new LinkedHashMap<String, String>();
+		Map<String, String> prefixMap = new LinkedHashMap<>();
 
 		for (ASTPrefixDecl prefixDecl : prefixDeclList) {
 			String prefix = prefixDecl.getPrefix();
@@ -80,12 +81,11 @@ public class PrefixDeclProcessor {
 
 		ASTUnparsedQuadDataBlock dataBlock = null;
 		if (qc.getOperation() instanceof ASTInsertData) {
-			ASTInsertData insertData = (ASTInsertData)qc.getOperation();
+			ASTInsertData insertData = (ASTInsertData) qc.getOperation();
 			dataBlock = insertData.jjtGetChild(ASTUnparsedQuadDataBlock.class);
 
-		}
-		else if (qc.getOperation() instanceof ASTDeleteData) {
-			ASTDeleteData deleteData = (ASTDeleteData)qc.getOperation();
+		} else if (qc.getOperation() instanceof ASTDeleteData) {
+			ASTDeleteData deleteData = (ASTDeleteData) qc.getOperation();
 			dataBlock = deleteData.jjtGetChild(ASTUnparsedQuadDataBlock.class);
 		}
 
@@ -94,13 +94,11 @@ public class PrefixDeclProcessor {
 			dataBlock.setAddedDefaultPrefixes(defaultPrefixesAdded);
 			// TODO optimize string concat?
 			dataBlock.setDataBlock(prefixes + dataBlock.getDataBlock());
-		}
-		else {
+		} else {
 			QNameProcessor visitor = new QNameProcessor(prefixMap);
 			try {
 				qc.jjtAccept(visitor, null);
-			}
-			catch (VisitorException e) {
+			} catch (VisitorException e) {
 				throw new MalformedQueryException(e);
 			}
 		}
@@ -139,9 +137,7 @@ public class PrefixDeclProcessor {
 		}
 
 		@Override
-		public Object visit(ASTQName qnameNode, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTQName qnameNode, Object data) throws VisitorException {
 			String qname = qnameNode.getValue();
 
 			int colonIdx = qname.indexOf(':');
@@ -169,8 +165,8 @@ public class PrefixDeclProcessor {
 
 			// process escaped special chars.
 			StringBuffer unescaped = new StringBuffer();
-			Pattern escapedCharPattern = Pattern.compile(
-					"\\\\[_~\\.\\-!\\$\\&\\'\\(\\)\\*\\+\\,\\;\\=\\:\\/\\?#\\@\\%]");
+			Pattern escapedCharPattern = Pattern
+					.compile("\\\\[_~\\.\\-!\\$\\&\\'\\(\\)\\*\\+\\,\\;\\=\\:\\/\\?#\\@\\%]");
 			Matcher m = escapedCharPattern.matcher(localName);
 			boolean result = m.find();
 			while (result) {
@@ -184,9 +180,7 @@ public class PrefixDeclProcessor {
 		}
 
 		@Override
-		public Object visit(ASTServiceGraphPattern node, Object data)
-			throws VisitorException
-		{
+		public Object visit(ASTServiceGraphPattern node, Object data) throws VisitorException {
 			node.setPrefixDeclarations(prefixMap);
 			return super.visit(node, data);
 		}

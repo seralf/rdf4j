@@ -42,6 +42,7 @@ public class FallbackDataset implements Dataset, Serializable {
 		this.fallback = secondary;
 	}
 
+	@Override
 	public Set<IRI> getDefaultGraphs() {
 		Set<IRI> set = primary.getDefaultGraphs();
 		if (set == null || set.isEmpty())
@@ -49,6 +50,7 @@ public class FallbackDataset implements Dataset, Serializable {
 		return set;
 	}
 
+	@Override
 	public Set<IRI> getNamedGraphs() {
 		Set<IRI> set = primary.getNamedGraphs();
 		if (set == null || set.isEmpty())
@@ -56,6 +58,7 @@ public class FallbackDataset implements Dataset, Serializable {
 		return set;
 	}
 
+	@Override
 	public IRI getDefaultInsertGraph() {
 		IRI graph = primary.getDefaultInsertGraph();
 		if (graph == null)
@@ -63,6 +66,7 @@ public class FallbackDataset implements Dataset, Serializable {
 		return graph;
 	}
 
+	@Override
 	public Set<IRI> getDefaultRemoveGraphs() {
 		Set<IRI> set = primary.getDefaultRemoveGraphs();
 		if (set == null || set.isEmpty())
@@ -80,11 +84,11 @@ public class FallbackDataset implements Dataset, Serializable {
 		sb.append("INSERT INTO ");
 		appendURI(sb, getDefaultInsertGraph());
 		for (IRI uri : getDefaultGraphs()) {
-			sb.append("USING ");
+			sb.append("FROM ");
 			appendURI(sb, uri);
 		}
 		for (IRI uri : getNamedGraphs()) {
-			sb.append("USING NAMED ");
+			sb.append("FROM NAMED ");
 			appendURI(sb, uri);
 		}
 		return sb.toString();
@@ -95,8 +99,7 @@ public class FallbackDataset implements Dataset, Serializable {
 		if (str.length() > 50) {
 			sb.append("<").append(str, 0, 19).append("..");
 			sb.append(str, str.length() - 29, str.length()).append(">\n");
-		}
-		else {
+		} else {
 			sb.append("<").append(uri).append(">\n");
 		}
 	}

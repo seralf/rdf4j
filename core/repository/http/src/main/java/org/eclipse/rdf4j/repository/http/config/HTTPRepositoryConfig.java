@@ -7,6 +7,7 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.repository.http.config;
 
+import static org.eclipse.rdf4j.repository.http.config.HTTPRepositorySchema.NAMESPACE;
 import static org.eclipse.rdf4j.repository.http.config.HTTPRepositorySchema.PASSWORD;
 import static org.eclipse.rdf4j.repository.http.config.HTTPRepositorySchema.REPOSITORYURL;
 import static org.eclipse.rdf4j.repository.http.config.HTTPRepositorySchema.USERNAME;
@@ -64,9 +65,7 @@ public class HTTPRepositoryConfig extends AbstractRepositoryImplConfig {
 	}
 
 	@Override
-	public void validate()
-		throws RepositoryConfigException
-	{
+	public void validate() throws RepositoryConfigException {
 		super.validate();
 		if (url == null) {
 			throw new RepositoryConfigException("No URL specified for HTTP repository");
@@ -78,6 +77,7 @@ public class HTTPRepositoryConfig extends AbstractRepositoryImplConfig {
 		Resource implNode = super.export(graph);
 
 		if (url != null) {
+			graph.setNamespace("http", NAMESPACE);
 			graph.add(implNode, REPOSITORYURL, SimpleValueFactory.getInstance().createIRI(url));
 		}
 		// if (username != null) {
@@ -93,23 +93,19 @@ public class HTTPRepositoryConfig extends AbstractRepositoryImplConfig {
 	}
 
 	@Override
-	public void parse(Model model, Resource implNode)
-		throws RepositoryConfigException
-	{
+	public void parse(Model model, Resource implNode) throws RepositoryConfigException {
 		super.parse(model, implNode);
 
 		try {
-			Models.objectIRI(model.filter(implNode, REPOSITORYURL, null)).ifPresent(
-					iri -> setURL(iri.stringValue()));
+			Models.objectIRI(model.filter(implNode, REPOSITORYURL, null)).ifPresent(iri -> setURL(iri.stringValue()));
 
-			Models.objectLiteral(model.filter(implNode, USERNAME, null)).ifPresent(
-					username -> setUsername(username.getLabel()));
+			Models.objectLiteral(model.filter(implNode, USERNAME, null))
+					.ifPresent(username -> setUsername(username.getLabel()));
 
-			Models.objectLiteral(model.filter(implNode, PASSWORD, null)).ifPresent(
-					password -> setPassword(password.getLabel()));
+			Models.objectLiteral(model.filter(implNode, PASSWORD, null))
+					.ifPresent(password -> setPassword(password.getLabel()));
 
-		}
-		catch (ModelException e) {
+		} catch (ModelException e) {
 			throw new RepositoryConfigException(e.getMessage(), e);
 		}
 	}

@@ -25,17 +25,18 @@ public class SimpleDataset implements Dataset, Serializable {
 
 	private static final long serialVersionUID = 7841576172053060417L;
 
-	private Set<IRI> defaultRemoveGraphs = new LinkedHashSet<IRI>();
+	private Set<IRI> defaultRemoveGraphs = new LinkedHashSet<>();
 
 	private IRI defaultInsertGraph;
 
-	private Set<IRI> defaultGraphs = new LinkedHashSet<IRI>();
+	private Set<IRI> defaultGraphs = new LinkedHashSet<>();
 
-	private Set<IRI> namedGraphs = new LinkedHashSet<IRI>();
+	private Set<IRI> namedGraphs = new LinkedHashSet<>();
 
 	public SimpleDataset() {
 	}
 
+	@Override
 	public Set<IRI> getDefaultRemoveGraphs() {
 		return Collections.unmodifiableSet(defaultRemoveGraphs);
 	}
@@ -50,8 +51,7 @@ public class SimpleDataset implements Dataset, Serializable {
 	/**
 	 * Removes a graph URI from the set of default remove graph URIs.
 	 * 
-	 * @return <tt>true</tt> if the URI was removed from the set, <tt>false</tt> if the set did not contain
-	 *         the URI.
+	 * @return <tt>true</tt> if the URI was removed from the set, <tt>false</tt> if the set did not contain the URI.
 	 */
 	public boolean removeDefaultRemoveGraph(IRI graphURI) {
 		return defaultRemoveGraphs.remove(graphURI);
@@ -60,18 +60,19 @@ public class SimpleDataset implements Dataset, Serializable {
 	/**
 	 * @return Returns the default insert graph.
 	 */
+	@Override
 	public IRI getDefaultInsertGraph() {
 		return defaultInsertGraph;
 	}
 
 	/**
-	 * @param defaultInsertGraph
-	 *        The default insert graph to used.
+	 * @param defaultInsertGraph The default insert graph to used.
 	 */
 	public void setDefaultInsertGraph(IRI defaultInsertGraph) {
 		this.defaultInsertGraph = defaultInsertGraph;
 	}
 
+	@Override
 	public Set<IRI> getDefaultGraphs() {
 		return Collections.unmodifiableSet(defaultGraphs);
 	}
@@ -86,8 +87,7 @@ public class SimpleDataset implements Dataset, Serializable {
 	/**
 	 * Removes a graph URI from the set of default graph URIs.
 	 * 
-	 * @return <tt>true</tt> if the URI was removed from the set, <tt>false</tt> if the set did not contain
-	 *         the URI.
+	 * @return <tt>true</tt> if the URI was removed from the set, <tt>false</tt> if the set did not contain the URI.
 	 */
 	public boolean removeDefaultGraph(IRI graphURI) {
 		return defaultGraphs.remove(graphURI);
@@ -96,6 +96,7 @@ public class SimpleDataset implements Dataset, Serializable {
 	/**
 	 * Gets the (unmodifiable) set of named graph URIs.
 	 */
+	@Override
 	public Set<IRI> getNamedGraphs() {
 		return Collections.unmodifiableSet(namedGraphs);
 	}
@@ -110,8 +111,7 @@ public class SimpleDataset implements Dataset, Serializable {
 	/**
 	 * Removes a graph URI from the set of named graph URIs.
 	 * 
-	 * @return <tt>true</tt> if the URI was removed from the set, <tt>false</tt> if the set did not contain
-	 *         the URI.
+	 * @return <tt>true</tt> if the URI was removed from the set, <tt>false</tt> if the set did not contain the URI.
 	 */
 	public boolean removeNamedGraph(IRI graphURI) {
 		return namedGraphs.remove(graphURI);
@@ -139,11 +139,11 @@ public class SimpleDataset implements Dataset, Serializable {
 			appendURI(sb, getDefaultInsertGraph());
 		}
 		for (IRI uri : getDefaultGraphs()) {
-			sb.append("USING ");
+			sb.append("FROM ");
 			appendURI(sb, uri);
 		}
 		for (IRI uri : getNamedGraphs()) {
-			sb.append("USING NAMED ");
+			sb.append("FROM NAMED ");
 			appendURI(sb, uri);
 		}
 		if (getDefaultGraphs().isEmpty() && getNamedGraphs().isEmpty()) {
@@ -157,8 +157,7 @@ public class SimpleDataset implements Dataset, Serializable {
 		if (str.length() > 50) {
 			sb.append("<").append(str, 0, 19).append("..");
 			sb.append(str, str.length() - 29, str.length()).append(">\n");
-		}
-		else {
+		} else {
 			sb.append("<").append(uri).append(">\n");
 		}
 	}

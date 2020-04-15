@@ -37,7 +37,7 @@ public class SnapshotSailStore implements SailStore {
 	private final SailSourceBranch inferredAutoFlush;
 
 	/**
-	 * Wraps an {@link SailStore}, tracking changes in {@link SailModelFactory} instances.
+	 * Wraps an {@link SailStore}, tracking changes in {@link ModelFactory} instances.
 	 * 
 	 * @param backingStore
 	 * @param modelFactory
@@ -49,20 +49,16 @@ public class SnapshotSailStore implements SailStore {
 	}
 
 	@Override
-	public void close()
-		throws SailException
-	{
+	public void close() throws SailException {
 		try {
 			try {
 				explicitAutoFlush.flush();
 				inferredAutoFlush.flush();
-			}
-			finally {
+			} finally {
 				explicitAutoFlush.close();
 				inferredAutoFlush.close();
 			}
-		}
-		finally {
+		} finally {
 			backingStore.close();
 		}
 	}

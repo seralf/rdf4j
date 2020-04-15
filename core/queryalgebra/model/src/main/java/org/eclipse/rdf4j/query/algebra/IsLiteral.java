@@ -24,9 +24,8 @@ public class IsLiteral extends UnaryValueOperator {
 	 * Methods *
 	 *---------*/
 
-	public <X extends Exception> void visit(QueryModelVisitor<X> visitor)
-		throws X
-	{
+	@Override
+	public <X extends Exception> void visit(QueryModelVisitor<X> visitor) throws X {
 		visitor.meet(this);
 	}
 
@@ -42,6 +41,6 @@ public class IsLiteral extends UnaryValueOperator {
 
 	@Override
 	public IsLiteral clone() {
-		return (IsLiteral)super.clone();
+		return (IsLiteral) super.clone();
 	}
 }

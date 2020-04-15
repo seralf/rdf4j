@@ -9,7 +9,9 @@ package org.eclipse.rdf4j.rio.n3;
 
 import java.io.OutputStream;
 import java.io.Writer;
+import java.net.URISyntaxException;
 
+import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.RDFWriterFactory;
@@ -24,6 +26,7 @@ public class N3WriterFactory implements RDFWriterFactory {
 	/**
 	 * Returns {@link RDFFormat#N3}.
 	 */
+	@Override
 	public RDFFormat getRDFFormat() {
 		return RDFFormat.N3;
 	}
@@ -31,14 +34,26 @@ public class N3WriterFactory implements RDFWriterFactory {
 	/**
 	 * Returns a new instance of {@link N3Writer}.
 	 */
+	@Override
 	public RDFWriter getWriter(OutputStream out) {
 		return new N3Writer(out);
+	}
+
+	@Override
+	public RDFWriter getWriter(OutputStream out, String baseURI) throws URISyntaxException {
+		return new N3Writer(out, new ParsedIRI(baseURI));
 	}
 
 	/**
 	 * Returns a new instance of {@link N3Writer}.
 	 */
+	@Override
 	public RDFWriter getWriter(Writer writer) {
 		return new N3Writer(writer);
+	}
+
+	@Override
+	public RDFWriter getWriter(Writer writer, String baseURI) throws URISyntaxException {
+		return new N3Writer(writer, new ParsedIRI(baseURI));
 	}
 }

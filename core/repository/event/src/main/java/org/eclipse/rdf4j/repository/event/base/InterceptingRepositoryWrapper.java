@@ -21,10 +21,9 @@ import org.eclipse.rdf4j.repository.event.RepositoryConnectionInterceptor;
 import org.eclipse.rdf4j.repository.event.RepositoryInterceptor;
 
 /**
- * Wrapper that notifies interceptors of events on Repositories before they happen. Any interceptor can block
- * the operation by returning true from the relevant notification method. To do so will also cause the
- * notification process to stop, i.e. no other interceptors will be notified. The order in which interceptors
- * are notified is unspecified.
+ * Wrapper that notifies interceptors of events on Repositories before they happen. Any interceptor can block the
+ * operation by returning true from the relevant notification method. To do so will also cause the notification process
+ * to stop, i.e. no other interceptors will be notified. The order in which interceptors are notified is unspecified.
  * 
  * @author Herko ter Horst
  * @see InterceptingRepositoryConnectionWrapper
@@ -37,9 +36,9 @@ public class InterceptingRepositoryWrapper extends RepositoryWrapper implements 
 
 	private boolean activated;
 
-	private Set<RepositoryInterceptor> interceptors = new CopyOnWriteArraySet<RepositoryInterceptor>();
+	private Set<RepositoryInterceptor> interceptors = new CopyOnWriteArraySet<>();
 
-	private Set<RepositoryConnectionInterceptor> conInterceptors = new CopyOnWriteArraySet<RepositoryConnectionInterceptor>();
+	private Set<RepositoryConnectionInterceptor> conInterceptors = new CopyOnWriteArraySet<>();
 
 	/*--------------*
 	 * Constructors *
@@ -58,9 +57,10 @@ public class InterceptingRepositoryWrapper extends RepositoryWrapper implements 
 	 *---------*/
 
 	/**
-	 * Registers a <tt>RepositoryInterceptor</tt> that will receive notifications of operations that are
-	 * performed on this repository.
+	 * Registers a <tt>RepositoryInterceptor</tt> that will receive notifications of operations that are performed on
+	 * this repository.
 	 */
+	@Override
 	public void addRepositoryInterceptor(RepositoryInterceptor interceptor) {
 		interceptors.add(interceptor);
 		activated = true;
@@ -69,15 +69,17 @@ public class InterceptingRepositoryWrapper extends RepositoryWrapper implements 
 	/**
 	 * Removes a registered <tt>RepositoryInterceptor</tt> from this repository.
 	 */
+	@Override
 	public void removeRepositoryInterceptor(RepositoryInterceptor interceptor) {
 		interceptors.remove(interceptor);
 		activated = !interceptors.isEmpty();
 	}
 
 	/**
-	 * Registers a <tt>RepositoryConnectionInterceptor</tt> that will receive notifications of operations that
-	 * are performed on any connections that are created by this repository.
+	 * Registers a <tt>RepositoryConnectionInterceptor</tt> that will receive notifications of operations that are
+	 * performed on any connections that are created by this repository.
 	 */
+	@Override
 	public void addRepositoryConnectionInterceptor(RepositoryConnectionInterceptor interceptor) {
 		conInterceptors.add(interceptor);
 	}
@@ -85,14 +87,13 @@ public class InterceptingRepositoryWrapper extends RepositoryWrapper implements 
 	/**
 	 * Removes a registered <tt>RepositoryConnectionInterceptor</tt> from this repository.
 	 */
+	@Override
 	public void removeRepositoryConnectionInterceptor(RepositoryConnectionInterceptor interceptor) {
 		conInterceptors.remove(interceptor);
 	}
 
 	@Override
-	public InterceptingRepositoryConnection getConnection()
-		throws RepositoryException
-	{
+	public InterceptingRepositoryConnection getConnection() throws RepositoryException {
 		RepositoryConnection conn = getDelegate().getConnection();
 		if (activated) {
 			boolean denied = false;
@@ -118,9 +119,7 @@ public class InterceptingRepositoryWrapper extends RepositoryWrapper implements 
 	}
 
 	@Override
-	public void initialize()
-		throws RepositoryException
-	{
+	public void initialize() throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryInterceptor interceptor : interceptors) {
@@ -152,9 +151,7 @@ public class InterceptingRepositoryWrapper extends RepositoryWrapper implements 
 	}
 
 	@Override
-	public void shutDown()
-		throws RepositoryException
-	{
+	public void shutDown() throws RepositoryException {
 		boolean denied = false;
 		if (activated) {
 			for (RepositoryInterceptor interceptor : interceptors) {

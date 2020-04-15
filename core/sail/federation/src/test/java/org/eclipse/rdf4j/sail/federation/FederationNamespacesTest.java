@@ -7,12 +7,7 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.federation;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsCollectionContaining.hasItem;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,68 +38,44 @@ public class FederationNamespacesTest {
 	private static Namespace EXPECTED_NAMESPACE = new SimpleNamespace(PREFIX, EXPECTED_NAME);
 
 	@Test
-	public void testTwoMatchingNamespaces()
-		throws RepositoryException, RDFParseException, IOException
-	{
-		RepositoryConnection con = createFederationWithMemberNamespaces("a", "a");
-		try {
-			assertThat(con.getNamespace(PREFIX), is(equalTo(EXPECTED_NAME)));
+	public void testTwoMatchingNamespaces() throws RepositoryException, RDFParseException, IOException {
+		try (RepositoryConnection con = createFederationWithMemberNamespaces("a", "a")) {
+			assertThat(con.getNamespace(PREFIX)).isEqualTo(EXPECTED_NAME);
 			List<Namespace> asList = Iterations.asList(con.getNamespaces());
-			assertThat(asList, hasItem(EXPECTED_NAMESPACE));
-		}
-		finally {
-			con.close();
+			assertThat(asList).contains(EXPECTED_NAMESPACE);
 		}
 	}
 
 	@Test
-	public void testThreeMatchingNamespaces()
-		throws RepositoryException, RDFParseException, IOException
-	{
-		RepositoryConnection con = createFederationWithMemberNamespaces("a", "a", "a");
-		try {
-			assertThat(con.getNamespace(PREFIX), is(equalTo(EXPECTED_NAME)));
+	public void testThreeMatchingNamespaces() throws RepositoryException, RDFParseException, IOException {
+		try (RepositoryConnection con = createFederationWithMemberNamespaces("a", "a", "a")) {
+			assertThat(con.getNamespace(PREFIX)).isEqualTo(EXPECTED_NAME);
 			List<Namespace> asList = Iterations.asList(con.getNamespaces());
-			assertThat(asList, hasItem(EXPECTED_NAMESPACE));
-		}
-		finally {
-			con.close();
+			assertThat(asList).contains(EXPECTED_NAMESPACE);
 		}
 	}
 
 	@Test
-	public void testTwoMismatchedNamespaces()
-		throws RepositoryException, RDFParseException, IOException
-	{
-		RepositoryConnection con = createFederationWithMemberNamespaces("a", "b");
-		try {
-			assertThat(con.getNamespace(PREFIX), is(nullValue()));
+	public void testTwoMismatchedNamespaces() throws RepositoryException, RDFParseException, IOException {
+		try (RepositoryConnection con = createFederationWithMemberNamespaces("a", "b")) {
+			assertThat(con.getNamespace(PREFIX)).isNull();
+			;
 			List<Namespace> asList = Iterations.asList(con.getNamespaces());
-			assertThat(asList, not(hasItem(EXPECTED_NAMESPACE)));
-		}
-		finally {
-			con.close();
+			assertThat(asList).doesNotContain(EXPECTED_NAMESPACE);
 		}
 	}
 
 	@Test
-	public void testThreeMismatchedNamespaces()
-		throws RepositoryException, RDFParseException, IOException
-	{
-		RepositoryConnection con = createFederationWithMemberNamespaces("a", "b", "c");
-		try {
-			assertThat(con.getNamespace(PREFIX), is(nullValue()));
+	public void testThreeMismatchedNamespaces() throws RepositoryException, RDFParseException, IOException {
+		try (RepositoryConnection con = createFederationWithMemberNamespaces("a", "b", "c")) {
+			assertThat(con.getNamespace(PREFIX)).isNull();
 			List<Namespace> asList = Iterations.asList(con.getNamespaces());
-			assertThat(asList, not(hasItem(EXPECTED_NAMESPACE)));
-		}
-		finally {
-			con.close();
+			assertThat(asList).doesNotContain(EXPECTED_NAMESPACE);
 		}
 	}
 
 	private RepositoryConnection createFederationWithMemberNamespaces(String... paths)
-		throws RepositoryException, RDFParseException, IOException
-	{
+			throws RepositoryException, RDFParseException, IOException {
 		Federation federation = new Federation();
 		for (int i = 0; i < paths.length; i++) {
 			federation.addMember(createMember(Integer.toString(i), "http://test/" + paths[i] + "#"));
@@ -115,16 +86,11 @@ public class FederationNamespacesTest {
 	}
 
 	private Repository createMember(String memberID, String name)
-		throws RepositoryException, RDFParseException, IOException
-	{
+			throws RepositoryException, RDFParseException, IOException {
 		SailRepository member = new SailRepository(new MemoryStore());
 		member.initialize();
-		SailRepositoryConnection con = member.getConnection();
-		try {
+		try (SailRepositoryConnection con = member.getConnection()) {
 			con.setNamespace(PREFIX, name);
-		}
-		finally {
-			con.close();
 		}
 		return member;
 	}

@@ -11,6 +11,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,9 +45,7 @@ public class RDFCollectionsTest {
 	private Literal c;
 
 	@Before
-	public void setUp()
-		throws Exception
-	{
+	public void setUp() throws Exception {
 		a = Literals.createLiteral(vf, "A");
 		b = Literals.createLiteral(vf, "B");
 		c = Literals.createLiteral(vf, "C");
@@ -60,7 +63,7 @@ public class RDFCollectionsTest {
 		assertTrue(m.contains(head, RDF.FIRST, a));
 		assertFalse(m.contains(null, RDF.REST, head));
 
-		List<Value> newList = RDFCollections.asValues(m, head, new ArrayList<Value>());
+		List<Value> newList = RDFCollections.asValues(m, head, new ArrayList<>());
 		assertNotNull(newList);
 		assertTrue(newList.contains(a));
 		assertTrue(newList.contains(b));
@@ -74,10 +77,9 @@ public class RDFCollectionsTest {
 		Model m = RDFCollections.asRDF(values, head, new TreeModel());
 		m.remove(null, RDF.REST, RDF.NIL);
 		try {
-			RDFCollections.asValues(m, head, new ArrayList<Value>());
+			RDFCollections.asValues(m, head, new ArrayList<>());
 			fail("collection missing terminator should result in error");
-		}
-		catch (ModelException e) {
+		} catch (ModelException e) {
 			// fall through, expected
 		}
 
@@ -85,21 +87,27 @@ public class RDFCollectionsTest {
 		m.add(head, RDF.REST, head);
 
 		try {
-			RDFCollections.asValues(m, head, new ArrayList<Value>());
+			RDFCollections.asValues(m, head, new ArrayList<>());
 			fail("collection with cycle should result in error");
-		}
-		catch (ModelException e) {
+		} catch (ModelException e) {
 			// fall through, expected
 		}
 
 		// supply incorrect head node
 		try {
-			RDFCollections.asValues(m, vf.createBNode(), new ArrayList<Value>());
+			RDFCollections.asValues(m, vf.createBNode(), new ArrayList<>());
 			fail("resource that is not a collection should result in error");
-		}
-		catch (ModelException e) {
+		} catch (ModelException e) {
 			// fall through, expected
 		}
+	}
+
+	@Test
+	public void testInjectedValueFactoryIsUsed() {
+		Resource head = vf.createBNode();
+		ValueFactory injected = mock(SimpleValueFactory.class, CALLS_REAL_METHODS);
+		RDFCollections.asRDF(values, head, new TreeModel(), injected);
+		verify(injected, atLeastOnce()).createStatement(any(), any(), any());
 	}
 
 	@Test
