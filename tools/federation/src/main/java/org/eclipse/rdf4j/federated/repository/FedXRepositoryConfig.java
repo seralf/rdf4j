@@ -9,6 +9,7 @@ package org.eclipse.rdf4j.federated.repository;
 
 import java.util.Set;
 
+import org.eclipse.rdf4j.federated.FedXConfig;
 import org.eclipse.rdf4j.federated.util.Vocabulary.FEDX;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Model;
@@ -25,7 +26,7 @@ import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 
 /**
  * A {@link RepositoryImplConfig} to configure FedX for the use in the RDF4J workbench.
- * 
+ *
  * <p>
  * Federation member repositories (e.g. NativeStore or SPARQL endpoints) can be managed in the RDF4J Workbench, and
  * referenced as members in the federation. Alternatively, FedX can manage repositories, please refer to the
@@ -34,24 +35,24 @@ import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
  * <p>
  * Example configuration file:
  * </p>
- * 
+ *
  * <pre>
  * # RDF4J configuration template for a FedX Repository
- * 
+ *
  * &#64;prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
  * &#64;prefix rep: <http://www.openrdf.org/config/repository#>.
  * &#64;prefix fedx: <http://www.fluidops.com/config/fedx#>.
- * 
+ *
  * [] a rep:Repository ;
  * rep:repositoryImpl [
  *   rep:repositoryType "fedx:FedXRepository" ;
  *   fedx:member [
  *      fedx:store "ResolvableRepository" ;
- *      fedx:repositoryName "endpoint1" 
+ *      fedx:repositoryName "endpoint1"
  *   ],
  *   [
  *      fedx:store "ResolvableRepository" ;
- *      fedx:repositoryName "endpoint2" 
+ *      fedx:repositoryName "endpoint2"
  *   ]
  *   # optionally define data config
  *   #fedx:fedxConfig "fedxConfig.prop" ;
@@ -60,12 +61,12 @@ import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
  * rep:repositoryID "fedx" ;
  * rdfs:label "FedX Federation" .
  * </pre>
- * 
+ *
  * <p>
  * Note that the location of the fedx config and the data config is relative to the repository's data dir (as managed by
  * the RDF4J repository manager)
  * </p>
- * 
+ *
  * @author Andreas Schwarte
  *
  */
@@ -91,6 +92,7 @@ public class FedXRepositoryConfig extends AbstractRepositoryImplConfig {
 	/**
 	 * the location of the fedx configuration
 	 */
+	@Deprecated
 	private String fedxConfig;
 
 	/**
@@ -100,7 +102,7 @@ public class FedXRepositoryConfig extends AbstractRepositoryImplConfig {
 
 	/**
 	 * the model representing the members
-	 * 
+	 *
 	 * <pre>
 	 * :member1 fedx:store "ResolvableRepository" ;
 	 * 		fedx:repositoryName "endpoint1" .
@@ -110,20 +112,30 @@ public class FedXRepositoryConfig extends AbstractRepositoryImplConfig {
 	 */
 	private Model members;
 
+	/**
+	 * Initialized {@link FedXConfig}
+	 */
+	private FedXConfig config;
+
 	public FedXRepositoryConfig() {
 		super(FedXRepositoryFactory.REPOSITORY_TYPE);
 	}
 
 	/**
 	 * @return the location of the FedX configuration
+	 * @deprecated use {@link #getConfig()}, scheduled for removal in 4.0
 	 */
+	@Deprecated
 	public String getFedxConfig() {
 		return fedxConfig;
 	}
 
 	/**
 	 * Set the location of the FedX configuration
+	 * 
+	 * @deprecated use {@link #setConfig(FedXConfig)}, scheduled for removal in 4.0
 	 */
+	@Deprecated
 	public void setFedxConfig(String fedxConfig) {
 		this.fedxConfig = fedxConfig;
 	}
@@ -142,6 +154,14 @@ public class FedXRepositoryConfig extends AbstractRepositoryImplConfig {
 
 	public void setMembers(Model members) {
 		this.members = members;
+	}
+
+	public FedXConfig getConfig() {
+		return config;
+	}
+
+	public void setConfig(FedXConfig config) {
+		this.config = config;
 	}
 
 	@Override
@@ -186,7 +206,7 @@ public class FedXRepositoryConfig extends AbstractRepositoryImplConfig {
 		super.parse(m, implNode);
 
 		try {
-			Models.objectLiteral(m.filter(implNode, DATA_CONFIG, null))
+			Models.objectLiteral(m.getStatements(implNode, DATA_CONFIG, null))
 					.ifPresent(value -> setDataConfig(value.stringValue()));
 
 			Set<Value> memberNodes = m.filter(implNode, MEMBER, null).objects();

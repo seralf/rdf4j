@@ -20,7 +20,7 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.QueryResults;
 import org.eclipse.rdf4j.rio.ParserConfig;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
@@ -76,15 +76,15 @@ public class JSONLDWriterBackgroundTest extends RDFWriterTest {
 		String exNs = "http://example.org/";
 		IRI uri1 = vf.createIRI(exNs, "uri1");
 		IRI uri2 = vf.createIRI(exNs, "uri2");
-		Literal plainLit = vf.createLiteral("plain", XMLSchema.STRING);
+		Literal plainLit = vf.createLiteral("plain", XSD.STRING);
 
 		Statement st1 = vf.createStatement(uri1, uri2, plainLit);
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		RDFWriter rdfWriter = rdfWriterFactory.getWriter(out);
 		rdfWriter.getWriterConfig().set(JSONLDSettings.JSONLD_MODE, JSONLDMode.COMPACT);
-		rdfWriter.handleNamespace("ex", exNs);
 		rdfWriter.startRDF();
+		rdfWriter.handleNamespace("ex", exNs);
 		rdfWriter.handleStatement(st1);
 		rdfWriter.endRDF();
 

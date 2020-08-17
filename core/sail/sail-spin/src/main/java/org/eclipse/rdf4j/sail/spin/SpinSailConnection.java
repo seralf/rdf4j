@@ -7,9 +7,19 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.spin;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.common.iteration.CloseableIteration;
 import org.eclipse.rdf4j.common.iteration.Iterations;
@@ -19,7 +29,7 @@ import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.LinkedHashModel;
+import org.eclipse.rdf4j.model.impl.DynamicModelFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -78,18 +88,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 class SpinSailConnection extends AbstractForwardChainingInferencerConnection {
 
@@ -355,13 +356,12 @@ class SpinSailConnection extends AbstractForwardChainingInferencerConnection {
 
 	@Override
 	protected Model createModel() {
-		return new LinkedHashModel();
+		return new DynamicModelFactory().createEmptyModel();
 	}
 
 	private final static List<Statement> schemaSp;
 	private final static List<Statement> schemaSpin;
 	private final static List<Statement> schemaSplSpin;
-	private final static List<Statement> schemaSpinFull;
 	private final static List<Statement> schemaSpinFullFC;
 
 	static {
@@ -369,7 +369,6 @@ class SpinSailConnection extends AbstractForwardChainingInferencerConnection {
 			schemaSp = getStatementsAsList("/schema/sp.ttl", RDFFormat.TURTLE);
 			schemaSpin = getStatementsAsList("/schema/spin.ttl", RDFFormat.TURTLE);
 			schemaSplSpin = getStatementsAsList("/schema/spl.spin.ttl", RDFFormat.TURTLE);
-			schemaSpinFull = getStatementsAsList("/schema/spin-full.ttl", RDFFormat.TURTLE);
 			schemaSpinFullFC = getStatementsAsList("/schema/spin-full-forwardchained.ttl", RDFFormat.TURTLE);
 		} catch (IOException e) {
 			throw new RuntimeException(e);

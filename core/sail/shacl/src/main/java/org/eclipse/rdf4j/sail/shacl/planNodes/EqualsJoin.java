@@ -55,7 +55,8 @@ public class EqualsJoin implements PlanNode {
 				while (next == null) {
 					if (nextRight != null) {
 
-						if (nextLeft.line == nextRight.line || nextLeft.line.equals(nextRight.line)) {
+						if (nextLeft.getLine() == nextRight.getLine()
+								|| nextLeft.getLine().equals(nextRight.getLine())) {
 							if (useAsFilter) {
 								next = nextLeft;
 								next.addAllCausedByPropertyShape(nextRight.getCausedByPropertyShapes());
@@ -127,8 +128,9 @@ public class EqualsJoin implements PlanNode {
 
 	@Override
 	public void getPlanAsGraphvizDot(StringBuilder stringBuilder) {
-		if (printed)
+		if (printed) {
 			return;
+		}
 		printed = true;
 		left.getPlanAsGraphvizDot(stringBuilder);
 
@@ -146,8 +148,9 @@ public class EqualsJoin implements PlanNode {
 
 	@Override
 	public IteratorData getIteratorDataType() {
-		if (left.getIteratorDataType() == right.getIteratorDataType())
+		if (left.getIteratorDataType() == right.getIteratorDataType()) {
 			return left.getIteratorDataType();
+		}
 
 		throw new IllegalStateException("Not implemented support for when left and right have different types of data");
 

@@ -7,6 +7,9 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.elasticsearchstore;
 
+import java.util.Arrays;
+import java.util.Iterator;
+
 import org.eclipse.rdf4j.common.iteration.CloseableIteration;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -14,9 +17,8 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
-
-import java.util.Arrays;
-import java.util.Iterator;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 
 class ElasticsearchHelper {
 
@@ -33,6 +35,7 @@ class ElasticsearchHelper {
 			{
 
 				SearchResponse scrollResp = client.prepareSearch(index)
+						.addSort(FieldSortBuilder.DOC_FIELD_NAME, SortOrder.ASC)
 						.setScroll(new TimeValue(scrollTimeout))
 						.setQuery(queryBuilder)
 						.setSize(size)

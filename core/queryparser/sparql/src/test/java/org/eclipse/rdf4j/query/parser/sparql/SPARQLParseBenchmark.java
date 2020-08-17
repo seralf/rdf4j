@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 201 Eclipse RDF4J contributors.
+ * Copyright (c) 2019 Eclipse RDF4J contributors.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Distribution License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *******************************************************************************/
 
 package org.eclipse.rdf4j.query.parser.sparql;
+
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.rdf4j.query.parser.ParsedQuery;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -22,9 +24,8 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-
-import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
 @Warmup(iterations = 10)
@@ -34,6 +35,15 @@ import java.util.concurrent.TimeUnit;
 @Measurement(iterations = 40)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class SPARQLParseBenchmark {
+
+	public static void main(String[] args) throws RunnerException {
+		Options opt = new OptionsBuilder()
+				.include("SPARQLParseBenchmark") // adapt to control which benchmark test to run
+				.forks(1)
+				.build();
+
+		new Runner(opt).run();
+	}
 
 	@Setup(Level.Iteration)
 	public void setUp() {
@@ -56,12 +66,6 @@ public class SPARQLParseBenchmark {
 
 		return temp;
 
-	}
-
-	public static void main(String[] args) throws RunnerException {
-		String regexp = SPARQLParseBenchmark.class.getName() + "\\.*";
-
-		new Runner(new OptionsBuilder().include(regexp).build()).run();
 	}
 
 }

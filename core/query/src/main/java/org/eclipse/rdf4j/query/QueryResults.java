@@ -9,6 +9,7 @@ package org.eclipse.rdf4j.query;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -32,12 +34,13 @@ import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.ModelFactory;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
-import org.eclipse.rdf4j.model.impl.LinkedHashModel;
+import org.eclipse.rdf4j.model.impl.DynamicModelFactory;
 import org.eclipse.rdf4j.model.util.Models;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.impl.BackgroundGraphResult;
 import org.eclipse.rdf4j.query.impl.IteratingGraphQueryResult;
 import org.eclipse.rdf4j.query.impl.IteratingTupleQueryResult;
@@ -66,9 +69,40 @@ public class QueryResults extends Iterations {
 	 */
 	public static Model asModel(CloseableIteration<? extends Statement, ? extends RDF4JException> iteration)
 			throws QueryEvaluationException {
-		Model model = new LinkedHashModel();
+		return asModel(iteration, new DynamicModelFactory());
+	}
+
+	/**
+	 * Get a {@link Model} containing all elements obtained from the specified query result.
+	 *
+	 * @param iteration    the source iteration to get the statements from. This can be a {@link GraphQueryResult}, a
+	 *                     {@link RepositoryResult&lt;Statement&gt;}, or any other instance of {@link CloseableIteration
+	 *                     &lt;Statement&gt;}
+	 * @param modelFactory the ModelFactory used to instantiate the model that gets returned.
+	 * @return a {@link Model} containing all statements obtained from the specified source iteration.
+	 */
+	public static Model asModel(CloseableIteration<? extends Statement, ? extends RDF4JException> iteration,
+			ModelFactory modelFactory)
+			throws QueryEvaluationException {
+		Model model = modelFactory.createEmptyModel();
 		addAll(iteration, model);
 		return model;
+	}
+
+	/**
+	 * Returns a list of values of a particular variable out of the QueryResult.
+	 *
+	 * @param result
+	 * @param var    variable for which list of values needs to be returned
+	 * @return a list of Values of var
+	 * @throws QueryEvaluationException
+	 */
+	public static List<Value> getAllValues(TupleQueryResult result, String var) throws QueryEvaluationException {
+		try (Stream<BindingSet> stream = result.stream()) {
+			return result.getBindingNames().contains(var)
+					? stream.map(bs -> bs.getValue(var)).collect(Collectors.toList())
+					: Collections.emptyList();
+		}
 	}
 
 	/**
@@ -426,15 +460,15 @@ public class QueryResults extends Iterations {
 							&& XMLDatatypeUtil.isValidValue(leftLit.getLabel(), dt1)
 							&& XMLDatatypeUtil.isValidValue(rightLit.getLabel(), dt2)) {
 						Integer compareResult = null;
-						if (dt1.equals(XMLSchema.DOUBLE)) {
+						if (dt1.equals(XSD.DOUBLE)) {
 							compareResult = Double.compare(leftLit.doubleValue(), rightLit.doubleValue());
-						} else if (dt1.equals(XMLSchema.FLOAT)) {
+						} else if (dt1.equals(XSD.FLOAT)) {
 							compareResult = Float.compare(leftLit.floatValue(), rightLit.floatValue());
-						} else if (dt1.equals(XMLSchema.DECIMAL)) {
+						} else if (dt1.equals(XSD.DECIMAL)) {
 							compareResult = leftLit.decimalValue().compareTo(rightLit.decimalValue());
 						} else if (XMLDatatypeUtil.isIntegerDatatype(dt1)) {
 							compareResult = leftLit.integerValue().compareTo(rightLit.integerValue());
-						} else if (dt1.equals(XMLSchema.BOOLEAN)) {
+						} else if (dt1.equals(XSD.BOOLEAN)) {
 							Boolean leftBool = leftLit.booleanValue();
 							Boolean rightBool = rightLit.booleanValue();
 							compareResult = leftBool.compareTo(rightBool);

@@ -8,11 +8,16 @@
 
 package org.eclipse.rdf4j.sail.shacl.benchmark;
 
-import ch.qos.logback.classic.Logger;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.util.Files;
 import org.eclipse.rdf4j.IsolationLevels;
-import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -41,12 +46,7 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
+import ch.qos.logback.classic.Logger;
 
 @State(Scope.Benchmark)
 @Warmup(iterations = 20)
@@ -63,7 +63,7 @@ public class ParallelBenchmark {
 	private List<List<Statement>> allStatements;
 
 	@Setup(Level.Iteration)
-	public void setUp() {
+	public void setUp() throws InterruptedException {
 		Logger root = (Logger) LoggerFactory.getLogger(ShaclSailConnection.class.getName());
 		root.setLevel(ch.qos.logback.classic.Level.INFO);
 
@@ -76,7 +76,7 @@ public class ParallelBenchmark {
 		}));
 
 		System.gc();
-
+		Thread.sleep(100);
 	}
 
 	@Benchmark

@@ -8,37 +8,62 @@
 
 package org.eclipse.rdf4j.sail.shacl.results;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.SHACL;
+import org.eclipse.rdf4j.sail.shacl.AST.InversePath;
 import org.eclipse.rdf4j.sail.shacl.AST.Path;
 import org.eclipse.rdf4j.sail.shacl.AST.PathPropertyShape;
 import org.eclipse.rdf4j.sail.shacl.AST.PropertyShape;
 import org.eclipse.rdf4j.sail.shacl.AST.SimplePath;
 import org.eclipse.rdf4j.sail.shacl.SourceConstraintComponent;
 
-import java.util.ArrayList;
-import java.util.List;
+/**
+ * The ValidationResult represents the results from a SHACL validation in an easy-to-use Java API.
+ *
+ * @deprecated The ValidationResult is deprecated because it is planned moved to a new package to allow it to be used
+ *             with remote validation results.
+ */
+@Deprecated
+public class ValidationResult {
 
-public class ValidationResult implements ModelInterface {
+	private final Resource id = SimpleValueFactory.getInstance().createBNode();
 
-	private Resource id = SimpleValueFactory.getInstance().createBNode();
-
-	private SourceConstraintComponent sourceConstraintComponent;
-	private PropertyShape sourceShape;
+	private final SourceConstraintComponent sourceConstraintComponent;
+	private final PropertyShape sourceShape;
 	private Path path;
 	private ValidationResult detail;
-	private Value focusNode;
+	private final Value focusNode;
+	private final Optional<Value> value;
 
-	public ValidationResult(PropertyShape sourceShape, Value focusNode) {
+	static Set<SourceConstraintComponent.ConstraintType> constraintTypesThatSupportValue = Arrays
+			.stream(SourceConstraintComponent.ConstraintType.values())
+			.filter(t -> t != SourceConstraintComponent.ConstraintType.Cardinality)
+			.filter(t -> t != SourceConstraintComponent.ConstraintType.Logical)
+			.collect(Collectors.toSet());
+
+	public ValidationResult(PropertyShape sourceShape, Value focusNode, Value value) {
 		this.sourceShape = sourceShape;
 		this.focusNode = focusNode;
 		this.sourceConstraintComponent = sourceShape.getSourceConstraintComponent();
 		if (sourceShape instanceof PathPropertyShape) {
 			this.path = ((PathPropertyShape) sourceShape).getPath();
+		}
+
+		if (constraintTypesThatSupportValue.contains(sourceConstraintComponent.getConstraintType())) {
+			this.value = Optional.of(value);
+		} else {
+			this.value = Optional.empty();
 		}
 
 	}
@@ -71,7 +96,6 @@ public class ValidationResult implements ModelInterface {
 
 	}
 
-	@Override
 	public Model asModel(Model model) {
 
 		model.add(getId(), RDF.TYPE, SHACL.VALIDATION_RESULT);
@@ -81,8 +105,16 @@ public class ValidationResult implements ModelInterface {
 		model.add(getId(), SHACL.SOURCE_SHAPE, getSourceShapeResource());
 
 		if (getPath() != null) {
-			model.add(getId(), SHACL.RESULT_PATH, ((SimplePath) getPath()).getPath());
+			// TODO: Path should be responsible for this!
+			if (getPath() instanceof SimplePath) {
+				model.add(getId(), SHACL.RESULT_PATH, ((SimplePath) getPath()).getPath());
+			} else if (getPath() instanceof InversePath) {
+				model.add(getId(), SHACL.RESULT_PATH, getPath().getId());
+				model.add(getPath().getId(), SHACL.INVERSE_PATH, ((InversePath) getPath()).getPath());
+			}
 		}
+
+		value.ifPresent(v -> model.add(getId(), SHACL.VALUE, v));
 
 		if (detail != null) {
 			model.add(getId(), SHACL.DETAIL, detail.getId());
@@ -113,7 +145,6 @@ public class ValidationResult implements ModelInterface {
 		return focusNode;
 	}
 
-	@Override
 	public Resource getId() {
 		return id;
 	}
@@ -134,5 +165,9 @@ public class ValidationResult implements ModelInterface {
 				", detail=" + detail +
 				", focusNode=" + focusNode +
 				'}';
+	}
+
+	public Optional<Value> getValue() {
+		return value;
 	}
 }

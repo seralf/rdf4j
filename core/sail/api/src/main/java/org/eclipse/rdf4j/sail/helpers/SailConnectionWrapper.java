@@ -7,8 +7,11 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.helpers;
 
+import java.util.Optional;
+
 import org.eclipse.rdf4j.IsolationLevel;
 import org.eclipse.rdf4j.common.iteration.CloseableIteration;
+import org.eclipse.rdf4j.common.transaction.TransactionSetting;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Namespace;
 import org.eclipse.rdf4j.model.Resource;
@@ -16,10 +19,13 @@ import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.Dataset;
+import org.eclipse.rdf4j.query.Query;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.algebra.TupleExpr;
 import org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedServiceResolver;
 import org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedServiceResolverClient;
+import org.eclipse.rdf4j.query.explanation.Explanation;
 import org.eclipse.rdf4j.sail.SailConnection;
 import org.eclipse.rdf4j.sail.SailException;
 import org.eclipse.rdf4j.sail.UnknownSailTransactionStateException;
@@ -28,7 +34,7 @@ import org.eclipse.rdf4j.sail.UpdateContext;
 /**
  * An implementation of the SailConnection interface that wraps another SailConnection object and forwards any method
  * calls to the wrapped connection.
- * 
+ *
  * @author Jeen Broekstra
  */
 public class SailConnectionWrapper implements SailConnection, FederatedServiceResolverClient {
@@ -40,7 +46,7 @@ public class SailConnectionWrapper implements SailConnection, FederatedServiceRe
 	/**
 	 * The wrapped SailConnection.
 	 */
-	private SailConnection wrappedCon;
+	private final SailConnection wrappedCon;
 
 	/*--------------*
 	 * Constructors *
@@ -59,7 +65,7 @@ public class SailConnectionWrapper implements SailConnection, FederatedServiceRe
 
 	/**
 	 * Gets the connection that is wrapped by this object.
-	 * 
+	 *
 	 * @return The SailConnection object that was supplied to the constructor of this class.
 	 */
 	public SailConnection getWrappedConnection() {
@@ -81,6 +87,11 @@ public class SailConnectionWrapper implements SailConnection, FederatedServiceRe
 	@Override
 	public void close() throws SailException {
 		wrappedCon.close();
+	}
+
+	@Override
+	public Optional<TupleExpr> prepareQuery(QueryLanguage ql, Query.QueryType type, String query, String baseURI) {
+		return wrappedCon.prepareQuery(ql, type, query, baseURI);
 	}
 
 	@Override
@@ -191,6 +202,12 @@ public class SailConnectionWrapper implements SailConnection, FederatedServiceRe
 	}
 
 	@Override
+	public Explanation explain(Explanation.Level level, TupleExpr tupleExpr, Dataset dataset,
+			BindingSet bindings, boolean includeInferred, int timeoutSeconds) {
+		return wrappedCon.explain(level, tupleExpr, dataset, bindings, includeInferred, timeoutSeconds);
+	}
+
+	@Override
 	public void begin() throws SailException {
 		wrappedCon.begin();
 	}
@@ -198,6 +215,11 @@ public class SailConnectionWrapper implements SailConnection, FederatedServiceRe
 	@Override
 	public void begin(IsolationLevel level) throws SailException {
 		wrappedCon.begin(level);
+	}
+
+	@Override
+	public void setTransactionSettings(TransactionSetting... settings) {
+		wrappedCon.setTransactionSettings(settings);
 	}
 
 	@Override
@@ -214,4 +236,5 @@ public class SailConnectionWrapper implements SailConnection, FederatedServiceRe
 	public boolean isActive() throws UnknownSailTransactionStateException {
 		return wrappedCon.isActive();
 	}
+
 }

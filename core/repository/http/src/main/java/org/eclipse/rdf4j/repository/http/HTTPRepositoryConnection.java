@@ -25,9 +25,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.http.client.HttpClient;
-import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.OpenRDFUtil;
+import org.eclipse.rdf4j.RDF4JException;
 import org.eclipse.rdf4j.common.iteration.CloseableIteratorIteration;
+import org.eclipse.rdf4j.common.transaction.TransactionSetting;
 import org.eclipse.rdf4j.http.client.HttpClientDependent;
 import org.eclipse.rdf4j.http.client.RDF4JProtocolSession;
 import org.eclipse.rdf4j.http.protocol.Protocol;
@@ -81,7 +82,7 @@ import org.eclipse.rdf4j.rio.helpers.StatementCollector;
  * RepositoryConnection that communicates with a server using the HTTP protocol. Methods in this class may throw the
  * specific RepositoryException subclasses UnautorizedException and NotAllowedException, the semantics of which are
  * defined by the HTTP protocol.
- * 
+ *
  * @see org.eclipse.rdf4j.http.protocol.UnauthorizedException
  * @see org.eclipse.rdf4j.http.protocol.NotAllowedException
  * @author Arjohn Kampman
@@ -165,12 +166,33 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		}
 	}
 
+	@Override
+	public void begin(TransactionSetting... settings) {
+		verifyIsOpen();
+		verifyNotTxnActive("Connection already has an active transaction");
+
+		if (this.getRepository().useCompatibleMode()) {
+			active = true;
+			return;
+		}
+
+		try {
+			client.beginTransaction(settings);
+			active = true;
+		} catch (RepositoryException e) {
+			throw e;
+		} catch (RDF4JException | IllegalStateException | IOException e) {
+			throw new RepositoryException(e);
+		}
+
+	}
+
 	/**
 	 * Prepares a {@Link Query} for evaluation on this repository. Note that the preferred way of preparing queries is
 	 * to use the more specific {@link #prepareTupleQuery(QueryLanguage, String, String)},
 	 * {@link #prepareBooleanQuery(QueryLanguage, String, String)}, or
 	 * {@link #prepareGraphQuery(QueryLanguage, String, String)} methods instead.
-	 * 
+	 *
 	 * @throws UnsupportedOperationException if the method is not supported for the supplied query language.
 	 */
 	@Override
@@ -294,6 +316,8 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		try {
 			client.commitTransaction();
 			active = false;
+		} catch (RepositoryException e) {
+			throw e;
 		} catch (RDF4JException | IllegalStateException | IOException e) {
 			throw new RepositoryException(e);
 		}
@@ -311,6 +335,8 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 		try {
 			client.rollbackTransaction();
 			active = false;
+		} catch (RepositoryException e) {
+			throw e;
 		} catch (RDF4JException | IllegalStateException | IOException e) {
 			throw new RepositoryException(e);
 		}
@@ -421,7 +447,8 @@ class HTTPRepositoryConnection extends AbstractRepositoryConnection implements H
 			// N-Triples format, just with a different
 			// default MIME-type.
 			return new RDFFormat(NTRIPLES.getName(), Arrays.asList("text/plain"), NTRIPLES.getCharset(),
-					NTRIPLES.getFileExtensions(), NTRIPLES.supportsNamespaces(), NTRIPLES.supportsContexts());
+					NTRIPLES.getFileExtensions(), NTRIPLES.supportsNamespaces(), NTRIPLES.supportsContexts(),
+					NTRIPLES.supportsRDFStar());
 		}
 
 		return format;

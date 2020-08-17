@@ -8,23 +8,40 @@
 
 package org.eclipse.rdf4j.sail.shacl.results;
 
-import org.eclipse.rdf4j.model.Model;
-import org.eclipse.rdf4j.model.Resource;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
-import org.eclipse.rdf4j.model.vocabulary.SHACL;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ValidationReport implements ModelInterface {
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.impl.BooleanLiteral;
+import org.eclipse.rdf4j.model.impl.DynamicModelFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDF4J;
+import org.eclipse.rdf4j.model.vocabulary.SHACL;
+import org.eclipse.rdf4j.sail.shacl.planNodes.Tuple;
 
-	private Resource id = SimpleValueFactory.getInstance().createBNode();
+/**
+ * The ValidationReport represents the report from a SHACL validation in an easy-to-use Java API.
+ *
+ * @deprecated The ValidationReport is deprecated because it is planned moved to a new package to allow it to be used
+ *             with remote validation reports.
+ */
+@Deprecated
+public class ValidationReport {
 
-	private boolean conforms;
+	protected final Resource id = SimpleValueFactory.getInstance().createBNode();
 
-	private List<ValidationResult> validationResult = new ArrayList<>();
+	protected boolean conforms = true;
+
+	protected final List<ValidationResult> validationResult = new ArrayList<>();
+	protected boolean truncated = false;
+	List<Tuple> tuples;
+
+	public ValidationReport() {
+
+	}
 
 	public ValidationReport(boolean conforms) {
 		this.conforms = conforms;
@@ -34,13 +51,13 @@ public class ValidationReport implements ModelInterface {
 		this.validationResult.add(validationResult);
 	}
 
-	@Override
 	public Model asModel(Model model) {
 
 		SimpleValueFactory vf = SimpleValueFactory.getInstance();
 
 		model.add(getId(), SHACL.CONFORMS, vf.createLiteral(conforms));
 		model.add(getId(), RDF.TYPE, SHACL.VALIDATION_REPORT);
+		model.add(getId(), RDF4J.TRUNCATED, BooleanLiteral.valueOf(truncated));
 
 		for (ValidationResult result : validationResult) {
 			model.add(getId(), SHACL.RESULT, result.getId());
@@ -50,7 +67,10 @@ public class ValidationReport implements ModelInterface {
 		return model;
 	}
 
-	@Override
+	public Model asModel() {
+		return asModel(new DynamicModelFactory().createEmptyModel());
+	}
+
 	public Resource getId() {
 		return id;
 	}
@@ -75,5 +95,19 @@ public class ValidationReport implements ModelInterface {
 				"conforms=" + conforms +
 				", validationResult=" + Arrays.toString(validationResult.toArray()) +
 				'}';
+	}
+
+	/**
+	 * Users can enable a limit for the number of validation results they want to accept. If the limit is reached the
+	 * report will be marked as truncated.
+	 *
+	 * @return true if this SHACL validation report has been truncated.
+	 */
+	public boolean isTruncated() {
+		return truncated;
+	}
+
+	public void setTuples(List<Tuple> collect) {
+		this.tuples = collect;
 	}
 }

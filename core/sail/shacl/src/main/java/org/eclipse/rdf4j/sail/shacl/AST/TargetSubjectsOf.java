@@ -8,12 +8,18 @@
 
 package org.eclipse.rdf4j.sail.shacl.AST;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Set;
+
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.sail.SailConnection;
 import org.eclipse.rdf4j.sail.shacl.ConnectionsGroup;
 import org.eclipse.rdf4j.sail.shacl.RdfsSubClassOfReasoner;
+import org.eclipse.rdf4j.sail.shacl.ShaclSail;
+import org.eclipse.rdf4j.sail.shacl.Stats;
 import org.eclipse.rdf4j.sail.shacl.planNodes.ExternalFilterByPredicate;
 import org.eclipse.rdf4j.sail.shacl.planNodes.PlanNode;
 import org.eclipse.rdf4j.sail.shacl.planNodes.PlanNodeProvider;
@@ -22,10 +28,6 @@ import org.eclipse.rdf4j.sail.shacl.planNodes.Sort;
 import org.eclipse.rdf4j.sail.shacl.planNodes.TrimTuple;
 import org.eclipse.rdf4j.sail.shacl.planNodes.Unique;
 import org.eclipse.rdf4j.sail.shacl.planNodes.UnorderedSelect;
-
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * sh:targetSubjectsOf
@@ -36,8 +38,9 @@ public class TargetSubjectsOf extends NodeShape {
 
 	private final Set<IRI> targetSubjectsOf;
 
-	TargetSubjectsOf(Resource id, SailRepositoryConnection connection, boolean deactivated, Set<IRI> targetSubjectsOf) {
-		super(id, connection, deactivated);
+	TargetSubjectsOf(Resource id, ShaclSail shaclSail, SailRepositoryConnection connection, boolean deactivated,
+			Set<IRI> targetSubjectsOf) {
+		super(id, shaclSail, connection, deactivated);
 		this.targetSubjectsOf = targetSubjectsOf;
 		assert !this.targetSubjectsOf.isEmpty();
 	}
@@ -57,6 +60,7 @@ public class TargetSubjectsOf extends NodeShape {
 	@Override
 	public PlanNode getPlanAddedStatements(ConnectionsGroup connection,
 			PlaneNodeWrapper planeNodeWrapper) {
+		assert planeNodeWrapper == null;
 
 		PlanNode select;
 		if (targetSubjectsOf.size() == 1) {
@@ -75,6 +79,7 @@ public class TargetSubjectsOf extends NodeShape {
 	@Override
 	public PlanNode getPlanRemovedStatements(ConnectionsGroup connection,
 			PlaneNodeWrapper planeNodeWrapper) {
+		assert planeNodeWrapper == null;
 
 		PlanNode select;
 		if (targetSubjectsOf.size() == 1) {
@@ -91,7 +96,10 @@ public class TargetSubjectsOf extends NodeShape {
 	}
 
 	@Override
-	public boolean requiresEvaluation(SailConnection addedStatements, SailConnection removedStatements) {
+	public boolean requiresEvaluation(SailConnection addedStatements, SailConnection removedStatements, Stats stats) {
+		if (stats.isEmpty()) {
+			return false;
+		}
 		return targetSubjectsOf.stream()
 				.map(target -> addedStatements.hasStatement(null, target, null, false))
 				.reduce((a, b) -> a || b)
@@ -110,8 +118,8 @@ public class TargetSubjectsOf extends NodeShape {
 	}
 
 	@Override
-	public PlanNode getTargetFilter(SailConnection connection, PlanNode parent) {
-		return new ExternalFilterByPredicate(connection, targetSubjectsOf, parent, 0,
+	public PlanNode getTargetFilter(ConnectionsGroup connectionsGroup, PlanNode parent) {
+		return new ExternalFilterByPredicate(connectionsGroup.getBaseConnection(), targetSubjectsOf, parent, 0,
 				ExternalFilterByPredicate.On.Subject);
 	}
 

@@ -7,8 +7,12 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.query.resultio.text.tsv;
 
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResultHandlerException;
 import org.eclipse.rdf4j.query.resultio.AbstractTupleQueryResultParser;
@@ -16,15 +20,12 @@ import org.eclipse.rdf4j.query.resultio.QueryResultParseException;
 import org.eclipse.rdf4j.query.resultio.TupleQueryResultFormat;
 import org.eclipse.rdf4j.query.resultio.TupleQueryResultParser;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
 
 /**
  * SPARQL Results TSV format parser.
- * 
+ *
  * @author Jeen Broekstra
  * @author Andrew Rucker Jones
  */
@@ -38,7 +39,7 @@ public class SPARQLResultsTSVParser extends AbstractTupleQueryResultParser imple
 	@Override
 	public void parse(InputStream in) throws QueryResultParseException, TupleQueryResultHandlerException {
 		if (handler != null) {
-			SPARQLResultsTSVMappingStrategy strategy = new SPARQLResultsTSVMappingStrategy(valueFactory);
+			SPARQLResultsTSVMappingStrategy strategy = createMappingStrategy();
 
 			Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
 			CsvToBean csvToBean = new CsvToBeanBuilder<BindingSet>(reader).withType(BindingSet.class)
@@ -54,5 +55,9 @@ public class SPARQLResultsTSVParser extends AbstractTupleQueryResultParser imple
 			}
 			handler.endQueryResult();
 		}
+	}
+
+	protected SPARQLResultsTSVMappingStrategy createMappingStrategy() {
+		return new SPARQLResultsTSVMappingStrategy(valueFactory);
 	}
 }

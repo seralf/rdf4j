@@ -34,7 +34,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SESAME;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.AbstractTupleQueryResultHandler;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
@@ -48,7 +48,6 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.query.impl.MapBindingSet;
 import org.eclipse.rdf4j.query.impl.SimpleBinding;
 import org.eclipse.rdf4j.query.impl.SimpleDataset;
-import org.eclipse.rdf4j.query.parser.sparql.manifest.SPARQL11ManifestTest;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
@@ -66,7 +65,7 @@ import org.slf4j.LoggerFactory;
  * A set of compliance tests on SPARQL query functionality which can not be easily executed using the
  * {@link SPARQL11ManifestTest} format. This includes tests on queries with non-deterministic output (e.g.
  * GROUP_CONCAT).
- * 
+ *
  * @author Jeen Broekstra
  */
 public abstract class ComplexSPARQLQueryTest {
@@ -944,7 +943,7 @@ public abstract class ComplexSPARQLQueryTest {
 			Value y = bs.getValue("y");
 			assertNotNull(y);
 			assertTrue(y instanceof Literal);
-			assertEquals(f.createLiteral("1", XMLSchema.INTEGER), y);
+			assertEquals(f.createLiteral("1", XSD.INTEGER), y);
 		}
 	}
 
@@ -980,7 +979,7 @@ public abstract class ComplexSPARQLQueryTest {
 			Value y = bs.getValue("y");
 			assertNotNull(y);
 			assertTrue(y instanceof Literal);
-			assertEquals(f.createLiteral("1", XMLSchema.INTEGER), y);
+			assertEquals(f.createLiteral("1", XSD.INTEGER), y);
 		}
 	}
 
@@ -2312,7 +2311,8 @@ public abstract class ComplexSPARQLQueryTest {
 				"  { BIND (?a AS ?b) } \n" +
 				"}";
 
-		List<BindingSet> result = QueryResults.asList(conn.prepareTupleQuery(query).evaluate());
+		TupleQuery q = conn.prepareTupleQuery(query);
+		List<BindingSet> result = QueryResults.asList(q.evaluate());
 
 		assertEquals(1, result.size());
 
@@ -2338,7 +2338,8 @@ public abstract class ComplexSPARQLQueryTest {
 				"  }\n" +
 				"}";
 
-		List<BindingSet> result = QueryResults.asList(conn.prepareTupleQuery(query).evaluate());
+		TupleQuery q = conn.prepareTupleQuery(query);
+		List<BindingSet> result = QueryResults.asList(q.evaluate());
 
 		assertEquals(2, result.size());
 
@@ -2422,6 +2423,33 @@ public abstract class ComplexSPARQLQueryTest {
 		assertEquals("http://subj1", result.get(0).getValue("s").stringValue());
 	}
 
+	@Test
+	public void testValuesClauseNamedGraph() throws Exception {
+		String ex = "http://example.org/";
+		String data = "@prefix foaf: <" + FOAF.NAMESPACE + "> .\n"
+				+ "@prefix ex: <" + ex + "> .\n"
+				+ "ex:graph1 {\n" +
+				"	ex:Person1 rdf:type foaf:Person ;\n" +
+				"		foaf:name \"Person 1\" .	ex:Person2 rdf:type foaf:Person ;\n" +
+				"		foaf:name \"Person 2\" .	ex:Person3 rdf:type foaf:Person ;\n" +
+				"		foaf:name \"Person 3\" .\n" +
+				"}";
+
+		conn.add(new StringReader(data), "", RDFFormat.TRIG);
+
+		String query = "SELECT  ?person ?name ?__index \n"
+				+ "WHERE { "
+				+ "        VALUES (?person ?name  ?__index) { \n"
+				+ "                  (<http://example.org/Person1> UNDEF \"0\") \n"
+				+ "                  (<http://example.org/Person3> UNDEF \"2\")  } \n"
+				+ "        GRAPH <http://example.org/graph1> { ?person <http://xmlns.com/foaf/0.1/name> ?name .   } }";
+
+		TupleQuery q = conn.prepareTupleQuery(query);
+
+		List<BindingSet> result = QueryResults.asList(q.evaluate());
+		assertThat(result).hasSize(2);
+	}
+
 	/**
 	 * See https://github.com/eclipse/rdf4j/issues/1267
 	 */
@@ -2476,7 +2504,7 @@ public abstract class ComplexSPARQLQueryTest {
 
 	/**
 	 * Get a set of useful namespace prefix declarations.
-	 * 
+	 *
 	 * @return namespace prefix declarations for dc, foaf and ex.
 	 */
 	protected String getNamespaceDeclarations() {

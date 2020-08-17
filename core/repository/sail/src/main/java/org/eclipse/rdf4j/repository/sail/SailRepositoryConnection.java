@@ -7,10 +7,15 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.repository.sail;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
+
 import org.apache.http.client.HttpClient;
 import org.eclipse.rdf4j.IsolationLevel;
 import org.eclipse.rdf4j.OpenRDFUtil;
 import org.eclipse.rdf4j.common.iteration.CloseableIteration;
+import org.eclipse.rdf4j.common.transaction.TransactionSetting;
 import org.eclipse.rdf4j.http.client.HttpClientDependent;
 import org.eclipse.rdf4j.http.client.HttpClientSessionManager;
 import org.eclipse.rdf4j.http.client.SessionManagerDependent;
@@ -20,8 +25,10 @@ import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.MalformedQueryException;
+import org.eclipse.rdf4j.query.Query;
 import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.Update;
+import org.eclipse.rdf4j.query.algebra.TupleExpr;
 import org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedServiceResolver;
 import org.eclipse.rdf4j.query.algebra.evaluation.federation.FederatedServiceResolverClient;
 import org.eclipse.rdf4j.query.parser.ParsedBooleanQuery;
@@ -33,11 +40,11 @@ import org.eclipse.rdf4j.query.parser.QueryParserUtil;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryReadOnlyException;
+import org.eclipse.rdf4j.repository.RepositoryResolver;
+import org.eclipse.rdf4j.repository.RepositoryResolverClient;
 import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.repository.UnknownTransactionStateException;
 import org.eclipse.rdf4j.repository.base.AbstractRepositoryConnection;
-import org.eclipse.rdf4j.repository.RepositoryResolver;
-import org.eclipse.rdf4j.repository.RepositoryResolverClient;
 import org.eclipse.rdf4j.rio.RDFHandler;
 import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.sail.SailConnection;
@@ -135,7 +142,14 @@ public class SailRepositoryConnection extends AbstractRepositoryConnection imple
 	@Override
 	public void begin() throws RepositoryException {
 		try {
-			sailConnection.begin(getIsolationLevel());
+			// always call receiveTransactionSettings(...) before calling begin();
+			sailConnection.setTransactionSettings(new TransactionSetting[0]);
+
+			if (getIsolationLevel() != null) {
+				sailConnection.begin(getIsolationLevel());
+			} else {
+				sailConnection.begin();
+			}
 		} catch (SailException e) {
 			throw new RepositoryException(e);
 		}
@@ -144,7 +158,41 @@ public class SailRepositoryConnection extends AbstractRepositoryConnection imple
 	@Override
 	public void begin(IsolationLevel level) throws RepositoryException {
 		try {
-			sailConnection.begin(level);
+			// always call receiveTransactionSettings(...) before calling begin();
+			sailConnection.setTransactionSettings(new TransactionSetting[0]);
+
+			if (level != null) {
+				sailConnection.begin(level);
+			} else {
+				sailConnection.begin();
+			}
+		} catch (SailException e) {
+			throw new RepositoryException(e);
+		}
+	}
+
+	@Override
+	public void begin(TransactionSetting... settings) {
+		try {
+			// Asserts to catch any of these issues in our tests. These asserts don't run in production since they are
+			// slow. Nulls in the transaction settings or multiple isolation levels have undefined behaviour.
+			assert Arrays.stream(settings).noneMatch(Objects::isNull) : "No transaction settings should be null!";
+			assert Arrays.stream(settings)
+					.filter(setting -> setting instanceof IsolationLevel)
+					.count() <= 1 : "There should never be more than one isolation level";
+
+			sailConnection.setTransactionSettings(settings);
+
+			for (TransactionSetting setting : settings) {
+				if (setting instanceof IsolationLevel) {
+					sailConnection.begin((IsolationLevel) setting);
+					return;
+				}
+			}
+
+			// if none of the transaction settings are isolation levels
+			sailConnection.begin();
+
 		} catch (SailException e) {
 			throw new RepositoryException(e);
 		}
@@ -195,10 +243,25 @@ public class SailRepositoryConnection extends AbstractRepositoryConnection imple
 		ParsedQuery parsedQuery = QueryParserUtil.parseQuery(ql, queryString, baseURI);
 
 		if (parsedQuery instanceof ParsedTupleQuery) {
+			Optional<TupleExpr> sailTupleExpr = sailConnection.prepareQuery(ql, Query.QueryType.TUPLE, queryString,
+					baseURI);
+			if (sailTupleExpr.isPresent()) {
+				parsedQuery = new ParsedTupleQuery(queryString, sailTupleExpr.get());
+			}
 			return new SailTupleQuery((ParsedTupleQuery) parsedQuery, this);
 		} else if (parsedQuery instanceof ParsedGraphQuery) {
+			Optional<TupleExpr> sailTupleExpr = sailConnection.prepareQuery(ql, Query.QueryType.GRAPH, queryString,
+					baseURI);
+			if (sailTupleExpr.isPresent()) {
+				parsedQuery = new ParsedGraphQuery(queryString, sailTupleExpr.get());
+			}
 			return new SailGraphQuery((ParsedGraphQuery) parsedQuery, this);
 		} else if (parsedQuery instanceof ParsedBooleanQuery) {
+			Optional<TupleExpr> sailTupleExpr = sailConnection.prepareQuery(ql, Query.QueryType.BOOLEAN, queryString,
+					baseURI);
+			if (sailTupleExpr.isPresent()) {
+				parsedQuery = new ParsedBooleanQuery(queryString, sailTupleExpr.get());
+			}
 			return new SailBooleanQuery((ParsedBooleanQuery) parsedQuery, this);
 		} else {
 			throw new RuntimeException("Unexpected query type: " + parsedQuery.getClass());
@@ -208,21 +271,34 @@ public class SailRepositoryConnection extends AbstractRepositoryConnection imple
 	@Override
 	public SailTupleQuery prepareTupleQuery(QueryLanguage ql, String queryString, String baseURI)
 			throws MalformedQueryException {
-		ParsedTupleQuery parsedQuery = QueryParserUtil.parseTupleQuery(ql, queryString, baseURI);
+		Optional<TupleExpr> sailTupleExpr = sailConnection.prepareQuery(ql, Query.QueryType.TUPLE, queryString,
+				baseURI);
+
+		ParsedTupleQuery parsedQuery = sailTupleExpr
+				.map(expr -> new ParsedTupleQuery(queryString, expr))
+				.orElse(QueryParserUtil.parseTupleQuery(ql, queryString, baseURI));
 		return new SailTupleQuery(parsedQuery, this);
 	}
 
 	@Override
 	public SailGraphQuery prepareGraphQuery(QueryLanguage ql, String queryString, String baseURI)
 			throws MalformedQueryException {
-		ParsedGraphQuery parsedQuery = QueryParserUtil.parseGraphQuery(ql, queryString, baseURI);
+		Optional<TupleExpr> sailTupleExpr = sailConnection.prepareQuery(ql, Query.QueryType.GRAPH, queryString,
+				baseURI);
+		ParsedGraphQuery parsedQuery = sailTupleExpr
+				.map(expr -> new ParsedGraphQuery(queryString, expr))
+				.orElse(QueryParserUtil.parseGraphQuery(ql, queryString, baseURI));
 		return new SailGraphQuery(parsedQuery, this);
 	}
 
 	@Override
 	public SailBooleanQuery prepareBooleanQuery(QueryLanguage ql, String queryString, String baseURI)
 			throws MalformedQueryException {
-		ParsedBooleanQuery parsedQuery = QueryParserUtil.parseBooleanQuery(ql, queryString, baseURI);
+		Optional<TupleExpr> sailTupleExpr = sailConnection.prepareQuery(ql, Query.QueryType.BOOLEAN, queryString,
+				baseURI);
+		ParsedBooleanQuery parsedQuery = sailTupleExpr
+				.map(expr -> new ParsedBooleanQuery(queryString, expr))
+				.orElse(QueryParserUtil.parseBooleanQuery(ql, queryString, baseURI));
 		return new SailBooleanQuery(parsedQuery, this);
 	}
 
@@ -230,7 +306,6 @@ public class SailRepositoryConnection extends AbstractRepositoryConnection imple
 	public Update prepareUpdate(QueryLanguage ql, String update, String baseURI)
 			throws RepositoryException, MalformedQueryException {
 		ParsedUpdate parsedUpdate = QueryParserUtil.parseUpdate(ql, update, baseURI);
-
 		return new SailUpdate(parsedUpdate, this);
 	}
 

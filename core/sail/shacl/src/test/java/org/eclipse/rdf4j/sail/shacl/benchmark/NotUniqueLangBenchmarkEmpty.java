@@ -8,7 +8,9 @@
 
 package org.eclipse.rdf4j.sail.shacl.benchmark;
 
-import ch.qos.logback.classic.Logger;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.eclipse.rdf4j.IsolationLevels;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -33,8 +35,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import ch.qos.logback.classic.Logger;
 
 /**
  * @author Håvard Ottestad
@@ -54,7 +55,7 @@ public class NotUniqueLangBenchmarkEmpty {
 	private List<List<Statement>> allStatements;
 
 	@Setup(Level.Iteration)
-	public void setUp() {
+	public void setUp() throws InterruptedException {
 		Logger root = (Logger) LoggerFactory.getLogger(ShaclSailConnection.class.getName());
 		root.setLevel(ch.qos.logback.classic.Level.INFO);
 
@@ -72,7 +73,7 @@ public class NotUniqueLangBenchmarkEmpty {
 		}));
 
 		System.gc();
-
+		Thread.sleep(100);
 	}
 
 	@Benchmark

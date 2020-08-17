@@ -26,12 +26,13 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.datatypes.XMLDatatypeUtil;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.algebra.AbstractAggregateOperator;
 import org.eclipse.rdf4j.query.algebra.AggregateOperator;
 import org.eclipse.rdf4j.query.algebra.Avg;
+import org.eclipse.rdf4j.query.algebra.Compare;
 import org.eclipse.rdf4j.query.algebra.Count;
 import org.eclipse.rdf4j.query.algebra.Group;
 import org.eclipse.rdf4j.query.algebra.GroupConcat;
@@ -45,7 +46,10 @@ import org.eclipse.rdf4j.query.algebra.ValueExpr;
 import org.eclipse.rdf4j.query.algebra.evaluation.EvaluationStrategy;
 import org.eclipse.rdf4j.query.algebra.evaluation.QueryBindingSet;
 import org.eclipse.rdf4j.query.algebra.evaluation.ValueExprEvaluationException;
+import org.eclipse.rdf4j.query.algebra.evaluation.impl.ExtendedEvaluationStrategy;
+import org.eclipse.rdf4j.query.algebra.evaluation.impl.StrictEvaluationStrategy;
 import org.eclipse.rdf4j.query.algebra.evaluation.util.MathUtil;
+import org.eclipse.rdf4j.query.algebra.evaluation.util.QueryEvaluationUtil;
 import org.eclipse.rdf4j.query.algebra.evaluation.util.ValueComparator;
 import org.eclipse.rdf4j.query.impl.EmptyBindingSet;
 import org.mapdb.DB;
@@ -235,7 +239,7 @@ public class GroupIterator extends CloseableIteratorIteration<BindingSet, QueryE
 
 	/**
 	 * A unique key for a set of existing bindings.
-	 * 
+	 *
 	 * @author David Huynh
 	 */
 	protected class Key implements Serializable {
@@ -457,7 +461,7 @@ public class GroupIterator extends CloseableIteratorIteration<BindingSet, QueryE
 
 		@Override
 		public Value getValue() {
-			return vf.createLiteral(Long.toString(count), XMLSchema.INTEGER);
+			return vf.createLiteral(Long.toString(count), XSD.INTEGER);
 		}
 	}
 
@@ -474,6 +478,9 @@ public class GroupIterator extends CloseableIteratorIteration<BindingSet, QueryE
 		@Override
 		public void processAggregate(BindingSet s) throws QueryEvaluationException {
 			Value v = evaluate(s);
+			if (strategy instanceof ExtendedEvaluationStrategy) {
+				comparator.setStrict(false);
+			}
 			if (v != null && distinctValue(v)) {
 				if (min == null) {
 					min = v;
@@ -504,6 +511,9 @@ public class GroupIterator extends CloseableIteratorIteration<BindingSet, QueryE
 
 		@Override
 		public void processAggregate(BindingSet s) throws QueryEvaluationException {
+			if (strategy instanceof ExtendedEvaluationStrategy) {
+				comparator.setStrict(false);
+			}
 			Value v = evaluate(s);
 			if (v != null && distinctValue(v)) {
 				if (max == null) {
@@ -526,7 +536,7 @@ public class GroupIterator extends CloseableIteratorIteration<BindingSet, QueryE
 
 	private class SumAggregate extends Aggregate {
 
-		private Literal sum = vf.createLiteral("0", XMLSchema.INTEGER);
+		private Literal sum = vf.createLiteral("0", XSD.INTEGER);
 
 		private ValueExprEvaluationException typeError = null;
 
@@ -571,7 +581,7 @@ public class GroupIterator extends CloseableIteratorIteration<BindingSet, QueryE
 
 		private long count = 0;
 
-		private Literal sum = vf.createLiteral("0", XMLSchema.INTEGER);
+		private Literal sum = vf.createLiteral("0", XSD.INTEGER);
 
 		private ValueExprEvaluationException typeError = null;
 
@@ -617,7 +627,7 @@ public class GroupIterator extends CloseableIteratorIteration<BindingSet, QueryE
 			}
 
 			if (count == 0) {
-				return vf.createLiteral("0", XMLSchema.INTEGER);
+				return vf.createLiteral("0", XSD.INTEGER);
 			}
 
 			Literal sizeLit = vf.createLiteral(count);

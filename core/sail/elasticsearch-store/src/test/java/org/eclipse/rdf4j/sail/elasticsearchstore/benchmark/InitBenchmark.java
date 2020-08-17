@@ -8,12 +8,16 @@
 
 package org.eclipse.rdf4j.sail.elasticsearchstore.benchmark;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
 import org.assertj.core.util.Files;
 import org.eclipse.rdf4j.IsolationLevels;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
-import org.eclipse.rdf4j.sail.elasticsearchstore.SingletonClientProvider;
 import org.eclipse.rdf4j.sail.elasticsearchstore.ElasticsearchStore;
+import org.eclipse.rdf4j.sail.elasticsearchstore.SingletonClientProvider;
 import org.eclipse.rdf4j.sail.elasticsearchstore.TestHelpers;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -27,11 +31,8 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
-import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 
 /**
  * @author Håvard Ottestad
@@ -53,8 +54,11 @@ public class InitBenchmark {
 
 	@Setup(Level.Trial)
 	public void beforeClass() throws IOException, InterruptedException {
+		// JMH does not correctly set JAVA_HOME. Change the JAVA_HOME below if you the following error:
+		// [EmbeddedElsHandler] INFO p.a.t.e.ElasticServer - could not find java; set JAVA_HOME or ensure java is in
+		// PATH
 		embeddedElastic = TestHelpers.startElasticsearch(installLocation,
-				"/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home");
+				"/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home");
 
 		clientPool = new SingletonClientProvider("localhost", embeddedElastic.getTransportTcpPort(), "cluster1");
 		System.gc();

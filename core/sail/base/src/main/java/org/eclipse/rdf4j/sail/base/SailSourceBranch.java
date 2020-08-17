@@ -7,6 +7,15 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.base;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.eclipse.rdf4j.IsolationLevel;
 import org.eclipse.rdf4j.IsolationLevels;
 import org.eclipse.rdf4j.model.IRI;
@@ -15,20 +24,12 @@ import org.eclipse.rdf4j.model.ModelFactory;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.impl.LinkedHashModelFactory;
+import org.eclipse.rdf4j.model.impl.DynamicModelFactory;
 import org.eclipse.rdf4j.query.algebra.StatementPattern;
 import org.eclipse.rdf4j.query.algebra.Var;
 import org.eclipse.rdf4j.sail.SailException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * An {@link SailSource} that keeps a delta of its state from a backing {@link SailSource}.
@@ -96,7 +97,7 @@ class SailSourceBranch implements SailSource {
 	 * @param backingSource
 	 */
 	public SailSourceBranch(SailSource backingSource) {
-		this(backingSource, new LinkedHashModelFactory(), false);
+		this(backingSource, new DynamicModelFactory(), false);
 	}
 
 	/**
@@ -350,10 +351,7 @@ class SailSourceBranch implements SailSource {
 	}
 
 	private boolean isChanged(Changeset change) {
-		return change.getApproved() != null || change.getDeprecated() != null || change.getApprovedContexts() != null
-				|| change.getDeprecatedContexts() != null || change.getAddedNamespaces() != null
-				|| change.getRemovedPrefixes() != null || change.isStatementCleared() || change.isNamespaceCleared()
-				|| change.getObservations() != null;
+		return change.isChanged();
 	}
 
 	private SailDataset derivedFromSerializable(IsolationLevel level) throws SailException {
@@ -483,13 +481,13 @@ class SailSourceBranch implements SailSource {
 		if (deprecatedContexts != null && !deprecatedContexts.isEmpty()) {
 			sink.clear(deprecatedContexts.toArray(new Resource[0]));
 		}
-		Model deprecated = change.getDeprecated();
+		List<Statement> deprecated = change.getDeprecatedStatements();
 		if (deprecated != null) {
 			for (Statement st : deprecated) {
 				sink.deprecate(st);
 			}
 		}
-		Model approved = change.getApproved();
+		List<Statement> approved = change.getApprovedStatements();
 		if (approved != null) {
 			for (Statement st : approved) {
 				sink.approve(st);

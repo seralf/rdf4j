@@ -52,9 +52,9 @@ public class TrimTuple implements PlanNode {
 
 				Tuple tuple = new Tuple();
 
-				int tempLength = newLength >= 0 ? newLength : next.line.size();
-				for (int i = startIndex; i < tempLength && i < next.line.size(); i++) {
-					tuple.line.add(next.line.get(i));
+				int tempLength = newLength >= 0 ? newLength : next.getLine().size();
+				for (int i = startIndex; i < tempLength && i < next.getLine().size(); i++) {
+					tuple.getLine().add(next.getLine().get(i));
 				}
 
 				tuple.addHistory(next);
@@ -78,8 +78,9 @@ public class TrimTuple implements PlanNode {
 
 	@Override
 	public void getPlanAsGraphvizDot(StringBuilder stringBuilder) {
-		if (printed)
+		if (printed) {
 			return;
+		}
 		printed = true;
 		stringBuilder.append(getId() + " [label=\"" + StringEscapeUtils.escapeJava(this.toString()) + "\"];")
 				.append("\n");
@@ -99,8 +100,9 @@ public class TrimTuple implements PlanNode {
 
 	@Override
 	public IteratorData getIteratorDataType() {
-		if (newLength == 1)
+		if (newLength == 1) {
 			return IteratorData.tripleBased;
+		}
 		return parent.getIteratorDataType();
 	}
 

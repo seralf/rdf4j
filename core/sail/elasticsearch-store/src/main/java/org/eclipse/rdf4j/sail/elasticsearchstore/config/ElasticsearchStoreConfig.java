@@ -7,6 +7,11 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.sail.elasticsearchstore.config;
 
+import static org.eclipse.rdf4j.sail.elasticsearchstore.config.ElasticsearchStoreSchema.NAMESPACE;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -15,11 +20,6 @@ import org.eclipse.rdf4j.model.util.ModelException;
 import org.eclipse.rdf4j.model.util.Models;
 import org.eclipse.rdf4j.sail.base.config.BaseSailConfig;
 import org.eclipse.rdf4j.sail.config.SailConfigException;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.eclipse.rdf4j.sail.elasticsearchstore.config.ElasticsearchStoreSchema.NAMESPACE;
 
 /**
  * @author Håvard Mikkelsen Ottestad
@@ -64,27 +64,30 @@ public class ElasticsearchStoreConfig extends BaseSailConfig {
 
 		try {
 
-			Models.objectLiteral(graph.filter(implNode, ElasticsearchStoreSchema.hostname, null)).ifPresent(value -> {
-				try {
-					setHostname(value.stringValue());
-				} catch (IllegalArgumentException e) {
-					throw new SailConfigException(
-							"String value required for " + ElasticsearchStoreSchema.hostname + " property, found "
-									+ value);
-				}
-			});
+			Models.objectLiteral(graph.getStatements(implNode, ElasticsearchStoreSchema.hostname, null))
+					.ifPresent(value -> {
+						try {
+							setHostname(value.stringValue());
+						} catch (IllegalArgumentException e) {
+							throw new SailConfigException(
+									"String value required for " + ElasticsearchStoreSchema.hostname
+											+ " property, found "
+											+ value);
+						}
+					});
 
-			Models.objectLiteral(graph.filter(implNode, ElasticsearchStoreSchema.index, null)).ifPresent(value -> {
-				try {
-					setIndex(value.stringValue());
-				} catch (IllegalArgumentException e) {
-					throw new SailConfigException(
-							"String value required for " + ElasticsearchStoreSchema.index + " property, found "
-									+ value);
-				}
-			});
+			Models.objectLiteral(graph.getStatements(implNode, ElasticsearchStoreSchema.index, null))
+					.ifPresent(value -> {
+						try {
+							setIndex(value.stringValue());
+						} catch (IllegalArgumentException e) {
+							throw new SailConfigException(
+									"String value required for " + ElasticsearchStoreSchema.index + " property, found "
+											+ value);
+						}
+					});
 
-			Models.objectLiteral(graph.filter(implNode, ElasticsearchStoreSchema.clusterName, null))
+			Models.objectLiteral(graph.getStatements(implNode, ElasticsearchStoreSchema.clusterName, null))
 					.ifPresent(value -> {
 						try {
 							setClusterName(value.stringValue());
@@ -95,15 +98,16 @@ public class ElasticsearchStoreConfig extends BaseSailConfig {
 						}
 					});
 
-			Models.objectLiteral(graph.filter(implNode, ElasticsearchStoreSchema.port, null)).ifPresent(value -> {
-				try {
-					setPort(value.intValue());
-				} catch (IllegalArgumentException e) {
-					throw new SailConfigException(
-							"Integer value required for " + ElasticsearchStoreSchema.port + " property, found "
-									+ value);
-				}
-			});
+			Models.objectLiteral(graph.getStatements(implNode, ElasticsearchStoreSchema.port, null))
+					.ifPresent(value -> {
+						try {
+							setPort(value.intValue());
+						} catch (IllegalArgumentException e) {
+							throw new SailConfigException(
+									"Integer value required for " + ElasticsearchStoreSchema.port + " property, found "
+											+ value);
+						}
+					});
 
 		} catch (ModelException e) {
 			throw new SailConfigException(e.getMessage(), e);

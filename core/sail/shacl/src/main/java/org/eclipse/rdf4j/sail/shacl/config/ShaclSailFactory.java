@@ -15,14 +15,14 @@ import org.eclipse.rdf4j.sail.shacl.ShaclSail;
 
 /**
  * Factory class for creation of {@link ShaclSail}s as part of a Sail stack.
- * 
+ *
  * @author Jeen Broekstra
  */
 public class ShaclSailFactory implements SailFactory {
 
 	/**
 	 * The type of Sails that are created by this factory.
-	 * 
+	 *
 	 * @see SailFactory#getSailType()
 	 */
 	public static final String SAIL_TYPE = "rdf4j:ShaclSail";
@@ -64,6 +64,10 @@ public class ShaclSailFactory implements SailFactory {
 			sail.setPerformanceLogging(shaclSailConfig.isPerformanceLogging());
 			sail.setSerializableValidation(shaclSailConfig.isSerializableValidation());
 			sail.setRdfsSubClassReasoning(shaclSailConfig.isRdfsSubClassReasoning());
+			sail.setEclipseRdf4jShaclExtensions(shaclSailConfig.isEclipseRdf4jShaclExtensions());
+			sail.setDashDataShapes(shaclSailConfig.isDashDataShapes());
+			sail.setValidationResultsLimitTotal(shaclSailConfig.getValidationResultsLimitTotal());
+			sail.setValidationResultsLimitPerConstraint(shaclSailConfig.getValidationResultsLimitPerConstraint());
 		}
 
 		return sail;

@@ -7,6 +7,13 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.rio.turtle;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -26,16 +33,8 @@ import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
 import org.eclipse.rdf4j.rio.helpers.ParseErrorCollector;
 import org.eclipse.rdf4j.rio.helpers.SimpleParseLocationListener;
 import org.eclipse.rdf4j.rio.helpers.StatementCollector;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author jeen
@@ -480,6 +479,32 @@ public class TurtleParserTest {
 			assertTrue(statementCollector.getStatements().size() == 1);
 		} catch (RDFParseException e) {
 			fail("New line is legal inside triple quoted literal");
+		}
+	}
+
+	@Test
+	public void testLegalUnicodeInTripleSubject() throws IOException {
+		String data = "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n<r:\uD804\uDC9D> a xsd:string .";
+		Reader r = new StringReader(data);
+
+		try {
+			parser.parse(r, baseURI);
+			assertTrue(statementCollector.getStatements().size() == 1);
+		} catch (RDFParseException e) {
+			fail("Complex unicode characters should be parsed correctly (" + e.getMessage() + ")");
+		}
+	}
+
+	@Test
+	public void testOverflowingUnicodeInTripleSubject() throws IOException {
+		String data = "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n<r:\uD800\uDF32\uD800\uDF3F\uD800\uDF44\uD800\uDF39\uD800\uDF43\uD800\uDF3A> a xsd:string .";
+		Reader r = new StringReader(data);
+
+		try {
+			parser.parse(r, baseURI);
+			assertTrue(statementCollector.getStatements().size() == 1);
+		} catch (RDFParseException e) {
+			fail("Complex unicode characters should be parsed correctly (" + e.getMessage() + ")");
 		}
 	}
 

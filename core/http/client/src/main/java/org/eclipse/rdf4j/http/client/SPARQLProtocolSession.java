@@ -10,18 +10,24 @@ package org.eclipse.rdf4j.http.client;
 import static org.eclipse.rdf4j.http.protocol.Protocol.ACCEPT_PARAM_NAME;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
@@ -49,9 +55,11 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.rdf4j.RDF4JConfigException;
 import org.eclipse.rdf4j.RDF4JException;
+import org.eclipse.rdf4j.http.client.shacl.RemoteShaclValidationException;
 import org.eclipse.rdf4j.http.protocol.Protocol;
 import org.eclipse.rdf4j.http.protocol.UnauthorizedException;
 import org.eclipse.rdf4j.http.protocol.error.ErrorInfo;
@@ -80,6 +88,7 @@ import org.eclipse.rdf4j.query.resultio.QueryResultParseException;
 import org.eclipse.rdf4j.query.resultio.TupleQueryResultFormat;
 import org.eclipse.rdf4j.query.resultio.TupleQueryResultParser;
 import org.eclipse.rdf4j.query.resultio.TupleQueryResultParserRegistry;
+import org.eclipse.rdf4j.query.resultio.TupleQueryResultWriter;
 import org.eclipse.rdf4j.query.resultio.helpers.BackgroundTupleResult;
 import org.eclipse.rdf4j.query.resultio.helpers.QueryResultCollector;
 import org.eclipse.rdf4j.repository.RepositoryException;
@@ -90,6 +99,7 @@ import org.eclipse.rdf4j.rio.RDFHandlerException;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFParser;
 import org.eclipse.rdf4j.rio.RDFParserRegistry;
+import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.UnsupportedRDFormatException;
 import org.eclipse.rdf4j.rio.helpers.BasicParserSettings;
@@ -108,7 +118,7 @@ import org.slf4j.LoggerFactory;
  * <p/>
  * Functionality specific to the RDF4J HTTP protocol can be found in {@link RDF4JProtocolSession} (which is used by
  * HTTPRepository).
- * 
+ *
  * @author Herko ter Horst
  * @author Arjohn Kampman
  * @author Andreas Schwarte
@@ -117,10 +127,6 @@ import org.slf4j.LoggerFactory;
  * @see <a href="https://www.w3.org/TR/sparql11-protocol/">SPARQL 1.1 Protocol (W3C Recommendation)</a>
  */
 public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable {
-
-	/*-----------*
-	 * Constants *
-	 *-----------*/
 
 	protected static final Charset UTF8 = StandardCharsets.UTF_8;
 
@@ -148,11 +154,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	 */
 	private final int maximumUrlLength;
 
-	final Logger logger = LoggerFactory.getLogger(SPARQLProtocolSession.class);
-
-	/*-----------*
-	 * Variables *
-	 *-----------*/
+	final static Logger logger = LoggerFactory.getLogger(SPARQLProtocolSession.class);
 
 	private ValueFactory valueFactory;
 
@@ -178,10 +180,6 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 
 	private Map<String, String> additionalHttpHeaders = Collections.emptyMap();
 
-	/*--------------*
-	 * Constructors *
-	 *--------------*/
-
 	public SPARQLProtocolSession(HttpClient client, ExecutorService executor) {
 		this.httpClient = client;
 		this.httpContext = new HttpClientContext();
@@ -205,10 +203,6 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 		}
 		this.maximumUrlLength = maximumUrlLength;
 	}
-
-	/*-----------------*
-	 * Get/set methods *
-	 *-----------------*/
 
 	@Override
 	public final HttpClient getHttpClient() {
@@ -243,9 +237,8 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	}
 
 	/**
-	 * Sets the preferred format for encoding tuple query results. The {@link TupleQueryResultFormat#BINARY binary}
-	 * format is preferred by default.
-	 * 
+	 * Sets the preferred format for encoding tuple query results.
+	 *
 	 * @param format The preferred {@link TupleQueryResultFormat}, or <tt>null</tt> to indicate no specific format is
 	 *               preferred.
 	 */
@@ -254,8 +247,9 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	}
 
 	/**
-	 * Gets the preferred {@link TupleQueryResultFormat} for encoding tuple query results.
-	 * 
+	 * Gets the preferred {@link TupleQueryResultFormat} for encoding tuple query results. The
+	 * {@link TupleQueryResultFormat#SPARQL SPARQL/XML} format is preferred by default.
+	 *
 	 * @return The preferred format, of <tt>null</tt> if no specific format is preferred.
 	 */
 	public TupleQueryResultFormat getPreferredTupleQueryResultFormat() {
@@ -263,9 +257,8 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	}
 
 	/**
-	 * Sets the preferred format for encoding RDF documents. The {@link RDFFormat#TURTLE Turtle} format is preferred by
-	 * default.
-	 * 
+	 * Sets the preferred format for encoding RDF documents.
+	 *
 	 * @param format The preferred {@link RDFFormat}, or <tt>null</tt> to indicate no specific format is preferred.
 	 */
 	public void setPreferredRDFFormat(RDFFormat format) {
@@ -273,8 +266,9 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	}
 
 	/**
-	 * Gets the preferred {@link RDFFormat} for encoding RDF documents.
-	 * 
+	 * Gets the preferred {@link RDFFormat} for encoding RDF documents. The {@link RDFFormat#TURTLE Turtle} format is
+	 * preferred by default.
+	 *
 	 * @return The preferred format, of <tt>null</tt> if no specific format is preferred.
 	 */
 	public RDFFormat getPreferredRDFFormat() {
@@ -282,9 +276,8 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	}
 
 	/**
-	 * Sets the preferred format for encoding boolean query results. The {@link BooleanQueryResultFormat#TEXT binary}
-	 * format is preferred by default.
-	 * 
+	 * Sets the preferred format for encoding boolean query results.
+	 *
 	 * @param format The preferred {@link BooleanQueryResultFormat}, or <tt>null</tt> to indicate no specific format is
 	 *               preferred.
 	 */
@@ -293,8 +286,9 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	}
 
 	/**
-	 * Gets the preferred {@link BooleanQueryResultFormat} for encoding boolean query results.
-	 * 
+	 * Gets the preferred {@link BooleanQueryResultFormat} for encoding boolean query results. The
+	 * {@link BooleanQueryResultFormat#TEXT binary} format is preferred by default.
+	 *
 	 * @return The preferred format, of <tt>null</tt> if no specific format is preferred.
 	 */
 	public BooleanQueryResultFormat getPreferredBooleanQueryResultFormat() {
@@ -303,7 +297,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 
 	/**
 	 * Set the username and password for authentication with the remote server.
-	 * 
+	 *
 	 * @param username the username
 	 * @param password the password
 	 */
@@ -445,7 +439,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 
 	/**
 	 * Get the additional HTTP headers which will be used
-	 * 
+	 *
 	 * @return a read-only view of the additional HTTP headers which will be included in every request to the server.
 	 */
 	public Map<String, String> getAdditionalHttpHeaders() {
@@ -455,7 +449,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	/**
 	 * Set additional HTTP headers to be included in every request to the server, which may be required for certain
 	 * unusual server configurations.
-	 * 
+	 *
 	 * @param additionalHttpHeaders a map containing pairs of header names and values. May be null
 	 */
 	public void setAdditionalHttpHeaders(Map<String, String> additionalHttpHeaders) {
@@ -474,8 +468,9 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 		String queryUrlWithParams;
 		try {
 			URIBuilder urib = new URIBuilder(getQueryURL());
-			for (NameValuePair nvp : queryParams)
+			for (NameValuePair nvp : queryParams) {
 				urib.addParameter(nvp.getName(), nvp.getValue());
+			}
 			queryUrlWithParams = urib.toString();
 		} catch (URISyntaxException e) {
 			throw new AssertionError(e);
@@ -501,7 +496,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 
 	/**
 	 * Return whether the provided query should use POST (otherwise use GET)
-	 * 
+	 *
 	 * @param fullQueryUrl the complete URL, including hostname and all HTTP query parameters
 	 */
 	protected boolean shouldUsePost(String fullQueryUrl) {
@@ -525,8 +520,9 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 		method.setEntity(new UrlEncodedFormEntity(queryParams, UTF8));
 
 		if (this.additionalHttpHeaders != null) {
-			for (Map.Entry<String, String> additionalHeader : additionalHttpHeaders.entrySet())
+			for (Map.Entry<String, String> additionalHeader : additionalHttpHeaders.entrySet()) {
 				method.addHeader(additionalHeader.getKey(), additionalHeader.getValue());
+			}
 		}
 
 		return method;
@@ -688,6 +684,21 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 				QueryResultFormat format = TupleQueryResultFormat.matchMIMEType(mimeType, tqrFormats)
 						.orElseThrow(() -> new RepositoryException(
 								"Server responded with an unsupported file format: " + mimeType));
+
+				// Check if we can pass through to the output stream directly
+				if (handler instanceof TupleQueryResultWriter) {
+					TupleQueryResultWriter tqrWriter = (TupleQueryResultWriter) handler;
+					if (tqrWriter.getTupleQueryResultFormat().equals(format)) {
+						OutputStream out = tqrWriter.getOutputStream().orElse(null);
+						if (out != null) {
+							InputStream in = response.getEntity().getContent();
+							IOUtils.copy(in, out);
+							return;
+						}
+					}
+				}
+
+				// we need to parse the result and re-serialize.
 				TupleQueryResultParser parser = QueryResultIO.createTupleParser(format, getValueFactory());
 				parser.setQueryResultHandler(handler);
 				parser.parseQueryResult(response.getEntity().getContent());
@@ -709,7 +720,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	 * Send the tuple query via HTTP and throws an exception in case anything goes wrong, i.e. only for HTTP 200 the
 	 * method returns without exception. If HTTP status code is not equal to 200, the request is aborted, however pooled
 	 * connections are not released.
-	 * 
+	 *
 	 * @param method
 	 * @throws RepositoryException
 	 * @throws HttpException
@@ -842,6 +853,20 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 				RDFFormat format = RDFFormat.matchMIMEType(mimeType, rdfFormats)
 						.orElseThrow(() -> new RepositoryException(
 								"Server responded with an unsupported file format: " + mimeType));
+				// Check if we can pass through to the output stream directly
+				if (handler instanceof RDFWriter) {
+					RDFWriter rdfWriter = (RDFWriter) handler;
+					if (rdfWriter.getRDFFormat().equals(format)) {
+						OutputStream out = rdfWriter.getOutputStream().orElse(null);
+						if (out != null) {
+							InputStream in = response.getEntity().getContent();
+							IOUtils.copy(in, out);
+							return;
+						}
+					}
+				}
+
+				// we need to parse the result and re-serialize.
 				RDFParser parser = Rio.createParser(format, getValueFactory());
 				parser.setParserConfig(getParserConfig());
 				parser.setParseErrorListener(new ParseErrorLogger());
@@ -874,7 +899,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	/**
 	 * Parse the response in this thread using a suitable {@link BooleanQueryResultParser}. All HTTP connections are
 	 * closed and released in this method
-	 * 
+	 *
 	 * @throws RDF4JException
 	 */
 	protected boolean getBoolean(HttpUriRequest method) throws IOException, RDF4JException {
@@ -941,7 +966,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	/**
 	 * Convenience method to deal with HTTP level errors of tuple, graph and boolean queries in the same way. This
 	 * method aborts the HTTP connection.
-	 * 
+	 *
 	 * @param method
 	 * @throws RDF4JException
 	 */
@@ -1007,6 +1032,11 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 						throw new MalformedQueryException(errInfo.getErrorMessage());
 					} else if (errInfo.getErrorType() == ErrorType.UNSUPPORTED_QUERY_LANGUAGE) {
 						throw new UnsupportedQueryLanguageException(errInfo.getErrorMessage());
+					} else if (contentTypeIs(response, "application/shacl-validation-report")) {
+						RDFFormat format = getContentTypeSerialisation(response);
+						throw new RepositoryException(new RemoteShaclValidationException(
+								new StringReader(errInfo.toString()), "", format));
+
 					} else if (errInfo.toString().length() > 0) {
 						throw new RepositoryException(errInfo.toString());
 					} else {
@@ -1021,6 +1051,64 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 		}
 	}
 
+	static RDFFormat getContentTypeSerialisation(HttpResponse response) {
+		Header[] headers = response.getHeaders("Content-Type");
+
+		Set<RDFFormat> rdfFormats = RDFParserRegistry.getInstance().getKeys();
+		if (rdfFormats.isEmpty()) {
+			throw new RepositoryException("No tuple RDF parsers have been registered");
+		}
+
+		for (Header header : headers) {
+			for (HeaderElement element : header.getElements()) {
+				// SHACL Validation report Content-Type gets transformed from:
+				// application/shacl-validation-report+n-quads => application/n-quads
+				// application/shacl-validation-report+ld+json => application/ld+json
+				// text/shacl-validation-report+turtle => text/turtle
+
+				String[] split = element.getName().split("\\+");
+				StringBuilder serialisation = new StringBuilder(element.getName().split("/")[0] + "/");
+				for (int i = 1; i < split.length; i++) {
+					serialisation.append(split[i]);
+					if (i + 1 < split.length) {
+						serialisation.append("+");
+					}
+				}
+
+				logger.debug("SHACL validation report is serialised as: " + serialisation.toString());
+
+				Optional<RDFFormat> rdfFormat = RDFFormat.matchMIMEType(serialisation.toString(), rdfFormats);
+
+				if (rdfFormat.isPresent()) {
+					return rdfFormat.get();
+				}
+			}
+		}
+
+		throw new RepositoryException("Unsupported content-type for SHACL Validation Report: "
+				+ Arrays.toString(response.getHeaders("Content-Type"))
+				+ "! If the format seems correct, then you may need a maven dependency for that.");
+
+	}
+
+	private static boolean contentTypeIs(HttpResponse response, String contentType) {
+		Header[] headers = response.getHeaders("Content-Type");
+		if (headers.length == 0) {
+			return false;
+		}
+
+		for (Header header : headers) {
+			for (HeaderElement element : header.getElements()) {
+				String name = element.getName().split("\\+")[0];
+				if (contentType.equals(name)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	/*-------------------------*
 	 * General utility methods *
 	 *-------------------------*/
@@ -1029,7 +1117,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 	 * Gets the MIME type specified in the response headers of the supplied method, if any. For example, if the response
 	 * headers contain <tt>Content-Type: application/xml;charset=UTF-8</tt>, this method will return
 	 * <tt>application/xml</tt> as the MIME type.
-	 * 
+	 *
 	 * @param method The method to get the reponse MIME type from.
 	 * @return The response MIME type, or <tt>null</tt> if not available.
 	 */
@@ -1042,7 +1130,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 			for (HeaderElement headerEl : headerElements) {
 				String mimeType = headerEl.getName();
 				if (mimeType != null) {
-					logger.debug("reponse MIME type is {}", mimeType);
+					logger.debug("response MIME type is {}", mimeType);
 					return mimeType;
 				}
 			}
@@ -1064,7 +1152,7 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 
 	/**
 	 * Sets the parser configuration used to process HTTP response data.
-	 * 
+	 *
 	 * @param parserConfig The parserConfig to set.
 	 */
 	public void setParserConfig(ParserConfig parserConfig) {
@@ -1085,12 +1173,12 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 		if (params == null) {
 			return 0;
 		}
-		return (long) params.getIntParameter(CoreConnectionPNames.SO_TIMEOUT, 0);
+		return params.getIntParameter(CoreConnectionPNames.SO_TIMEOUT, 0);
 	}
 
 	/**
 	 * Sets the http connection read timeout.
-	 * 
+	 *
 	 * @param timeout timeout in milliseconds. Zero sets to infinity.
 	 */
 	public void setConnectionTimeout(long timeout) {
@@ -1098,5 +1186,14 @@ public class SPARQLProtocolSession implements HttpClientDependent, AutoCloseable
 			params = new BasicHttpParams();
 		}
 		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, (int) timeout);
+	}
+
+	/**
+	 * Get the {@link HttpContext} used for sending HTTP requests.
+	 *
+	 * @return the {@link HttpContext} instance used for all protocol session requests.
+	 */
+	protected HttpContext getHttpContext() {
+		return this.httpContext;
 	}
 }

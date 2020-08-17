@@ -8,6 +8,11 @@
 
 package org.eclipse.rdf4j.sail.elasticsearchstore.benchmark;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
+
 import org.assertj.core.util.Files;
 import org.eclipse.rdf4j.IsolationLevels;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -27,12 +32,8 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
-import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
+import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 
 /**
  * @author Håvard Ottestad
@@ -54,8 +55,11 @@ public class AddBenchmark {
 
 	@Setup(Level.Trial)
 	public void beforeClass() throws IOException, InterruptedException {
+		// JMH does not correctly set JAVA_HOME. Change the JAVA_HOME below if you the following error:
+		// [EmbeddedElsHandler] INFO p.a.t.e.ElasticServer - could not find java; set JAVA_HOME or ensure java is in
+		// PATH
 		embeddedElastic = TestHelpers.startElasticsearch(installLocation,
-				"/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home");
+				"/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home");
 
 		elasticsearchStore = new SailRepository(
 				new ElasticsearchStore("localhost", embeddedElastic.getTransportTcpPort(), "cluster1", "testindex",
@@ -85,6 +89,20 @@ public class AddBenchmark {
 			connection.commit();
 
 			connection.begin(IsolationLevels.NONE);
+			connection.add(getResourceAsStream("benchmarkFiles/datagovbe-valid.ttl"), "", RDFFormat.TURTLE);
+			connection.commit();
+		}
+	}
+
+	@Benchmark
+	public void clearAndAddLargeFileReadCommitted() throws IOException {
+
+		try (SailRepositoryConnection connection = elasticsearchStore.getConnection()) {
+			connection.begin(IsolationLevels.NONE);
+			connection.clear();
+			connection.commit();
+
+			connection.begin(IsolationLevels.READ_COMMITTED);
 			connection.add(getResourceAsStream("benchmarkFiles/datagovbe-valid.ttl"), "", RDFFormat.TURTLE);
 			connection.commit();
 		}

@@ -7,7 +7,12 @@
  *******************************************************************************/
 package org.eclipse.rdf4j.query.resultio.text.tsv;
 
-import com.opencsv.CSVReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
@@ -17,11 +22,7 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.impl.ListBindingSet;
 import org.eclipse.rdf4j.query.resultio.text.SPARQLResultsXSVMappingStrategy;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.opencsv.CSVReader;
 
 /**
  * Implements a {@link com.opencsv.bean.MappingStrategy} to allow opencsv to work in parallel. This is where the input
@@ -48,27 +49,31 @@ public class SPARQLResultsTSVMappingStrategy extends SPARQLResultsXSVMappingStra
 		// process solution
 		List<Value> values = new ArrayList<>(line.length);
 		for (String valueString : line) {
-			Value v = null;
-			if (valueString.startsWith("_:")) {
-				v = valueFactory.createBNode(valueString.substring(2));
-			} else if (valueString.startsWith("<") && valueString.endsWith(">")) {
-				try {
-					v = valueFactory.createIRI(valueString.substring(1, valueString.length() - 1));
-				} catch (IllegalArgumentException e) {
-					v = valueFactory.createLiteral(valueString);
-				}
-			} else if (valueString.startsWith("\"")) {
-				v = parseLiteral(valueString);
-			} else if (!"".equals(valueString)) {
-				if (numberPattern.matcher(valueString).matches()) {
-					v = parseNumberPatternMatch(valueString);
-				} else {
-					v = valueFactory.createLiteral(valueString);
-				}
-			}
-			values.add(v);
+			values.add(parseValue(valueString));
 		}
 		return new ListBindingSet(bindingNames, values.toArray(new Value[values.size()]));
+	}
+
+	protected Value parseValue(String valueString) {
+		Value v = null;
+		if (valueString.startsWith("_:")) {
+			v = valueFactory.createBNode(valueString.substring(2));
+		} else if (valueString.startsWith("<") && valueString.endsWith(">")) {
+			try {
+				v = valueFactory.createIRI(valueString.substring(1, valueString.length() - 1));
+			} catch (IllegalArgumentException e) {
+				v = valueFactory.createLiteral(valueString);
+			}
+		} else if (valueString.startsWith("\"")) {
+			v = parseLiteral(valueString);
+		} else if (!"".equals(valueString)) {
+			if (numberPattern.matcher(valueString).matches()) {
+				v = parseNumberPatternMatch(valueString);
+			} else {
+				v = valueFactory.createLiteral(valueString);
+			}
+		}
+		return v;
 	}
 
 	/**

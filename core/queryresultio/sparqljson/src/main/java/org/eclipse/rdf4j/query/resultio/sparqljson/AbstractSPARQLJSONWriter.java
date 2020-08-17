@@ -22,7 +22,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.util.Literals;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryResultHandlerException;
@@ -75,9 +75,10 @@ abstract class AbstractSPARQLJSONWriter extends AbstractQueryResultWriter implem
 
 	protected boolean linksFound = false;
 
-	private final JsonGenerator jg;
+	protected final JsonGenerator jg;
 
 	protected AbstractSPARQLJSONWriter(OutputStream out) {
+		super(out);
 		try {
 			jg = JSON_FACTORY.createGenerator(new OutputStreamWriter(out, StandardCharsets.UTF_8));
 		} catch (IOException e) {
@@ -107,6 +108,8 @@ abstract class AbstractSPARQLJSONWriter extends AbstractQueryResultWriter implem
 
 	@Override
 	public void startQueryResult(List<String> columnHeaders) throws TupleQueryResultHandlerException {
+		super.startQueryResult(columnHeaders);
+
 		try {
 			if (!documentOpen) {
 				startDocument();
@@ -128,7 +131,7 @@ abstract class AbstractSPARQLJSONWriter extends AbstractQueryResultWriter implem
 	}
 
 	@Override
-	public void handleSolution(BindingSet bindingSet) throws TupleQueryResultHandlerException {
+	protected void handleSolutionImpl(BindingSet bindingSet) throws TupleQueryResultHandlerException {
 		try {
 			if (!documentOpen) {
 				startDocument();
@@ -287,7 +290,7 @@ abstract class AbstractSPARQLJSONWriter extends AbstractQueryResultWriter implem
 				jg.writeObjectField("xml:lang", lit.getLanguage().orElse(null));
 			} else {
 				IRI datatype = lit.getDatatype();
-				boolean ignoreDatatype = datatype.equals(XMLSchema.STRING) && xsdStringToPlainLiteral();
+				boolean ignoreDatatype = datatype.equals(XSD.STRING) && xsdStringToPlainLiteral();
 				if (!ignoreDatatype) {
 					jg.writeObjectField("datatype", lit.getDatatype().stringValue());
 				}
